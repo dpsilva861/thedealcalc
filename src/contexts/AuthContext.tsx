@@ -53,9 +53,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return data as Profile | null;
   };
 
+  const ensureProfile = async (u: User): Promise<Profile | null> => {
+    const existing = await fetchProfile(u.id);
+    if (existing) return existing;
+
+    // Create default profile so new users always receive 1 free analysis.
+    const { error: upsertError } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          user_id: u.id,
+          email: u.email ?? null,
+          subscription_status: "inactive",
+          analyses_used: 0,
+          free_analyses_limit: 1,
+        },
+        { onConflict: "user_id" }
+      );
+
+    if (upsertError) {
+      console.error("Error creating profile:", upsertError);
+      return null;
+    }
+
+    return await fetchProfile(u.id);
+  };
+
   const refreshProfile = async () => {
     if (user) {
-      const profileData = await fetchProfile(user.id);
+      const profileData = await ensureProfile(user);
       setProfile(profileData);
     }
   };
