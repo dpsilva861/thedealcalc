@@ -8,7 +8,7 @@ import { ExpensesStep } from "@/components/underwriting/steps/ExpensesStep";
 import { RenovationStep } from "@/components/underwriting/steps/RenovationStep";
 import { FinancingStep } from "@/components/underwriting/steps/FinancingStep";
 import { ReviewStep } from "@/components/underwriting/steps/ReviewStep";
-import { UnderwritingProvider, useUnderwriting } from "@/contexts/UnderwritingContext";
+import { useUnderwriting } from "@/contexts/UnderwritingContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,13 +43,14 @@ function UnderwriteContent() {
   };
 
   const handleRunAnalysis = async () => {
-    // Increment analysis count if using free trial
+    // Run analysis first so the user can view full results (even if this uses their last free run)
+    runAnalysis();
+    navigate("/results");
+
+    // Increment analysis count if using free trial (do this after navigation to avoid triggering paywall mid-run)
     if (!isSubscribed && freeTrialRemaining > 0) {
       await incrementAnalysisCount();
     }
-    
-    runAnalysis();
-    navigate("/results");
   };
 
   const handleReset = () => {
@@ -137,9 +138,7 @@ export default function Underwrite() {
   return (
     <Layout showFooter={false}>
       <AuthGuard requireSubscription={true}>
-        <UnderwritingProvider>
-          <UnderwriteContent />
-        </UnderwritingProvider>
+        <UnderwriteContent />
       </AuthGuard>
     </Layout>
   );
