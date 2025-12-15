@@ -9,6 +9,7 @@ import { RenovationStep } from "@/components/underwriting/steps/RenovationStep";
 import { FinancingStep } from "@/components/underwriting/steps/FinancingStep";
 import { ReviewStep } from "@/components/underwriting/steps/ReviewStep";
 import { UnderwritingProvider, useUnderwriting } from "@/contexts/UnderwritingContext";
+import { AuthGuard } from "@/components/AuthGuard";
 import { ArrowLeft, ArrowRight, Play, RotateCcw } from "lucide-react";
 
 const STEPS = [
@@ -50,74 +51,76 @@ function UnderwriteContent() {
   const isLastStep = currentStep === STEPS.length - 1;
 
   return (
-    <Layout showFooter={false}>
-      <div className="min-h-[calc(100vh-4rem)] bg-cream-dark">
-        {/* Header */}
-        <div className="border-b border-border bg-background">
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="font-display text-2xl font-bold text-foreground">
-                  Underwriting Analysis
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  Data is stored only in your browser
-                </p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={handleReset}>
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reset
-              </Button>
+    <div className="min-h-[calc(100vh-4rem)] bg-cream-dark">
+      {/* Header */}
+      <div className="border-b border-border bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                Underwriting Analysis
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                Data is stored only in your browser
+              </p>
             </div>
-            <StepIndicator
-              steps={STEPS}
-              currentStep={currentStep}
-              onStepClick={(step) => step < currentStep && setCurrentStep(step)}
-            />
+            <Button variant="ghost" size="sm" onClick={handleReset}>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
           </div>
+          <StepIndicator
+            steps={STEPS}
+            currentStep={currentStep}
+            onStepClick={(step) => step < currentStep && setCurrentStep(step)}
+          />
         </div>
+      </div>
 
-        {/* Step Content */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-card border border-border rounded-2xl shadow-card p-6 md:p-8">
-              <CurrentStepComponent />
-            </div>
+      {/* Step Content */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-card border border-border rounded-2xl shadow-card p-6 md:p-8">
+            <CurrentStepComponent />
+          </div>
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-6">
-              <Button
-                variant="outline"
-                onClick={handleBack}
-                disabled={currentStep === 0}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
+          {/* Navigation */}
+          <div className="flex items-center justify-between mt-6">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={currentStep === 0}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+
+            {isLastStep ? (
+              <Button variant="hero" size="lg" onClick={handleRunAnalysis}>
+                <Play className="h-4 w-4 mr-2" />
+                Run Analysis
               </Button>
-
-              {isLastStep ? (
-                <Button variant="hero" size="lg" onClick={handleRunAnalysis}>
-                  <Play className="h-4 w-4 mr-2" />
-                  Run Analysis
-                </Button>
-              ) : (
-                <Button variant="default" onClick={handleNext}>
-                  Next
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              )}
-            </div>
+            ) : (
+              <Button variant="default" onClick={handleNext}>
+                Next
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
 
 export default function Underwrite() {
   return (
-    <UnderwritingProvider>
-      <UnderwriteContent />
-    </UnderwritingProvider>
+    <Layout showFooter={false}>
+      <AuthGuard requireSubscription={true}>
+        <UnderwritingProvider>
+          <UnderwriteContent />
+        </UnderwritingProvider>
+      </AuthGuard>
+    </Layout>
   );
 }
