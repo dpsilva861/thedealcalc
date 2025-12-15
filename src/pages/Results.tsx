@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { UnderwritingProvider, useUnderwriting } from "@/contexts/UnderwritingContext";
+import { useUnderwriting } from "@/contexts/UnderwritingContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { 
   formatCurrency, 
@@ -389,9 +389,7 @@ export default function Results() {
   return (
     <Layout showFooter={false}>
       <AuthGuard requireSubscription={false}>
-        <UnderwritingProvider>
-          <ResultsContent />
-        </UnderwritingProvider>
+        <ResultsContent />
       </AuthGuard>
     </Layout>
   );
