@@ -3,7 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calculator, CheckCircle2 } from "lucide-react";
+import { Calculator, CheckCircle2, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -72,17 +72,17 @@ export default function Signup() {
 
     toast({
       title: "Account created!",
-      description: "Welcome to DealCalc. You can now start analyzing deals.",
+      description: "Welcome to DealCalc. You have 1 free analysis to try it out.",
     });
     
     navigate("/underwrite");
   };
 
   const benefits = [
-    "Unlimited deal analyses",
+    "1 free deal analysis",
     "Professional PDF reports",
     "Complete data privacy",
-    "Cancel anytime",
+    "No credit card required",
   ];
 
   return (
@@ -102,13 +102,19 @@ export default function Signup() {
               Create Your Account
             </h1>
             <p className="text-muted-foreground">
-              Start analyzing deals in minutes
+              Start with a free analysis—no credit card required
             </p>
           </div>
 
           <div className="bg-card border border-border rounded-2xl p-8 shadow-card">
+            {/* Free Trial Badge */}
+            <div className="flex items-center justify-center gap-2 mb-6 p-3 bg-sage-light rounded-xl">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <span className="font-medium text-foreground">1 Free Analysis Included</span>
+            </div>
+
             {/* Benefits */}
-            <div className="grid grid-cols-2 gap-3 mb-6 p-4 bg-sage-light/50 rounded-xl">
+            <div className="grid grid-cols-2 gap-3 mb-6 p-4 bg-muted/50 rounded-xl">
               {benefits.map((benefit) => (
                 <div key={benefit} className="flex items-center gap-2 text-sm">
                   <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
@@ -168,7 +174,7 @@ export default function Signup() {
                 size="lg"
                 disabled={loading}
               >
-                {loading ? "Creating account..." : "Create Account"}
+                {loading ? "Creating account..." : "Create Free Account"}
               </Button>
             </form>
 

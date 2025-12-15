@@ -12,6 +12,8 @@ interface Profile {
   subscription_end_date: string | null;
   created_at: string;
   updated_at: string;
+  analyses_used: number;
+  free_analyses_limit: number;
 }
 
 interface AuthContextType {
@@ -23,6 +25,10 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isSubscribed: boolean;
+  canRunAnalysis: boolean;
+  freeTrialRemaining: number;
+  incrementAnalysisCount: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,13 +44,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Error fetching profile:", error);
       return null;
     }
-    return data as Profile;
+    return data as Profile | null;
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      const profileData = await fetchProfile(user.id);
+      setProfile(profileData);
+    }
   };
 
   useEffect(() => {
@@ -111,7 +124,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
   };
 
+  const incrementAnalysisCount = async () => {
+    if (!profile) return;
+
+    const newCount = (profile.analyses_used || 0) + 1;
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update({ analyses_used: newCount })
+      .eq("user_id", profile.user_id);
+
+    if (!error) {
+      setProfile({ ...profile, analyses_used: newCount });
+    }
+  };
+
   const isSubscribed = profile?.subscription_status === "active";
+  
+  // User can run analysis if subscribed OR has free trial remaining
+  const freeTrialRemaining = profile 
+    ? Math.max(0, (profile.free_analyses_limit || 1) - (profile.analyses_used || 0))
+    : 0;
+  
+  const canRunAnalysis = isSubscribed || freeTrialRemaining > 0;
 
   return (
     <AuthContext.Provider
@@ -124,6 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signOut,
         isSubscribed,
+        canRunAnalysis,
+        freeTrialRemaining,
+        incrementAnalysisCount,
+        refreshProfile,
       }}
     >
       {children}

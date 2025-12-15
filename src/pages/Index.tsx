@@ -88,7 +88,7 @@ export default function Index() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
               <Button variant="hero" size="xl" asChild>
                 <Link to="/signup">
-                  Start Free Trial
+                  Try Free Analysis
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
@@ -98,7 +98,7 @@ export default function Index() {
             </div>
 
             <p className="text-sm text-muted-foreground mt-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              No credit card required to explore. Your data is never stored.
+              1 free analysis included. No credit card required.
             </p>
           </div>
         </div>
