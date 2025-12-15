@@ -388,7 +388,7 @@ function ResultsContent() {
 export default function Results() {
   return (
     <Layout showFooter={false}>
-      <AuthGuard requireSubscription={true}>
+      <AuthGuard requireSubscription={false}>
         <UnderwritingProvider>
           <ResultsContent />
         </UnderwritingProvider>
