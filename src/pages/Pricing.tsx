@@ -1,6 +1,10 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { 
   CheckCircle2, 
   ArrowRight, 
@@ -8,10 +12,15 @@ import {
   Shield,
   FileText,
   Calculator,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
 
 export default function Pricing() {
+  const { user, isSubscribed } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
   const features = [
     { icon: Infinity, text: "Unlimited deal analyses" },
     { icon: Calculator, text: "Full underwriting calculator" },
@@ -42,6 +51,40 @@ export default function Pricing() {
       answer: "We accept all major credit cards through Stripe. Your payment information is securely processed and never stored on our servers."
     },
   ];
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      navigate("/signup");
+      return;
+    }
+
+    if (isSubscribed) {
+      navigate("/underwrite");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke("create-checkout", {
+        body: { origin: window.location.origin },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error("Failed to start checkout. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Layout>
@@ -80,11 +123,34 @@ export default function Pricing() {
                   <span className="text-muted-foreground">/month</span>
                 </div>
 
-                <Button variant="hero" size="xl" className="w-full mb-8" asChild>
-                  <Link to="/signup">
-                    Get Started
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
+                <Button 
+                  variant="hero" 
+                  size="xl" 
+                  className="w-full mb-8" 
+                  onClick={handleSubscribe}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : isSubscribed ? (
+                    <>
+                      Go to Dashboard
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  ) : user ? (
+                    <>
+                      Subscribe Now
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  ) : (
+                    <>
+                      Get Started
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  )}
                 </Button>
 
                 <ul className="space-y-4">
@@ -162,11 +228,23 @@ export default function Pricing() {
           <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
             Join thousands of investors who trust DealCalc for accurate, private underwriting.
           </p>
-          <Button variant="secondary" size="xl" asChild>
-            <Link to="/signup">
-              Get Started for $5/month
-              <ArrowRight className="h-5 w-5" />
-            </Link>
+          <Button 
+            variant="secondary" 
+            size="xl" 
+            onClick={handleSubscribe}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                Get Started for $5/month
+                <ArrowRight className="h-5 w-5" />
+              </>
+            )}
           </Button>
         </div>
       </section>

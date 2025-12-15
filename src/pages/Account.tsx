@@ -1,25 +1,41 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { 
   User, 
   CreditCard, 
   CheckCircle2, 
   AlertCircle,
-  ExternalLink 
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 
 export default function Account() {
-  const { user, profile, loading, isSubscribed, signOut } = useAuth();
+  const { user, profile, loading, isSubscribed, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
     }
   }, [user, loading, navigate]);
+
+  // Handle successful checkout redirect
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    if (sessionId) {
+      toast.success("Subscription activated! Welcome to Pro.");
+      refreshProfile();
+      // Clean up URL
+      navigate("/account", { replace: true });
+    }
+  }, [searchParams, refreshProfile, navigate]);
 
   if (loading) {
     return (
@@ -35,9 +51,45 @@ export default function Account() {
     return null;
   }
 
-  const handleManageSubscription = () => {
-    // Will be implemented with Stripe Customer Portal
-    navigate("/pricing");
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const response = await supabase.functions.invoke("customer-portal", {
+        body: { origin: window.location.origin },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (error) {
+      console.error("Portal error:", error);
+      toast.error("Failed to open billing portal. Please try again.");
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    try {
+      const response = await supabase.functions.invoke("create-checkout", {
+        body: { origin: window.location.origin },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error("Failed to start checkout. Please try again.");
+    }
   };
 
   return (
@@ -119,18 +171,31 @@ export default function Account() {
                     ? "bg-primary/10 text-primary" 
                     : "bg-muted text-muted-foreground"
                 }`}>
-                  {profile.subscription_status.toUpperCase()}
+                  {(profile.subscription_status || "inactive").toUpperCase()}
                 </span>
               </div>
             </div>
 
             {isSubscribed ? (
-              <Button variant="outline" onClick={handleManageSubscription}>
-                Manage Subscription
-                <ExternalLink className="h-4 w-4 ml-2" />
+              <Button 
+                variant="outline" 
+                onClick={handleManageSubscription}
+                disabled={portalLoading}
+              >
+                {portalLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Opening...
+                  </>
+                ) : (
+                  <>
+                    Manage Subscription
+                    <ExternalLink className="h-4 w-4 ml-2" />
+                  </>
+                )}
               </Button>
             ) : (
-              <Button variant="hero" onClick={() => navigate("/pricing")}>
+              <Button variant="hero" onClick={handleSubscribe}>
                 Subscribe Now — $5/month
               </Button>
             )}
