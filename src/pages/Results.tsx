@@ -43,7 +43,7 @@ function ResultsContent() {
     );
   }
 
-  const { metrics, sourcesAndUses, saleAnalysis, annualSummary, sensitivityTables } = results;
+  const { metrics, sourcesAndUses, saleAnalysis, annualSummary, sensitivityTables, monthlyData } = results;
 
   const keyMetrics = [
     { 
@@ -279,6 +279,50 @@ function ResultsContent() {
                   <td className="text-right py-2">{formatPercent(year.coc)}</td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </section>
+
+        {/* Monthly Cash Flow & Amortization */}
+        <section className="p-5 rounded-xl bg-card border border-border shadow-card overflow-x-auto print-page-break">
+          <h3 className="font-semibold text-foreground mb-4">Monthly Cash Flow & Amortization</h3>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2 text-muted-foreground font-medium">Mo</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Rent/Unit</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">GPR</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">EGI</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Opex</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">NOI</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Debt</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Prin</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Int</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">CapEx</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">CF</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {monthlyData.map((m) => {
+                const capex = m.renoSpend + m.makeReady + m.leasingCosts;
+                return (
+                  <tr key={m.month} className="border-b last:border-0">
+                    <td className="py-1.5 font-medium">{m.month}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.rent)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.gpr)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.egi)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.totalOpex)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.noi)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.debtService)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.principalPayment)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.interestPayment)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(capex)}</td>
+                    <td className="text-right py-1.5 font-medium">{formatCurrency(m.cashFlowBeforeTax)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.loanBalance)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </section>
