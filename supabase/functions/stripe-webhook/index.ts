@@ -6,20 +6,30 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
 
+const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+
 serve(async (req) => {
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();
 
   console.log("Received webhook request");
 
-  // For now, parse without signature verification (add STRIPE_WEBHOOK_SECRET later for production)
   let event: Stripe.Event;
+  
   try {
-    event = JSON.parse(body) as Stripe.Event;
+    if (webhookSecret && signature) {
+      // Verify webhook signature for production security
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
+      console.log("Webhook signature verified");
+    } else {
+      // Fallback for development (not recommended for production)
+      console.warn("No webhook secret configured - skipping signature verification");
+      event = JSON.parse(body) as Stripe.Event;
+    }
     console.log("Webhook event type:", event.type);
   } catch (err) {
-    console.error("Failed to parse webhook body:", err);
-    return new Response("Invalid payload", { status: 400 });
+    console.error("Webhook signature verification failed:", err);
+    return new Response("Webhook signature verification failed", { status: 400 });
   }
 
   const supabaseAdmin = createClient(
