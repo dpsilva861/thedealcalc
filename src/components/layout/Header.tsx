@@ -1,12 +1,15 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Calculator, User, Menu, X } from "lucide-react";
+import { Home, Calculator, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, signOut, loading } = useAuth();
 
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
@@ -16,12 +19,17 @@ export function Header() {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-sage">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Calculator className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="font-display text-xl font-semibold text-foreground">
@@ -45,16 +53,45 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          {user && (
+            <Link
+              to="/underwrite"
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                isActive("/underwrite") || isActive("/results")
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              Underwrite
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Auth Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/login">Sign In</Link>
-          </Button>
-          <Button variant="hero" size="sm" asChild>
-            <Link to="/signup">Get Started</Link>
-          </Button>
+          {loading ? (
+            <div className="h-9 w-20 bg-muted animate-pulse rounded-lg" />
+          ) : user ? (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/account">Account</Link>
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Sign In</Link>
+              </Button>
+              <Button variant="hero" size="sm" asChild>
+                <Link to="/signup">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -89,19 +126,58 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
-            <hr className="my-2 border-border" />
-            <Link
-              to="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              Sign In
-            </Link>
-            <Button variant="hero" className="mt-2" asChild>
-              <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
-                Get Started
+            {user && (
+              <Link
+                to="/underwrite"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                  isActive("/underwrite")
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                Underwrite
               </Link>
-            </Button>
+            )}
+            <hr className="my-2 border-border" />
+            {user ? (
+              <>
+                <Link
+                  to="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted"
+                >
+                  Account
+                </Link>
+                <Button 
+                  variant="outline" 
+                  className="mt-2" 
+                  onClick={() => {
+                    handleSignOut();
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted"
+                >
+                  Sign In
+                </Link>
+                <Button variant="hero" className="mt-2" asChild>
+                  <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
+                    Get Started
+                  </Link>
+                </Button>
+              </>
+            )}
           </nav>
         </div>
       )}
