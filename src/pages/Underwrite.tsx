@@ -13,6 +13,7 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, ArrowRight, Play, RotateCcw, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 const STEPS = [
   { label: "Property", shortLabel: "Property", component: AcquisitionStep },
@@ -43,13 +44,20 @@ function UnderwriteContent() {
   };
 
   const handleRunAnalysis = async () => {
-    // Run analysis first so the user can view full results (even if this uses their last free run)
-    runAnalysis();
-    navigate("/results");
+    try {
+      // Run analysis first so the user can view full results (even if this uses their last free run)
+      runAnalysis();
+      navigate("/results");
 
-    // Increment analysis count if using free trial (do this after navigation to avoid triggering paywall mid-run)
-    if (!isSubscribed && freeTrialRemaining > 0) {
-      await incrementAnalysisCount();
+      // Increment analysis count if using free trial (do this after navigation to avoid triggering paywall mid-run)
+      if (!isSubscribed && freeTrialRemaining > 0) {
+        incrementAnalysisCount().catch((err) => {
+          console.error("Failed to increment analysis count:", err);
+        });
+      }
+    } catch (err) {
+      console.error("Run analysis failed:", err);
+      toast.error("Analysis failed. Please try again.");
     }
   };
 

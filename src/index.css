@@ -232,3 +232,34 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
 }
+
+@media print {
+  @page {
+    size: letter landscape;
+    margin: 0.5in;
+  }
+
+  html,
+  body {
+    background: white !important;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  .shadow-soft,
+  .shadow-card,
+  .shadow-elevated {
+    box-shadow: none !important;
+  }
+
+  .print-page-break {
+    break-before: page;
+  }
+}
+

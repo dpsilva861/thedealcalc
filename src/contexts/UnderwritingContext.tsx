@@ -76,8 +76,13 @@ export function UnderwritingProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const runAnalysis = useCallback(() => {
-    const analysisResults = runUnderwriting(inputs);
-    setResults(analysisResults);
+    try {
+      const analysisResults = runUnderwriting(inputs);
+      setResults(analysisResults);
+    } catch (err) {
+      console.error("Underwriting analysis failed:", err);
+      setResults(null);
+    }
   }, [inputs]);
 
   const resetInputs = useCallback(() => {
