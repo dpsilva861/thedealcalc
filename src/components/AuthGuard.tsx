@@ -10,7 +10,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requireSubscription = false }: AuthGuardProps) {
-  const { user, loading, isSubscribed } = useAuth();
+  const { user, loading, canRunAnalysis } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,12 +36,12 @@ export function AuthGuard({ children, requireSubscription = false }: AuthGuardPr
     return null;
   }
 
-  // Logged in but subscription required and not subscribed
-  if (requireSubscription && !isSubscribed) {
+  // Logged in but subscription required and can't run analysis (no subscription + no free trial)
+  if (requireSubscription && !canRunAnalysis) {
     return (
       <Paywall 
         title="Upgrade to Pro"
-        description="Subscribe to access the underwriting tool and run unlimited deal analyses."
+        description="You've used your free analysis. Subscribe to run unlimited deal analyses."
       />
     );
   }

@@ -10,7 +10,9 @@ import { FinancingStep } from "@/components/underwriting/steps/FinancingStep";
 import { ReviewStep } from "@/components/underwriting/steps/ReviewStep";
 import { UnderwritingProvider, useUnderwriting } from "@/contexts/UnderwritingContext";
 import { AuthGuard } from "@/components/AuthGuard";
-import { ArrowLeft, ArrowRight, Play, RotateCcw } from "lucide-react";
+import { FreeTrialBanner } from "@/components/FreeTrialBanner";
+import { useAuth } from "@/contexts/AuthContext";
+import { ArrowLeft, ArrowRight, Play, RotateCcw, Sparkles } from "lucide-react";
 
 const STEPS = [
   { label: "Property", shortLabel: "Property", component: AcquisitionStep },
@@ -24,6 +26,7 @@ const STEPS = [
 function UnderwriteContent() {
   const navigate = useNavigate();
   const { currentStep, setCurrentStep, runAnalysis, resetInputs } = useUnderwriting();
+  const { isSubscribed, freeTrialRemaining, incrementAnalysisCount } = useAuth();
 
   const CurrentStepComponent = STEPS[currentStep].component;
 
@@ -39,7 +42,12 @@ function UnderwriteContent() {
     }
   };
 
-  const handleRunAnalysis = () => {
+  const handleRunAnalysis = async () => {
+    // Increment analysis count if using free trial
+    if (!isSubscribed && freeTrialRemaining > 0) {
+      await incrementAnalysisCount();
+    }
+    
     runAnalysis();
     navigate("/results");
   };
@@ -49,9 +57,13 @@ function UnderwriteContent() {
   };
 
   const isLastStep = currentStep === STEPS.length - 1;
+  const isUsingFreeTrial = !isSubscribed && freeTrialRemaining > 0;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-cream-dark">
+      {/* Free Trial Banner */}
+      <FreeTrialBanner />
+
       {/* Header */}
       <div className="border-b border-border bg-background">
         <div className="container mx-auto px-4 py-6">
@@ -96,10 +108,18 @@ function UnderwriteContent() {
             </Button>
 
             {isLastStep ? (
-              <Button variant="hero" size="lg" onClick={handleRunAnalysis}>
-                <Play className="h-4 w-4 mr-2" />
-                Run Analysis
-              </Button>
+              <div className="flex items-center gap-3">
+                {isUsingFreeTrial && (
+                  <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground bg-sage-light px-3 py-1.5 rounded-lg">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span>Uses 1 free analysis</span>
+                  </div>
+                )}
+                <Button variant="hero" size="lg" onClick={handleRunAnalysis}>
+                  <Play className="h-4 w-4 mr-2" />
+                  Run Analysis
+                </Button>
+              </div>
             ) : (
               <Button variant="default" onClick={handleNext}>
                 Next

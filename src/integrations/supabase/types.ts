@@ -16,8 +16,10 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          analyses_used: number
           created_at: string
           email: string | null
+          free_analyses_limit: number
           id: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -27,8 +29,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          analyses_used?: number
           created_at?: string
           email?: string | null
+          free_analyses_limit?: number
           id?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -38,8 +42,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          analyses_used?: number
           created_at?: string
           email?: string | null
+          free_analyses_limit?: number
           id?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null

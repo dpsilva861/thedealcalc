@@ -7,17 +7,22 @@ import {
   Infinity,
   Shield,
   FileText,
-  Calculator
+  Calculator,
+  Sparkles
 } from "lucide-react";
 
 interface PaywallProps {
   title?: string;
   description?: string;
+  showFreeTrial?: boolean;
+  freeTrialRemaining?: number;
 }
 
 export function Paywall({ 
   title = "Subscribe to Access", 
-  description = "Unlock unlimited deal analyses with a Pro subscription." 
+  description = "Unlock unlimited deal analyses with a Pro subscription.",
+  showFreeTrial = false,
+  freeTrialRemaining = 0
 }: PaywallProps) {
   const features = [
     { icon: Infinity, text: "Unlimited deal analyses" },
