@@ -4,7 +4,6 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { 
   CheckCircle2, 
   ArrowRight, 
@@ -24,7 +23,7 @@ export default function Pricing() {
   const { user, isSubscribed } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const features = [
     { icon: Infinity, text: "Unlimited deal analyses" },
     { icon: Calculator, text: "Full underwriting calculator" },
@@ -57,6 +56,8 @@ export default function Pricing() {
   ];
 
   const handleSubscribe = async () => {
+    setCheckoutError(null);
+    
     if (!user) {
       navigate("/signup");
       return;
@@ -79,12 +80,19 @@ export default function Pricing() {
         throw new Error(response.error.message);
       }
 
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
       if (response.data?.url) {
         window.location.href = response.data.url;
+      } else {
+        throw new Error("No checkout URL returned");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Checkout error:", error);
-      toast.error("Failed to start checkout. Please try again.");
+      const errorMessage = error?.message || "Unknown error occurred";
+      setCheckoutError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -130,7 +138,7 @@ export default function Pricing() {
                 <Button 
                   variant="hero" 
                   size="xl" 
-                  className="w-full mb-8" 
+                  className="w-full mb-2" 
                   onClick={handleSubscribe}
                   disabled={loading}
                 >
@@ -156,6 +164,12 @@ export default function Pricing() {
                     </>
                   )}
                 </Button>
+
+                {checkoutError && (
+                  <p className="text-destructive text-sm mb-6 text-center">
+                    {checkoutError}
+                  </p>
+                )}
 
                 <ul className="space-y-4">
                   {features.map((feature) => (
@@ -304,6 +318,11 @@ export default function Pricing() {
                     "Upgrade to Pro"
                   )}
                 </Button>
+                {checkoutError && (
+                  <p className="text-destructive text-sm mt-2 text-center">
+                    {checkoutError}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -381,6 +400,11 @@ export default function Pricing() {
               </>
             )}
           </Button>
+          {checkoutError && (
+            <p className="text-destructive-foreground text-sm mt-3">
+              {checkoutError}
+            </p>
+          )}
         </div>
       </section>
     </Layout>
