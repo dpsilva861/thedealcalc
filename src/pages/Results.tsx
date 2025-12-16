@@ -188,6 +188,19 @@ function ResultsContent() {
   };
 
   const currentInputs = displayInputs || inputs;
+
+  // Show loading state while results are being computed
+  if (!baseResults || !outlookResults) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-cream-dark flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Generating analysis...</p>
+        </div>
+      </div>
+    );
+  }
+
   const results = baseResults;
   const monthlyData = outlookResults.monthlyData;
   const annualSummary = outlookResults.annualSummary;
