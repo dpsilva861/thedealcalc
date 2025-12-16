@@ -284,296 +284,307 @@ function ResultsContent() {
       </div>
 
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Key Metrics */}
-        <section>
-          <h2 className="font-display text-xl font-bold text-foreground mb-4">
-            Key Metrics
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {keyMetrics.map((metric) => (
-              <div 
-                key={metric.label}
-                className="p-5 rounded-xl bg-card border border-border shadow-card"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <metric.icon className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-muted-foreground">{metric.label}</span>
+        {/* PAGE 1: Key Metrics, Sources & Uses, Exit Analysis */}
+        <div className="print:break-after-page">
+          {/* Key Metrics */}
+          <section className="mb-8">
+            <h2 className="font-display text-xl font-bold text-foreground mb-4">
+              Key Metrics
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {keyMetrics.map((metric) => (
+                <div 
+                  key={metric.label}
+                  className="p-5 rounded-xl bg-card border border-border shadow-card"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <metric.icon className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-muted-foreground">{metric.label}</span>
+                  </div>
+                  <div className="text-2xl font-display font-bold text-foreground">
+                    {metric.value}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {metric.description}
+                  </p>
                 </div>
-                <div className="text-2xl font-display font-bold text-foreground">
-                  {metric.value}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {metric.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Red Flags */}
-        {redFlags.length > 0 && (
-          <section className="p-4 rounded-xl bg-destructive/10 border border-destructive/20">
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              <h3 className="font-semibold text-foreground">Potential Concerns</h3>
-            </div>
-            <ul className="space-y-2">
-              {redFlags.map((flag, i) => (
-                <li key={i} className="text-sm text-destructive flex items-start gap-2">
-                  <span className="mt-0.5">•</span>
-                  {flag}
-                </li>
               ))}
-            </ul>
+            </div>
           </section>
-        )}
 
-        {/* Sources & Uses */}
-        <section className="grid md:grid-cols-2 gap-6">
-          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-            <h3 className="font-semibold text-foreground mb-4">Sources</h3>
-            <dl className="space-y-3">
-              {sourcesAndUses.sources.loanAmount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <dt className="text-muted-foreground">Loan</dt>
-                  <dd className="font-medium">{formatCurrency(sourcesAndUses.sources.loanAmount)}</dd>
-                </div>
-              )}
-              <div className="flex justify-between text-sm">
-                <dt className="text-muted-foreground">Equity</dt>
-                <dd className="font-medium">{formatCurrency(sourcesAndUses.sources.equity)}</dd>
+          {/* Red Flags */}
+          {redFlags.length > 0 && (
+            <section className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <h3 className="font-semibold text-foreground">Potential Concerns</h3>
               </div>
-              <div className="flex justify-between text-sm pt-2 border-t">
-                <dt className="font-semibold text-foreground">Total</dt>
-                <dd className="font-bold text-primary">{formatCurrency(sourcesAndUses.sources.total)}</dd>
+              <ul className="space-y-2">
+                {redFlags.map((flag, i) => (
+                  <li key={i} className="text-sm text-destructive flex items-start gap-2">
+                    <span className="mt-0.5">•</span>
+                    {flag}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Sources & Uses */}
+          <section className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+              <h3 className="font-semibold text-foreground mb-4">Sources</h3>
+              <dl className="space-y-3">
+                {sourcesAndUses.sources.loanAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-muted-foreground">Loan</dt>
+                    <dd className="font-medium">{formatCurrency(sourcesAndUses.sources.loanAmount)}</dd>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <dt className="text-muted-foreground">Equity</dt>
+                  <dd className="font-medium">{formatCurrency(sourcesAndUses.sources.equity)}</dd>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t">
+                  <dt className="font-semibold text-foreground">Total</dt>
+                  <dd className="font-bold text-primary">{formatCurrency(sourcesAndUses.sources.total)}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+              <h3 className="font-semibold text-foreground mb-4">Uses</h3>
+              <dl className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <dt className="text-muted-foreground">Purchase Price</dt>
+                  <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.purchasePrice)}</dd>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <dt className="text-muted-foreground">Closing Costs</dt>
+                  <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.closingCosts)}</dd>
+                </div>
+                {sourcesAndUses.uses.originationFee > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <dt className="text-muted-foreground">Loan Origination</dt>
+                    <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.originationFee)}</dd>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <dt className="text-muted-foreground">Renovation</dt>
+                  <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.renoBudget)}</dd>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t">
+                  <dt className="font-semibold text-foreground">Total</dt>
+                  <dd className="font-bold text-primary">{formatCurrency(sourcesAndUses.uses.total)}</dd>
+                </div>
+              </dl>
+            </div>
+          </section>
+
+          {/* Exit Analysis */}
+          <section className="p-5 rounded-xl bg-card border border-border shadow-card">
+            <h3 className="font-semibold text-foreground mb-4">Exit Analysis</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Stabilized NOI</p>
+                <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.stabilizedNoi)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Sale Price</p>
+                <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.salePrice)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Sale Costs</p>
+                <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.saleCosts)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Loan Payoff</p>
+                <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.loanPayoff)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Net Proceeds</p>
+                <p className="font-bold text-primary">{formatCurrency(saleAnalysis.netSaleProceeds)}</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* PAGE 2: Sensitivity Tables */}
+        <div className="print:break-before-page print:break-after-page">
+          <h2 className="font-display text-xl font-bold text-foreground mb-6 print:pt-4">
+            Sensitivity Analysis
+          </h2>
+          <section className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+              <h3 className="font-semibold text-foreground mb-4">Rent Sensitivity</h3>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 text-muted-foreground font-medium">Change</th>
+                    <th className="text-right py-2 text-muted-foreground font-medium">IRR</th>
+                    <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sensitivityTables.rent.map((row) => (
+                    <tr key={row.label} className={row.label === "Base" ? "bg-sage-light" : ""}>
+                      <td className="py-2">{row.label}</td>
+                      <td className="text-right py-2">{formatPercent(row.irr)}</td>
+                      <td className="text-right py-2">{formatPercent(row.coc)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+              <h3 className="font-semibold text-foreground mb-4">Exit Cap Sensitivity</h3>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 text-muted-foreground font-medium">Change</th>
+                    <th className="text-right py-2 text-muted-foreground font-medium">IRR</th>
+                    <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sensitivityTables.exitCap.map((row) => (
+                    <tr key={row.label} className={row.label === "Base" ? "bg-sage-light" : ""}>
+                      <td className="py-2">{row.label}</td>
+                      <td className="text-right py-2">{formatPercent(row.irr)}</td>
+                      <td className="text-right py-2">{formatPercent(row.coc)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+              <h3 className="font-semibold text-foreground mb-4">Reno Budget Sensitivity</h3>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 text-muted-foreground font-medium">Change</th>
+                    <th className="text-right py-2 text-muted-foreground font-medium">IRR</th>
+                    <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sensitivityTables.renoBudget.map((row) => (
+                    <tr key={row.label} className={row.label === "Base" ? "bg-sage-light" : ""}>
+                      <td className="py-2">{row.label}</td>
+                      <td className="text-right py-2">{formatPercent(row.irr)}</td>
+                      <td className="text-right py-2">{formatPercent(row.coc)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Metric Definitions */}
+          <section className="p-5 rounded-xl bg-muted/50 border border-border">
+            <h3 className="font-semibold text-foreground mb-4">Metric Definitions</h3>
+            <dl className="grid md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <dt className="font-medium text-foreground">IRR (Internal Rate of Return)</dt>
+                <dd className="text-muted-foreground">The annualized rate at which cash flows equal the initial investment. Higher is better.</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-foreground">Cash-on-Cash Return</dt>
+                <dd className="text-muted-foreground">Annual pre-tax cash flow divided by total equity invested. Measures cash yield.</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-foreground">Equity Multiple</dt>
+                <dd className="text-muted-foreground">Total cash received divided by total cash invested. 2.0x means you doubled your money.</dd>
+              </div>
+              <div>
+                <dt className="font-medium text-foreground">DSCR (Debt Service Coverage Ratio)</dt>
+                <dd className="text-muted-foreground">NOI divided by annual debt service. Lenders typically require 1.20x or higher.</dd>
               </div>
             </dl>
-          </div>
+          </section>
+        </div>
 
-          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-            <h3 className="font-semibold text-foreground mb-4">Uses</h3>
-            <dl className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <dt className="text-muted-foreground">Purchase Price</dt>
-                <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.purchasePrice)}</dd>
-              </div>
-              <div className="flex justify-between text-sm">
-                <dt className="text-muted-foreground">Closing Costs</dt>
-                <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.closingCosts)}</dd>
-              </div>
-              {sourcesAndUses.uses.originationFee > 0 && (
-                <div className="flex justify-between text-sm">
-                  <dt className="text-muted-foreground">Loan Origination</dt>
-                  <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.originationFee)}</dd>
-                </div>
-              )}
-              <div className="flex justify-between text-sm">
-                <dt className="text-muted-foreground">Renovation</dt>
-                <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.renoBudget)}</dd>
-              </div>
-              <div className="flex justify-between text-sm pt-2 border-t">
-                <dt className="font-semibold text-foreground">Total</dt>
-                <dd className="font-bold text-primary">{formatCurrency(sourcesAndUses.uses.total)}</dd>
-              </div>
-            </dl>
-          </div>
-        </section>
-
-        {/* Sale Analysis */}
-        <section className="p-5 rounded-xl bg-card border border-border shadow-card">
-          <h3 className="font-semibold text-foreground mb-4">Exit Analysis</h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Stabilized NOI</p>
-              <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.stabilizedNoi)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Sale Price</p>
-              <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.salePrice)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Sale Costs</p>
-              <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.saleCosts)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Loan Payoff</p>
-              <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.loanPayoff)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Net Proceeds</p>
-              <p className="font-bold text-primary">{formatCurrency(saleAnalysis.netSaleProceeds)}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Annual Summary (30-Year Outlook) */}
-        <section className="p-5 rounded-xl bg-card border border-border shadow-card overflow-x-auto">
-          <h3 className="font-semibold text-foreground mb-4">30-Year Annual Summary</h3>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2 text-muted-foreground font-medium">Year</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">GPR</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">EGI</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">NOI</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Debt Service</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Cash Flow</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">DSCR</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
-              </tr>
-            </thead>
-            <tbody>
-              {annualSummary.map((year) => (
-                <tr key={year.year} className="border-b last:border-0">
-                  <td className="py-2 font-medium">{year.year}</td>
-                  <td className="text-right py-2">{formatCurrency(year.gpr)}</td>
-                  <td className="text-right py-2">{formatCurrency(year.egi)}</td>
-                  <td className="text-right py-2">{formatCurrency(year.noi)}</td>
-                  <td className="text-right py-2">{formatCurrency(year.debtService)}</td>
-                  <td className="text-right py-2 font-medium">{formatCurrency(year.cashFlow)}</td>
-                  <td className="text-right py-2">{year.dscr.toFixed(2)}</td>
-                  <td className="text-right py-2">{formatPercent(year.coc)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-
-        {/* Monthly Cash Flow & Amortization */}
-        <section className="p-5 rounded-xl bg-card border border-border shadow-card overflow-x-auto print-page-break">
-          <h3 className="font-semibold text-foreground mb-4">Monthly Cash Flow & Amortization</h3>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2 text-muted-foreground font-medium">Mo</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Rent/Unit</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">GPR</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">EGI</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Opex</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">NOI</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Debt</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Prin</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Int</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">CapEx</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">CF</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Balance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {monthlyData.map((m) => {
-                const capex = m.renoSpend + m.makeReady + m.leasingCosts;
-                return (
-                  <tr key={m.month} className="border-b last:border-0">
-                    <td className="py-1.5 font-medium">{m.month}</td>
-                    <td className="text-right py-1.5">{formatCurrency(m.rent)}</td>
-                    <td className="text-right py-1.5">{formatCurrency(m.gpr)}</td>
-                    <td className="text-right py-1.5">{formatCurrency(m.egi)}</td>
-                    <td className="text-right py-1.5">{formatCurrency(m.totalOpex)}</td>
-                    <td className="text-right py-1.5">{formatCurrency(m.noi)}</td>
-                    <td className="text-right py-1.5">{formatCurrency(m.debtService)}</td>
-                    <td className="text-right py-1.5">{formatCurrency(m.principalPayment)}</td>
-                    <td className="text-right py-1.5">{formatCurrency(m.interestPayment)}</td>
-                    <td className="text-right py-1.5">{formatCurrency(capex)}</td>
-                    <td className="text-right py-1.5 font-medium">{formatCurrency(m.cashFlowBeforeTax)}</td>
-                    <td className="text-right py-1.5">{formatCurrency(m.loanBalance)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
-
-        {/* Sensitivity Tables */}
-        <section className="grid md:grid-cols-3 gap-6">
-          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-            <h3 className="font-semibold text-foreground mb-4">Rent Sensitivity</h3>
+        {/* PAGE 3+: Annual Summary and Amortization */}
+        <div className="print:break-before-page">
+          {/* Annual Summary (30-Year Outlook) */}
+          <section className="p-5 rounded-xl bg-card border border-border shadow-card overflow-x-auto mb-8">
+            <h3 className="font-semibold text-foreground mb-4">30-Year Annual Summary</h3>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 text-muted-foreground font-medium">Change</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">IRR</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">Year</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">GPR</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">EGI</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">NOI</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Debt Service</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Cash Flow</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">DSCR</th>
                   <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
                 </tr>
               </thead>
               <tbody>
-                {sensitivityTables.rent.map((row) => (
-                  <tr key={row.label} className={row.label === "Base" ? "bg-sage-light" : ""}>
-                    <td className="py-2">{row.label}</td>
-                    <td className="text-right py-2">{formatPercent(row.irr)}</td>
-                    <td className="text-right py-2">{formatPercent(row.coc)}</td>
+                {annualSummary.map((year) => (
+                  <tr key={year.year} className="border-b last:border-0">
+                    <td className="py-2 font-medium">{year.year}</td>
+                    <td className="text-right py-2">{formatCurrency(year.gpr)}</td>
+                    <td className="text-right py-2">{formatCurrency(year.egi)}</td>
+                    <td className="text-right py-2">{formatCurrency(year.noi)}</td>
+                    <td className="text-right py-2">{formatCurrency(year.debtService)}</td>
+                    <td className="text-right py-2 font-medium">{formatCurrency(year.cashFlow)}</td>
+                    <td className="text-right py-2">{year.dscr.toFixed(2)}</td>
+                    <td className="text-right py-2">{formatPercent(year.coc)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </section>
 
-          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-            <h3 className="font-semibold text-foreground mb-4">Exit Cap Sensitivity</h3>
-            <table className="w-full text-sm">
+          {/* Monthly Cash Flow & Amortization */}
+          <section className="p-5 rounded-xl bg-card border border-border shadow-card overflow-x-auto">
+            <h3 className="font-semibold text-foreground mb-4">Monthly Cash Flow & Amortization</h3>
+            <table className="w-full text-xs">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 text-muted-foreground font-medium">Change</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">IRR</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">Mo</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Rent/Unit</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">GPR</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">EGI</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Opex</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">NOI</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Debt</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Prin</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Int</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">CapEx</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">CF</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Balance</th>
                 </tr>
               </thead>
               <tbody>
-                {sensitivityTables.exitCap.map((row) => (
-                  <tr key={row.label} className={row.label === "Base" ? "bg-sage-light" : ""}>
-                    <td className="py-2">{row.label}</td>
-                    <td className="text-right py-2">{formatPercent(row.irr)}</td>
-                    <td className="text-right py-2">{formatPercent(row.coc)}</td>
-                  </tr>
-                ))}
+                {monthlyData.map((m) => {
+                  const capex = m.renoSpend + m.makeReady + m.leasingCosts;
+                  return (
+                    <tr key={m.month} className="border-b last:border-0">
+                      <td className="py-1.5 font-medium">{m.month}</td>
+                      <td className="text-right py-1.5">{formatCurrency(m.rent)}</td>
+                      <td className="text-right py-1.5">{formatCurrency(m.gpr)}</td>
+                      <td className="text-right py-1.5">{formatCurrency(m.egi)}</td>
+                      <td className="text-right py-1.5">{formatCurrency(m.totalOpex)}</td>
+                      <td className="text-right py-1.5">{formatCurrency(m.noi)}</td>
+                      <td className="text-right py-1.5">{formatCurrency(m.debtService)}</td>
+                      <td className="text-right py-1.5">{formatCurrency(m.principalPayment)}</td>
+                      <td className="text-right py-1.5">{formatCurrency(m.interestPayment)}</td>
+                      <td className="text-right py-1.5">{formatCurrency(capex)}</td>
+                      <td className="text-right py-1.5 font-medium">{formatCurrency(m.cashFlowBeforeTax)}</td>
+                      <td className="text-right py-1.5">{formatCurrency(m.loanBalance)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-          </div>
-
-          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-            <h3 className="font-semibold text-foreground mb-4">Reno Budget Sensitivity</h3>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 text-muted-foreground font-medium">Change</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">IRR</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sensitivityTables.renoBudget.map((row) => (
-                  <tr key={row.label} className={row.label === "Base" ? "bg-sage-light" : ""}>
-                    <td className="py-2">{row.label}</td>
-                    <td className="text-right py-2">{formatPercent(row.irr)}</td>
-                    <td className="text-right py-2">{formatPercent(row.coc)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* Metric Explanations */}
-        <section className="p-5 rounded-xl bg-muted/50 border border-border">
-          <h3 className="font-semibold text-foreground mb-4">Metric Definitions</h3>
-          <dl className="grid md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <dt className="font-medium text-foreground">IRR (Internal Rate of Return)</dt>
-              <dd className="text-muted-foreground">The annualized rate at which cash flows equal the initial investment. Higher is better.</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-foreground">Cash-on-Cash Return</dt>
-              <dd className="text-muted-foreground">Annual pre-tax cash flow divided by total equity invested. Measures cash yield.</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-foreground">Equity Multiple</dt>
-              <dd className="text-muted-foreground">Total cash received divided by total cash invested. 2.0x means you doubled your money.</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-foreground">DSCR (Debt Service Coverage Ratio)</dt>
-              <dd className="text-muted-foreground">NOI divided by annual debt service. Lenders typically require 1.20x or higher.</dd>
-            </div>
-          </dl>
-        </section>
+          </section>
+        </div>
 
         {/* Save Status Note */}
         <section className="flex items-center justify-center gap-2 text-sm text-muted-foreground print:hidden">
