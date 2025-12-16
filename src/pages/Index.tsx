@@ -246,6 +246,43 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Coming Soon Section */}
+      <section className="py-16 md:py-20 border-t border-border">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-medium mb-4">
+              <Zap className="h-3.5 w-3.5" />
+              <span>Coming Soon</span>
+            </div>
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
+              More Calculators on the Way
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              We're building specialized tools for every investment strategy.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+            {[
+              { name: "BRRRR", description: "Buy, Rehab, Rent, Refinance, Repeat" },
+              { name: "Fix & Flip", description: "Renovation & resale analysis" },
+              { name: "Multifamily", description: "Large apartment complexes" },
+              { name: "Debt Sizing", description: "Loan qualification calculator" },
+            ].map((calc, index) => (
+              <div 
+                key={calc.name}
+                className="p-4 rounded-xl bg-card border border-border text-center animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <Building2 className="h-6 w-6 text-primary/60 mx-auto mb-2" />
+                <h3 className="font-semibold text-foreground text-sm mb-1">{calc.name}</h3>
+                <p className="text-xs text-muted-foreground">{calc.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 md:py-28 gradient-sage">
         <div className="container mx-auto px-4 text-center">

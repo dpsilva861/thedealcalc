@@ -254,24 +254,67 @@ function ResultsContent() {
       return;
     }
 
-    // Build CSV content
+    const addressLine = displayAddress ? `${displayAddress.address || ""}, ${displayAddress.city || ""}, ${displayAddress.state || ""} ${displayAddress.zipCode || ""}`.trim() : "N/A";
+    const reportDate = new Date().toLocaleDateString();
+    
+    // Build comprehensive CSV with property info and metrics
+    let csvLines: string[] = [];
+    
+    // Header section
+    csvLines.push("UNDERWRITING REPORT");
+    csvLines.push(`Property Address,${addressLine}`);
+    csvLines.push(`Report Date,${reportDate}`);
+    csvLines.push(`Units,${currentInputs.income.unitCount}`);
+    csvLines.push(`Purchase Price,${formatCurrency(currentInputs.acquisition.purchasePrice)}`);
+    csvLines.push(`Hold Period,${currentInputs.acquisition.holdPeriodMonths} months`);
+    csvLines.push("");
+    
+    // Key Metrics section
+    csvLines.push("KEY METRICS");
+    csvLines.push(`IRR,${formatPercent(metrics.irr)}`);
+    csvLines.push(`Cash-on-Cash (Year 1),${formatPercent(metrics.cocYear1)}`);
+    csvLines.push(`Equity Multiple,${formatMultiple(metrics.equityMultiple)}`);
+    csvLines.push(`DSCR,${metrics.dscr.toFixed(2)}`);
+    csvLines.push(`Breakeven Occupancy,${formatPercent(metrics.breakevenOccupancy)}`);
+    csvLines.push(`NOI (Stabilized Annual),${formatCurrency(metrics.stabilizedNoiAnnual)}`);
+    csvLines.push("");
+    
+    // Sources & Uses
+    csvLines.push("SOURCES OF FUNDS");
+    csvLines.push(`Loan Amount,${formatCurrency(sourcesAndUses.sources.loanAmount)}`);
+    csvLines.push(`Equity Required,${formatCurrency(sourcesAndUses.sources.equity)}`);
+    csvLines.push(`Total Sources,${formatCurrency(sourcesAndUses.sources.total)}`);
+    csvLines.push("");
+    csvLines.push("USES OF FUNDS");
+    csvLines.push(`Purchase Price,${formatCurrency(sourcesAndUses.uses.purchasePrice)}`);
+    csvLines.push(`Closing Costs,${formatCurrency(sourcesAndUses.uses.closingCosts)}`);
+    csvLines.push(`Renovation Budget,${formatCurrency(sourcesAndUses.uses.renoBudget)}`);
+    csvLines.push(`Total Uses,${formatCurrency(sourcesAndUses.uses.total)}`);
+    csvLines.push("");
+    
+    // Monthly Cash Flow Schedule
+    csvLines.push("MONTHLY CASH FLOW SCHEDULE");
     const headers = ["Month", "Rent/Unit", "GPR", "EGI", "OpEx", "NOI", "Debt Service", "Principal", "Interest", "CapEx", "Cash Flow", "Loan Balance"];
-    const rows = monthlyData.map(m => [
-      m.month,
-      m.rent.toFixed(2),
-      m.gpr.toFixed(2),
-      m.egi.toFixed(2),
-      m.totalOpex.toFixed(2),
-      m.noi.toFixed(2),
-      m.debtService.toFixed(2),
-      m.principalPayment.toFixed(2),
-      m.interestPayment.toFixed(2),
-      (m.renoSpend + m.makeReady + m.leasingCosts).toFixed(2),
-      m.cashFlowBeforeTax.toFixed(2),
-      m.loanBalance.toFixed(2),
-    ]);
+    csvLines.push(headers.join(","));
+    
+    monthlyData.forEach(m => {
+      csvLines.push([
+        m.month,
+        m.rent.toFixed(2),
+        m.gpr.toFixed(2),
+        m.egi.toFixed(2),
+        m.totalOpex.toFixed(2),
+        m.noi.toFixed(2),
+        m.debtService.toFixed(2),
+        m.principalPayment.toFixed(2),
+        m.interestPayment.toFixed(2),
+        (m.renoSpend + m.makeReady + m.leasingCosts).toFixed(2),
+        m.cashFlowBeforeTax.toFixed(2),
+        m.loanBalance.toFixed(2),
+      ].join(","));
+    });
 
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const csvContent = csvLines.join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -293,32 +336,94 @@ function ResultsContent() {
       return;
     }
 
-    // Build Excel-compatible XML (SpreadsheetML)
-    const headers = ["Month", "Rent/Unit", "GPR", "EGI", "OpEx", "NOI", "Debt Service", "Principal", "Interest", "CapEx", "Cash Flow", "Loan Balance"];
-    
+    const addressLine = displayAddress ? `${displayAddress.address || ""}, ${displayAddress.city || ""}, ${displayAddress.state || ""} ${displayAddress.zipCode || ""}`.trim() : "N/A";
+    const reportDate = new Date().toLocaleDateString();
+
+    // Build Excel-compatible XML (SpreadsheetML) with styles and multiple worksheets
     let xmlContent = `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
   xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="Header">
+      <Font ss:Bold="1" ss:Size="12"/>
+      <Interior ss:Color="#6B7F6E" ss:Pattern="Solid"/>
+      <Font ss:Color="#FFFFFF"/>
+    </Style>
+    <Style ss:ID="Title">
+      <Font ss:Bold="1" ss:Size="14"/>
+    </Style>
+    <Style ss:ID="SectionHeader">
+      <Font ss:Bold="1" ss:Size="11"/>
+      <Interior ss:Color="#F5F1E9" ss:Pattern="Solid"/>
+    </Style>
+    <Style ss:ID="Currency">
+      <NumberFormat ss:Format="&quot;$&quot;#,##0.00"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="Summary">
+    <Table>
+      <Column ss:Width="150"/>
+      <Column ss:Width="150"/>
+      <Row><Cell ss:StyleID="Title"><Data ss:Type="String">UNDERWRITING REPORT</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Property Address</Data></Cell><Cell><Data ss:Type="String">${addressLine}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Report Date</Data></Cell><Cell><Data ss:Type="String">${reportDate}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Units</Data></Cell><Cell><Data ss:Type="Number">${currentInputs.income.unitCount}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Purchase Price</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">${currentInputs.acquisition.purchasePrice}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Hold Period (months)</Data></Cell><Cell><Data ss:Type="Number">${currentInputs.acquisition.holdPeriodMonths}</Data></Cell></Row>
+      <Row></Row>
+      <Row><Cell ss:StyleID="SectionHeader"><Data ss:Type="String">KEY METRICS</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">IRR</Data></Cell><Cell><Data ss:Type="String">${formatPercent(metrics.irr)}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Cash-on-Cash (Year 1)</Data></Cell><Cell><Data ss:Type="String">${formatPercent(metrics.cocYear1)}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Equity Multiple</Data></Cell><Cell><Data ss:Type="String">${formatMultiple(metrics.equityMultiple)}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">DSCR</Data></Cell><Cell><Data ss:Type="Number">${metrics.dscr.toFixed(2)}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Breakeven Occupancy</Data></Cell><Cell><Data ss:Type="String">${formatPercent(metrics.breakevenOccupancy)}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">NOI (Stabilized Annual)</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">${metrics.stabilizedNoiAnnual}</Data></Cell></Row>
+      <Row></Row>
+      <Row><Cell ss:StyleID="SectionHeader"><Data ss:Type="String">SOURCES OF FUNDS</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Loan Amount</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">${sourcesAndUses.sources.loanAmount}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Equity Required</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">${sourcesAndUses.sources.equity}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Total Sources</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">${sourcesAndUses.sources.total}</Data></Cell></Row>
+      <Row></Row>
+      <Row><Cell ss:StyleID="SectionHeader"><Data ss:Type="String">USES OF FUNDS</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Purchase Price</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">${sourcesAndUses.uses.purchasePrice}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Closing Costs</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">${sourcesAndUses.uses.closingCosts}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Renovation Budget</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">${sourcesAndUses.uses.renoBudget}</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Total Uses</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">${sourcesAndUses.uses.total}</Data></Cell></Row>
+    </Table>
+  </Worksheet>
   <Worksheet ss:Name="Cash Flow">
     <Table>
-      <Row>${headers.map(h => `<Cell><Data ss:Type="String">${h}</Data></Cell>`).join("")}</Row>`;
+      <Row ss:StyleID="Header">
+        <Cell><Data ss:Type="String">Month</Data></Cell>
+        <Cell><Data ss:Type="String">Rent/Unit</Data></Cell>
+        <Cell><Data ss:Type="String">GPR</Data></Cell>
+        <Cell><Data ss:Type="String">EGI</Data></Cell>
+        <Cell><Data ss:Type="String">OpEx</Data></Cell>
+        <Cell><Data ss:Type="String">NOI</Data></Cell>
+        <Cell><Data ss:Type="String">Debt Service</Data></Cell>
+        <Cell><Data ss:Type="String">Principal</Data></Cell>
+        <Cell><Data ss:Type="String">Interest</Data></Cell>
+        <Cell><Data ss:Type="String">CapEx</Data></Cell>
+        <Cell><Data ss:Type="String">Cash Flow</Data></Cell>
+        <Cell><Data ss:Type="String">Loan Balance</Data></Cell>
+      </Row>`;
 
     monthlyData.forEach(m => {
       xmlContent += `
       <Row>
         <Cell><Data ss:Type="Number">${m.month}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.rent.toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.gpr.toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.egi.toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.totalOpex.toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.noi.toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.debtService.toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.principalPayment.toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.interestPayment.toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${(m.renoSpend + m.makeReady + m.leasingCosts).toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.cashFlowBeforeTax.toFixed(2)}</Data></Cell>
-        <Cell><Data ss:Type="Number">${m.loanBalance.toFixed(2)}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.rent}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.gpr}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.egi}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.totalOpex}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.noi}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.debtService}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.principalPayment}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.interestPayment}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.renoSpend + m.makeReady + m.leasingCosts}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.cashFlowBeforeTax}</Data></Cell>
+        <Cell ss:StyleID="Currency"><Data ss:Type="Number">${m.loanBalance}</Data></Cell>
       </Row>`;
     });
 
@@ -398,12 +503,15 @@ function ResultsContent() {
                     Export
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem onClick={handleExportPDF}>
                     <Download className="h-4 w-4 mr-2" />
-                    Export PDF
+                    Export PDF (Free)
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                    Pro Exports
+                  </div>
                   <DropdownMenuItem onClick={handleExportCSV}>
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Export CSV
@@ -411,9 +519,14 @@ function ResultsContent() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleExportExcel}>
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Export Excel
+                    Export Excel (with styling)
                     {!isSubscribed && <Lock className="h-3 w-3 ml-auto text-muted-foreground" />}
                   </DropdownMenuItem>
+                  {!isSubscribed && (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground border-t mt-1 pt-1">
+                      Upgrade to Pro for spreadsheet exports
+                    </div>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
