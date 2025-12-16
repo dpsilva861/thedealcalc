@@ -72,14 +72,14 @@ export default function Signup() {
 
     toast({
       title: "Account created!",
-      description: "Welcome to DealCalc. You have 1 free analysis to try it out.",
+      description: "Welcome to DealCalc. You have 3 free analyses to try it out.",
     });
     
     navigate("/underwrite");
   };
 
   const benefits = [
-    "1 free deal analysis",
+    "3 free deal analyses",
     "Professional PDF reports",
     "Complete data privacy",
     "No credit card required",
@@ -110,7 +110,7 @@ export default function Signup() {
             {/* Free Trial Badge */}
             <div className="flex items-center justify-center gap-2 mb-6 p-3 bg-sage-light rounded-xl">
               <Sparkles className="h-5 w-5 text-primary" />
-              <span className="font-medium text-foreground">1 Free Analysis Included</span>
+              <span className="font-medium text-foreground">3 Free Analyses Included</span>
             </div>
 
             {/* Benefits */}
