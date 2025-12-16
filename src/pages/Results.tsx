@@ -3,47 +3,128 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useUnderwriting } from "@/contexts/UnderwritingContext";
 import { AuthGuard } from "@/components/AuthGuard";
-import { 
-  formatCurrency, 
-  formatPercent, 
-  formatMultiple 
+import {
+  formatCurrency,
+  formatPercent,
+  formatMultiple,
+  runUnderwriting,
+  UnderwritingResults,
 } from "@/lib/underwriting";
-import { 
-  ArrowLeft, 
-  Download, 
-  TrendingUp, 
+import {
+  ArrowLeft,
+  Download,
+  TrendingUp,
   DollarSign,
   Percent,
   BarChart3,
   AlertTriangle,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function ResultsContent() {
   const navigate = useNavigate();
-  const { results, inputs, runAnalysis } = useUnderwriting();
+  const { inputs } = useUnderwriting();
 
-  // Run analysis if results don't exist
+  const [baseResults, setBaseResults] = useState<UnderwritingResults | null>(null);
+  const [outlookResults, setOutlookResults] = useState<UnderwritingResults | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const hasAutoPrinted = useRef(false);
+
+  // Compute results once from inputs (prevents the previous "infinite spinner" loop)
   useEffect(() => {
-    if (!results) {
-      runAnalysis();
-    }
-  }, [results, runAnalysis]);
+    setError(null);
+    setBaseResults(null);
+    setOutlookResults(null);
 
-  if (!results) {
+    const id = window.setTimeout(() => {
+      try {
+        const base = runUnderwriting(inputs);
+
+        // Always generate a lender-ready 30-year outlook (360 months) for the spreadsheet pages.
+        const outlookMonths = 360;
+        const outlook =
+          inputs.acquisition.holdPeriodMonths >= outlookMonths
+            ? base
+            : runUnderwriting({
+                ...inputs,
+                acquisition: {
+                  ...inputs.acquisition,
+                  holdPeriodMonths: outlookMonths,
+                },
+              });
+
+        setBaseResults(base);
+        setOutlookResults(outlook);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Unknown error";
+        console.error("Underwriting report generation failed:", e);
+        setError(message);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(id);
+  }, [inputs]);
+
+  // Auto-open print dialog when user clicks "Run Analysis" (Save as PDF)
+  useEffect(() => {
+    if (!baseResults) return;
+
+    const shouldAutoPrint = sessionStorage.getItem("uw:autoPrint") === "1";
+    if (!shouldAutoPrint) return;
+
+    if (hasAutoPrinted.current) return;
+    hasAutoPrinted.current = true;
+    sessionStorage.removeItem("uw:autoPrint");
+
+    window.setTimeout(() => {
+      try {
+        window.print();
+      } catch (e) {
+        console.error("Print failed:", e);
+      }
+    }, 250);
+  }, [baseResults]);
+
+  if (error) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Running analysis...</p>
+        <div className="max-w-lg w-full text-center space-y-4">
+          <p className="text-foreground font-semibold">Report generation failed</p>
+          <p className="text-sm text-muted-foreground">
+            {error}
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <Button variant="outline" onClick={() => navigate("/underwrite")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to inputs
+            </Button>
+            <Button variant="hero" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
-  const { metrics, sourcesAndUses, saleAnalysis, annualSummary, sensitivityTables, monthlyData } = results;
+  if (!baseResults || !outlookResults) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Building your lender-ready report…</p>
+        </div>
+      </div>
+    );
+  }
+
+  const results = baseResults;
+  const monthlyData = outlookResults.monthlyData;
+  const annualSummary = outlookResults.annualSummary;
+
+  const { metrics, sourcesAndUses, saleAnalysis, sensitivityTables } = results;
 
   const keyMetrics = [
     { 
@@ -250,9 +331,9 @@ function ResultsContent() {
           </div>
         </section>
 
-        {/* Annual Summary */}
+        {/* Annual Summary (30-Year Outlook) */}
         <section className="p-5 rounded-xl bg-card border border-border shadow-card overflow-x-auto">
-          <h3 className="font-semibold text-foreground mb-4">Annual Summary</h3>
+          <h3 className="font-semibold text-foreground mb-4">30-Year Annual Summary</h3>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">
