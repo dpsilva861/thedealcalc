@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/underwriting/StepIndicator";
+import { AddressStep } from "@/components/underwriting/steps/AddressStep";
 import { AcquisitionStep } from "@/components/underwriting/steps/AcquisitionStep";
 import { IncomeStep } from "@/components/underwriting/steps/IncomeStep";
 import { ExpensesStep } from "@/components/underwriting/steps/ExpensesStep";
@@ -16,6 +17,7 @@ import { ArrowLeft, ArrowRight, Play, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 const STEPS = [
+  { label: "Address", shortLabel: "Address", component: AddressStep },
   { label: "Property", shortLabel: "Property", component: AcquisitionStep },
   { label: "Income", shortLabel: "Income", component: IncomeStep },
   { label: "Expenses", shortLabel: "Expenses", component: ExpensesStep },
@@ -26,12 +28,32 @@ const STEPS = [
 
 function UnderwriteContent() {
   const navigate = useNavigate();
-  const { currentStep, setCurrentStep, runAnalysis, resetInputs } = useUnderwriting();
+  const { currentStep, setCurrentStep, runAnalysis, resetInputs, propertyAddress } = useUnderwriting();
   const { isSubscribed, freeTrialRemaining, incrementAnalysisCount } = useAuth();
 
   const CurrentStepComponent = STEPS[currentStep].component;
 
   const handleNext = () => {
+    // Validate address step before proceeding
+    if (currentStep === 0) {
+      if (!propertyAddress.address.trim()) {
+        toast.error("Please enter the street address");
+        return;
+      }
+      if (!propertyAddress.city.trim()) {
+        toast.error("Please enter the city");
+        return;
+      }
+      if (!propertyAddress.state) {
+        toast.error("Please select a state");
+        return;
+      }
+      if (!propertyAddress.zipCode || propertyAddress.zipCode.length !== 5) {
+        toast.error("Please enter a valid 5-digit ZIP code");
+        return;
+      }
+    }
+
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -85,7 +107,7 @@ function UnderwriteContent() {
                 Underwriting Analysis
               </h1>
               <p className="text-muted-foreground text-sm">
-                Data is stored only in your browser
+                Analysis will be saved to your account
               </p>
             </div>
             <Button variant="ghost" size="sm" onClick={handleReset}>

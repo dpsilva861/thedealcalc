@@ -6,9 +6,17 @@ import {
   runUnderwriting 
 } from "@/lib/underwriting";
 
+export interface PropertyAddress {
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+
 interface UnderwritingContextType {
   inputs: UnderwritingInputs;
   results: UnderwritingResults | null;
+  propertyAddress: PropertyAddress;
   updateInputs: (updates: Partial<UnderwritingInputs>) => void;
   updateAcquisition: (updates: Partial<UnderwritingInputs["acquisition"]>) => void;
   updateIncome: (updates: Partial<UnderwritingInputs["income"]>) => void;
@@ -16,6 +24,7 @@ interface UnderwritingContextType {
   updateRenovation: (updates: Partial<UnderwritingInputs["renovation"]>) => void;
   updateFinancing: (updates: Partial<UnderwritingInputs["financing"]>) => void;
   updateTax: (updates: Partial<UnderwritingInputs["tax"]>) => void;
+  updatePropertyAddress: (updates: Partial<PropertyAddress>) => void;
   runAnalysis: () => void;
   resetInputs: () => void;
   currentStep: number;
@@ -24,10 +33,18 @@ interface UnderwritingContextType {
 
 const UnderwritingContext = createContext<UnderwritingContextType | undefined>(undefined);
 
+const getDefaultPropertyAddress = (): PropertyAddress => ({
+  address: "",
+  city: "",
+  state: "",
+  zipCode: "",
+});
+
 export function UnderwritingProvider({ children }: { children: React.ReactNode }) {
   const [inputs, setInputs] = useState<UnderwritingInputs>(getDefaultInputs());
   const [results, setResults] = useState<UnderwritingResults | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [propertyAddress, setPropertyAddress] = useState<PropertyAddress>(getDefaultPropertyAddress());
 
   const updateInputs = useCallback((updates: Partial<UnderwritingInputs>) => {
     setInputs(prev => ({ ...prev, ...updates }));
@@ -75,6 +92,10 @@ export function UnderwritingProvider({ children }: { children: React.ReactNode }
     }));
   }, []);
 
+  const updatePropertyAddress = useCallback((updates: Partial<PropertyAddress>) => {
+    setPropertyAddress(prev => ({ ...prev, ...updates }));
+  }, []);
+
   const runAnalysis = useCallback(() => {
     try {
       const analysisResults = runUnderwriting(inputs);
@@ -89,6 +110,7 @@ export function UnderwritingProvider({ children }: { children: React.ReactNode }
     setInputs(getDefaultInputs());
     setResults(null);
     setCurrentStep(0);
+    setPropertyAddress(getDefaultPropertyAddress());
   }, []);
 
   return (
@@ -96,6 +118,7 @@ export function UnderwritingProvider({ children }: { children: React.ReactNode }
       value={{
         inputs,
         results,
+        propertyAddress,
         updateInputs,
         updateAcquisition,
         updateIncome,
@@ -103,6 +126,7 @@ export function UnderwritingProvider({ children }: { children: React.ReactNode }
         updateRenovation,
         updateFinancing,
         updateTax,
+        updatePropertyAddress,
         runAnalysis,
         resetInputs,
         currentStep,

@@ -56,6 +56,75 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_analyses: {
+        Row: {
+          address: string
+          city: string | null
+          created_at: string
+          id: string
+          inputs: Json
+          results: Json
+          state: string | null
+          updated_at: string
+          user_id: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          city?: string | null
+          created_at?: string
+          id?: string
+          inputs: Json
+          results: Json
+          state?: string | null
+          updated_at?: string
+          user_id: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          city?: string | null
+          created_at?: string
+          id?: string
+          inputs?: Json
+          results?: Json
+          state?: string | null
+          updated_at?: string
+          user_id?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      zip_codes: {
+        Row: {
+          analysis_count: number
+          city: string | null
+          created_at: string
+          id: string
+          state: string | null
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          analysis_count?: number
+          city?: string | null
+          created_at?: string
+          id?: string
+          state?: string | null
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          analysis_count?: number
+          city?: string | null
+          created_at?: string
+          id?: string
+          state?: string | null
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
