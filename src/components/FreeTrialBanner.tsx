@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sparkles, AlertCircle } from "lucide-react";
 
@@ -32,9 +33,9 @@ export function FreeTrialBanner() {
           <AlertCircle className="h-4 w-4 text-accent" />
           <span className="text-foreground">
             <strong className="font-semibold">Free trial used.</strong>{" "}
-            <a href="/pricing" className="text-primary hover:underline">
+            <Link to="/pricing" className="text-primary hover:underline">
               Subscribe for $5/month
-            </a>{" "}
+            </Link>{" "}
             for unlimited analyses.
           </span>
         </div>
