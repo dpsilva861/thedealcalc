@@ -146,7 +146,7 @@ function UnderwriteContent() {
                 {isUsingFreeTrial && (
                   <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground bg-sage-light px-3 py-1.5 rounded-lg">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    <span>Uses 1 free analysis</span>
+                    <span>Uses 1 of your free analyses</span>
                   </div>
                 )}
                 <Button variant="hero" size="lg" onClick={handleRunAnalysis}>

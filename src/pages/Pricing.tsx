@@ -32,7 +32,7 @@ export default function Pricing() {
   const faqs = [
     {
       question: "Is there a free trial?",
-      answer: "Yes! You can explore the tool and see sample outputs before subscribing. No credit card required to sign up."
+      answer: "Yes! New users get 3 free analyses to try the full tool. No credit card required to sign up."
     },
     {
       question: "What does \"unlimited\" mean?",

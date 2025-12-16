@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const existing = await fetchProfile(u.id);
     if (existing) return existing;
 
-    // Create default profile so new users always receive 1 free analysis.
+    // Create default profile so new users always receive 3 free analyses.
     const { error: upsertError } = await supabase
       .from("profiles")
       .upsert(
