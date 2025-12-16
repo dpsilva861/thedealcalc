@@ -8,6 +8,7 @@ import {
   formatPercent,
   formatMultiple,
   runUnderwriting,
+  runUnderwritingNoSensitivity,
   UnderwritingResults,
 } from "@/lib/underwriting";
 import {
@@ -47,7 +48,7 @@ function ResultsContent() {
         const outlook =
           inputs.acquisition.holdPeriodMonths >= outlookMonths
             ? base
-            : runUnderwriting({
+            : runUnderwritingNoSensitivity({
                 ...inputs,
                 acquisition: {
                   ...inputs.acquisition,

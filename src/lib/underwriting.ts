@@ -224,7 +224,10 @@ export function calculateIRR(cashFlows: number[], guess: number = 0.1): number {
   return rate * 12; // Fallback: simple annualization
 }
 
-export function runUnderwriting(inputs: UnderwritingInputs): UnderwritingResults {
+export function runUnderwriting(
+  inputs: UnderwritingInputs,
+  options?: { includeSensitivity?: boolean }
+): UnderwritingResults {
   const { acquisition, income, expenses, renovation, financing, tax } = inputs;
 
   // Calculate closing costs
@@ -245,7 +248,7 @@ export function runUnderwriting(inputs: UnderwritingInputs): UnderwritingResults
     : 0;
 
   // Sources and Uses
-  const totalUses = acquisition.purchasePrice + closingCostsAmount + originationFee + 
+  const totalUses = acquisition.purchasePrice + closingCostsAmount + originationFee +
     renovation.renoBudgetTotal + acquisition.acquisitionFee;
   const totalEquity = totalUses - loanAmount;
 
@@ -354,7 +357,7 @@ export function runUnderwriting(inputs: UnderwritingInputs): UnderwritingResults
 
     if (financing.useFinancing) {
       interestPayment = currentLoanBalance * monthlyRate;
-      
+
       if (m <= financing.interestOnlyMonths) {
         debtService = interestPayment;
         principalPayment = 0;
@@ -394,7 +397,7 @@ export function runUnderwriting(inputs: UnderwritingInputs): UnderwritingResults
   // Annual summary
   const annualSummary: AnnualSummary[] = [];
   const years = Math.ceil(acquisition.holdPeriodMonths / 12);
-  
+
   for (let year = 1; year <= years; year++) {
     const startMonth = (year - 1) * 12 + 1;
     const endMonth = Math.min(year * 12, acquisition.holdPeriodMonths);
@@ -475,8 +478,8 @@ export function runUnderwriting(inputs: UnderwritingInputs): UnderwritingResults
   const stabilizedMonth = last3Months[0];
   const annualOpex = stabilizedMonth ? stabilizedMonth.totalOpex * 12 : 0;
   const annualGpi = stabilizedMonth ? (stabilizedMonth.gpr + stabilizedMonth.otherIncome) * 12 : 0;
-  const breakevenOccupancy = annualGpi > 0 
-    ? ((annualOpex + stabilizedDebtService) / annualGpi) * 100 
+  const breakevenOccupancy = annualGpi > 0
+    ? ((annualOpex + stabilizedDebtService) / annualGpi) * 100
     : 0;
 
   const metrics: Metrics = {
@@ -493,8 +496,11 @@ export function runUnderwriting(inputs: UnderwritingInputs): UnderwritingResults
     totalProfit,
   };
 
-  // Sensitivity tables
-  const sensitivityTables = calculateSensitivityTables(inputs, metrics, totalEquity);
+  // Sensitivity tables (skip for "quick" calculations to avoid recursion)
+  const sensitivityTables =
+    options?.includeSensitivity === false
+      ? { rent: [], exitCap: [], renoBudget: [] }
+      : calculateSensitivityTables(inputs);
 
   return {
     monthlyData,
@@ -506,11 +512,7 @@ export function runUnderwriting(inputs: UnderwritingInputs): UnderwritingResults
   };
 }
 
-function calculateSensitivityTables(
-  inputs: UnderwritingInputs,
-  baseMetrics: Metrics,
-  totalEquity: number
-): SensitivityTables {
+function calculateSensitivityTables(inputs: UnderwritingInputs): SensitivityTables {
   const rentVariations = [-10, -5, 0, 5, 10];
   const exitCapVariations = [-1, -0.5, 0, 0.5, 1]; // percentage points
   const renoVariations = [0, 10, 20, 30];
@@ -558,9 +560,13 @@ function calculateSensitivityTables(
   return { rent, exitCap, renoBudget };
 }
 
+export function runUnderwritingNoSensitivity(inputs: UnderwritingInputs): UnderwritingResults {
+  return runUnderwriting(inputs, { includeSensitivity: false });
+}
+
 // Quick version for sensitivity analysis
 function runUnderwritingQuick(inputs: UnderwritingInputs): { irr: number; coc: number; equityMultiple: number } {
-  const results = runUnderwriting(inputs);
+  const results = runUnderwriting(inputs, { includeSensitivity: false });
   return {
     irr: results.metrics.irr,
     coc: results.metrics.cocYear1,
