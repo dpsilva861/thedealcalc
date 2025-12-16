@@ -14,6 +14,8 @@ import Account from "./pages/Account";
 import Underwrite from "./pages/Underwrite";
 import Results from "./pages/Results";
 import SavedAnalyses from "./pages/SavedAnalyses";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
               <Route path="/underwrite" element={<Underwrite />} />
               <Route path="/results" element={<Results />} />
               <Route path="/saved" element={<SavedAnalyses />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </UnderwritingProvider>

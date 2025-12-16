@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   ArrowRight,
   Building2,
-  DollarSign,
   BarChart3
 } from "lucide-react";
 
@@ -71,7 +70,7 @@ export default function Index() {
         <div className="relative container mx-auto px-4 py-20 md:py-32">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sage-light border border-primary/20 text-primary text-sm font-medium mb-6 animate-fade-in">
-              <DollarSign className="h-4 w-4" />
+              <Zap className="h-4 w-4" />
               <span>Unlimited analyses for $5/month</span>
             </div>
             

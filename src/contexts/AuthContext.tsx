@@ -167,12 +167,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isSubscribed = profile?.subscription_status === "active";
   
-  // User can run analysis if subscribed OR has free trial remaining
+  // Admin emails get unlimited free access
+  const ADMIN_EMAILS = ["dpsilva861@gmail.com"];
+  const isAdminUser = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+  
+  // User can run analysis if subscribed OR has free trial remaining OR is admin
   const freeTrialRemaining = profile 
     ? Math.max(0, (profile.free_analyses_limit || 1) - (profile.analyses_used || 0))
     : 0;
   
-  const canRunAnalysis = isSubscribed || freeTrialRemaining > 0;
+  const canRunAnalysis = isSubscribed || freeTrialRemaining > 0 || isAdminUser;
 
   return (
     <AuthContext.Provider
