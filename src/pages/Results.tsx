@@ -28,14 +28,25 @@ import {
   Save,
   MapPin,
   FolderOpen,
+  FileSpreadsheet,
+  Lock,
+  Edit,
+  List,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 function ResultsContent() {
   const navigate = useNavigate();
   const { inputs, propertyAddress } = useUnderwriting();
-  const { user } = useAuth();
+  const { user, isSubscribed } = useAuth();
 
   const [baseResults, setBaseResults] = useState<UnderwritingResults | null>(null);
   const [outlookResults, setOutlookResults] = useState<UnderwritingResults | null>(null);
@@ -232,6 +243,113 @@ function ResultsContent() {
     window.print();
   };
 
+  const handleExportCSV = () => {
+    if (!isSubscribed) {
+      toast.error("CSV export is a Pro feature", {
+        action: {
+          label: "Upgrade",
+          onClick: () => navigate("/pricing"),
+        },
+      });
+      return;
+    }
+
+    // Build CSV content
+    const headers = ["Month", "Rent/Unit", "GPR", "EGI", "OpEx", "NOI", "Debt Service", "Principal", "Interest", "CapEx", "Cash Flow", "Loan Balance"];
+    const rows = monthlyData.map(m => [
+      m.month,
+      m.rent.toFixed(2),
+      m.gpr.toFixed(2),
+      m.egi.toFixed(2),
+      m.totalOpex.toFixed(2),
+      m.noi.toFixed(2),
+      m.debtService.toFixed(2),
+      m.principalPayment.toFixed(2),
+      m.interestPayment.toFixed(2),
+      (m.renoSpend + m.makeReady + m.leasingCosts).toFixed(2),
+      m.cashFlowBeforeTax.toFixed(2),
+      m.loanBalance.toFixed(2),
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `underwriting-report-${displayAddress?.address?.replace(/\s+/g, "-") || "analysis"}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported successfully");
+  };
+
+  const handleExportExcel = () => {
+    if (!isSubscribed) {
+      toast.error("Excel export is a Pro feature", {
+        action: {
+          label: "Upgrade",
+          onClick: () => navigate("/pricing"),
+        },
+      });
+      return;
+    }
+
+    // Build Excel-compatible XML (SpreadsheetML)
+    const headers = ["Month", "Rent/Unit", "GPR", "EGI", "OpEx", "NOI", "Debt Service", "Principal", "Interest", "CapEx", "Cash Flow", "Loan Balance"];
+    
+    let xmlContent = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Cash Flow">
+    <Table>
+      <Row>${headers.map(h => `<Cell><Data ss:Type="String">${h}</Data></Cell>`).join("")}</Row>`;
+
+    monthlyData.forEach(m => {
+      xmlContent += `
+      <Row>
+        <Cell><Data ss:Type="Number">${m.month}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.rent.toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.gpr.toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.egi.toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.totalOpex.toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.noi.toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.debtService.toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.principalPayment.toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.interestPayment.toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${(m.renoSpend + m.makeReady + m.leasingCosts).toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.cashFlowBeforeTax.toFixed(2)}</Data></Cell>
+        <Cell><Data ss:Type="Number">${m.loanBalance.toFixed(2)}</Data></Cell>
+      </Row>`;
+    });
+
+    xmlContent += `
+    </Table>
+  </Worksheet>
+</Workbook>`;
+
+    const blob = new Blob([xmlContent], { type: "application/vnd.ms-excel" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `underwriting-report-${displayAddress?.address?.replace(/\s+/g, "-") || "analysis"}.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Excel file exported successfully");
+  };
+
+  const handleEditInputs = () => {
+    if (!isSubscribed && isFromSaved) {
+      toast.error("Editing saved analyses is a Pro feature", {
+        action: {
+          label: "Upgrade",
+          onClick: () => navigate("/pricing"),
+        },
+      });
+      return;
+    }
+    navigate("/underwrite");
+  };
+
   // Red flags / breakpoints
   const redFlags: string[] = [];
   if (metrics.dscr < 1.2 && metrics.dscr > 0) {
@@ -252,11 +370,12 @@ function ResultsContent() {
       {/* Header */}
       <div className="border-b border-border bg-background print:hidden">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate("/underwrite")}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Edit Inputs
+              <Button variant="ghost" size="sm" onClick={handleEditInputs}>
+                <Edit className="h-4 w-4 mr-2" />
+                {isFromSaved ? "Edit & Recalculate" : "Edit Inputs"}
+                {!isSubscribed && isFromSaved && <Lock className="h-3 w-3 ml-1" />}
               </Button>
               <div>
                 <h1 className="font-display text-2xl font-bold text-foreground">
@@ -267,20 +386,70 @@ function ResultsContent() {
                 </p>
               </div>
             </div>
-            <Button variant="hero" onClick={handleExportPDF}>
-              <Download className="h-4 w-4 mr-2" />
-              Export PDF
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/saved")}>
+                <FolderOpen className="h-4 w-4 mr-2" />
+                Saved Analyses
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="hero">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportPDF}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleExportCSV}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Export CSV
+                    {!isSubscribed && <Lock className="h-3 w-3 ml-auto text-muted-foreground" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportExcel}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Export Excel
+                    {!isSubscribed && <Lock className="h-3 w-3 ml-auto text-muted-foreground" />}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Print Header */}
+      {/* Print Header with Table of Contents */}
       <div className="hidden print:block p-8 border-b">
         <h1 className="font-display text-3xl font-bold">Underwriting Report</h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-6">
+          {displayAddress?.address && `${displayAddress.address}, `}
+          {displayAddress?.city && `${displayAddress.city}, `}
+          {displayAddress?.state && `${displayAddress.state} `}
+          {displayAddress?.zipCode}
+        </p>
+        <p className="text-sm text-muted-foreground mb-6">
           {inputs.income.unitCount} units • {formatCurrency(inputs.acquisition.purchasePrice)} • {inputs.acquisition.holdPeriodMonths} month hold
         </p>
+        
+        {/* Table of Contents */}
+        <div className="border rounded-lg p-4 bg-muted/20">
+          <div className="flex items-center gap-2 mb-3">
+            <List className="h-4 w-4" />
+            <h2 className="font-semibold">Table of Contents</h2>
+          </div>
+          <ol className="text-sm space-y-1 list-decimal list-inside">
+            <li>Key Metrics & Investment Summary</li>
+            <li>Sources & Uses of Funds</li>
+            <li>Exit Analysis</li>
+            <li>Sensitivity Analysis (Rent, Exit Cap, Reno Budget)</li>
+            <li>Metric Definitions</li>
+            <li>30-Year Annual Summary</li>
+            <li>Monthly Cash Flow & Amortization Schedule</li>
+          </ol>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-8 space-y-8">
