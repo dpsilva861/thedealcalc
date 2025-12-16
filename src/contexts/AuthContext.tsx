@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: u.email ?? null,
           subscription_status: "inactive",
           analyses_used: 0,
-          free_analyses_limit: 1,
+          free_analyses_limit: 3,
         },
         { onConflict: "user_id" }
       );

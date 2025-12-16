@@ -97,7 +97,7 @@ export default function Index() {
             </div>
 
             <p className="text-sm text-muted-foreground mt-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              1 free analysis included. No credit card required.
+              3 free analyses included. No credit card required.
             </p>
           </div>
         </div>
