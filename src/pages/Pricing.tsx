@@ -13,7 +13,11 @@ import {
   FileText,
   Calculator,
   Zap,
-  Loader2
+  Loader2,
+  X,
+  FileSpreadsheet,
+  Edit,
+  Download
 } from "lucide-react";
 
 export default function Pricing() {
@@ -169,6 +173,137 @@ export default function Pricing() {
                 <p className="text-sm text-muted-foreground text-center">
                   Cancel anytime. No long-term commitment.
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Comparison */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="font-display text-3xl font-bold text-foreground text-center mb-4">
+              Free vs Pro Comparison
+            </h2>
+            <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+              See what you get with each plan. Pro unlocks powerful export and editing features.
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Free Plan */}
+              <div className="rounded-2xl bg-card border border-border p-6">
+                <div className="text-center mb-6">
+                  <h3 className="font-display text-xl font-bold text-foreground mb-1">Free Trial</h3>
+                  <p className="text-muted-foreground text-sm">3 analyses to get started</p>
+                </div>
+                
+                <ul className="space-y-4">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Full underwriting calculator</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Basic PDF export</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="text-foreground">30-year projections</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Sensitivity analysis</span>
+                  </li>
+                  <li className="flex items-center gap-3 opacity-50">
+                    <X className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground">Excel export with styling</span>
+                  </li>
+                  <li className="flex items-center gap-3 opacity-50">
+                    <X className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground">CSV data export</span>
+                  </li>
+                  <li className="flex items-center gap-3 opacity-50">
+                    <X className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground">Edit & recalculate saved analyses</span>
+                  </li>
+                  <li className="flex items-center gap-3 opacity-50">
+                    <X className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground">Unlimited analyses</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Pro Plan */}
+              <div className="rounded-2xl bg-card border-2 border-primary p-6 relative">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="gradient-sage text-primary-foreground text-xs font-semibold px-4 py-1 rounded-full">
+                    RECOMMENDED
+                  </span>
+                </div>
+                
+                <div className="text-center mb-6">
+                  <h3 className="font-display text-xl font-bold text-foreground mb-1">Pro Plan</h3>
+                  <p className="text-primary font-semibold">$5/month</p>
+                </div>
+                
+                <ul className="space-y-4">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Full underwriting calculator</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Professional PDF reports</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="text-foreground">30-year projections</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                    <span className="text-foreground">Sensitivity analysis</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground flex-shrink-0">
+                      <FileSpreadsheet className="h-3 w-3" />
+                    </div>
+                    <span className="text-foreground font-medium">Excel export with styling</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground flex-shrink-0">
+                      <Download className="h-3 w-3" />
+                    </div>
+                    <span className="text-foreground font-medium">CSV data export</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground flex-shrink-0">
+                      <Edit className="h-3 w-3" />
+                    </div>
+                    <span className="text-foreground font-medium">Edit & recalculate saved analyses</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground flex-shrink-0">
+                      <Infinity className="h-3 w-3" />
+                    </div>
+                    <span className="text-foreground font-medium">Unlimited analyses</span>
+                  </li>
+                </ul>
+
+                <Button 
+                  variant="hero" 
+                  className="w-full mt-6" 
+                  onClick={handleSubscribe}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isSubscribed ? (
+                    "You're Subscribed!"
+                  ) : (
+                    "Upgrade to Pro"
+                  )}
+                </Button>
               </div>
             </div>
           </div>
