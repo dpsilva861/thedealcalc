@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Calculator, Menu, X, LogOut } from "lucide-react";
+import { Home, Calculator, Menu, X, LogOut, FolderOpen } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,17 +54,31 @@ export function Header() {
             </Link>
           ))}
           {user && (
-            <Link
-              to="/underwrite"
-              className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                isActive("/underwrite") || isActive("/results")
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
-              Underwrite
-            </Link>
+            <>
+              <Link
+                to="/underwrite"
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                  isActive("/underwrite") || isActive("/results")
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                Underwrite
+              </Link>
+              <Link
+                to="/saved"
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5",
+                  isActive("/saved")
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                <FolderOpen className="h-4 w-4" />
+                Saved
+              </Link>
+            </>
           )}
         </nav>
 
@@ -127,18 +141,33 @@ export function Header() {
               </Link>
             ))}
             {user && (
-              <Link
-                to="/underwrite"
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                  isActive("/underwrite")
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                Underwrite
-              </Link>
+              <>
+                <Link
+                  to="/underwrite"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                    isActive("/underwrite")
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  Underwrite
+                </Link>
+                <Link
+                  to="/saved"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-2",
+                    isActive("/saved")
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  <FolderOpen className="h-4 w-4" />
+                  Saved Analyses
+                </Link>
+              </>
             )}
             <hr className="my-2 border-border" />
             {user ? (

@@ -130,7 +130,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_zip_count: { Args: { p_zip_code: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
