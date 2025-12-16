@@ -88,32 +88,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
 
-        // Defer profile fetch with setTimeout to avoid deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            ensureProfile(session.user).then(setProfile);
-          }, 0);
-        } else {
-          setProfile(null);
-        }
+      if (session?.user) {
+        // Keep the app in a loading state until we've ensured the user has a profile
+        // so we don't flash the paywall for brand-new users.
+        setLoading(true);
+
+        // Defer profile calls to avoid auth deadlocks
+        setTimeout(() => {
+          ensureProfile(session.user)
+            .then((p) => {
+              setProfile(p);
+            })
+            .finally(() => {
+              setLoading(false);
+            });
+        }, 0);
+      } else {
+        setProfile(null);
+        setLoading(false);
       }
-    );
+    });
 
     // THEN check for existing session
+    setLoading(true);
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
-        ensureProfile(session.user).then((profileData) => {
-          setProfile(profileData);
-          setLoading(false);
-        });
+        ensureProfile(session.user)
+          .then((profileData) => {
+            setProfile(profileData);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
       } else {
         setLoading(false);
       }
