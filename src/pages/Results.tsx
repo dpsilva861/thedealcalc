@@ -86,37 +86,31 @@ function ResultsContent() {
 
   // Compute results from context inputs if not from saved
   useEffect(() => {
-    if (isFromSaved || displayInputs) return;
+    if (isFromSaved) return;
     
     setError(null);
-    setBaseResults(null);
-    setOutlookResults(null);
     setDisplayAddress(propertyAddress);
     setDisplayInputs(inputs);
 
-    const id = window.setTimeout(() => {
-      try {
-        const base = runUnderwriting(inputs);
-        const outlookMonths = 360;
-        const outlook =
-          inputs.acquisition.holdPeriodMonths >= outlookMonths
-            ? base
-            : runUnderwritingNoSensitivity({
-                ...inputs,
-                acquisition: { ...inputs.acquisition, holdPeriodMonths: outlookMonths },
-              });
+    try {
+      const base = runUnderwriting(inputs);
+      const outlookMonths = 360;
+      const outlook =
+        inputs.acquisition.holdPeriodMonths >= outlookMonths
+          ? base
+          : runUnderwritingNoSensitivity({
+              ...inputs,
+              acquisition: { ...inputs.acquisition, holdPeriodMonths: outlookMonths },
+            });
 
-        setBaseResults(base);
-        setOutlookResults(outlook);
-      } catch (e) {
-        const message = e instanceof Error ? e.message : "Unknown error";
-        console.error("Underwriting report generation failed:", e);
-        setError(message);
-      }
-    }, 0);
-
-    return () => window.clearTimeout(id);
-  }, [inputs, propertyAddress, isFromSaved, displayInputs]);
+      setBaseResults(base);
+      setOutlookResults(outlook);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Unknown error";
+      console.error("Underwriting report generation failed:", e);
+      setError(message);
+    }
+  }, [inputs, propertyAddress, isFromSaved]);
 
   // Auto-open print dialog when user clicks "Run Analysis" (Save as PDF)
   useEffect(() => {
