@@ -47,6 +47,9 @@ function UnderwriteContent() {
     try {
       // Run analysis first so the user can view full results (even if this uses their last free run)
       runAnalysis();
+
+      // Tell the Results page to auto-open the print dialog (Save as PDF)
+      sessionStorage.setItem("uw:autoPrint", "1");
       navigate("/results");
 
       // Increment analysis count if using free trial (do this after navigation to avoid triggering paywall mid-run)
