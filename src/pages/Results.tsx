@@ -1,8 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useUnderwriting } from "@/contexts/UnderwritingContext";
+import { useUnderwriting, PropertyAddress } from "@/contexts/UnderwritingContext";
 import { AuthGuard } from "@/components/AuthGuard";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import {
   formatCurrency,
   formatPercent,
@@ -10,6 +13,7 @@ import {
   runUnderwriting,
   runUnderwritingNoSensitivity,
   UnderwritingResults,
+  UnderwritingInputs,
 } from "@/lib/underwriting";
 import {
   ArrowLeft,
@@ -21,39 +25,85 @@ import {
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
+  Save,
+  MapPin,
+  FolderOpen,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 function ResultsContent() {
   const navigate = useNavigate();
-  const { inputs } = useUnderwriting();
+  const { inputs, propertyAddress } = useUnderwriting();
+  const { user } = useAuth();
 
   const [baseResults, setBaseResults] = useState<UnderwritingResults | null>(null);
   const [outlookResults, setOutlookResults] = useState<UnderwritingResults | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isFromSaved, setIsFromSaved] = useState(false);
+  const [displayAddress, setDisplayAddress] = useState<PropertyAddress | null>(null);
+  const [displayInputs, setDisplayInputs] = useState<UnderwritingInputs | null>(null);
   const hasAutoPrinted = useRef(false);
 
-  // Compute results once from inputs (prevents the previous "infinite spinner" loop)
+  // Check if viewing a saved analysis
   useEffect(() => {
+    const savedAnalysisStr = sessionStorage.getItem("uw:savedAnalysis");
+    if (savedAnalysisStr) {
+      try {
+        const savedAnalysis = JSON.parse(savedAnalysisStr);
+        sessionStorage.removeItem("uw:savedAnalysis");
+        
+        setIsFromSaved(true);
+        setIsSaved(true);
+        setDisplayAddress({
+          address: savedAnalysis.address,
+          city: savedAnalysis.city || "",
+          state: savedAnalysis.state || "",
+          zipCode: savedAnalysis.zip_code,
+        });
+        setDisplayInputs(savedAnalysis.inputs as UnderwritingInputs);
+        
+        // Compute results from saved inputs
+        const savedInputs = savedAnalysis.inputs as UnderwritingInputs;
+        const base = runUnderwriting(savedInputs);
+        const outlookMonths = 360;
+        const outlook = savedInputs.acquisition.holdPeriodMonths >= outlookMonths
+          ? base
+          : runUnderwritingNoSensitivity({
+              ...savedInputs,
+              acquisition: { ...savedInputs.acquisition, holdPeriodMonths: outlookMonths },
+            });
+        setBaseResults(base);
+        setOutlookResults(outlook);
+      } catch (e) {
+        console.error("Failed to parse saved analysis:", e);
+        sessionStorage.removeItem("uw:savedAnalysis");
+      }
+    }
+  }, []);
+
+  // Compute results from context inputs if not from saved
+  useEffect(() => {
+    if (isFromSaved || displayInputs) return;
+    
     setError(null);
     setBaseResults(null);
     setOutlookResults(null);
+    setDisplayAddress(propertyAddress);
+    setDisplayInputs(inputs);
 
     const id = window.setTimeout(() => {
       try {
         const base = runUnderwriting(inputs);
-
-        // Always generate a lender-ready 30-year outlook (360 months) for the spreadsheet pages.
         const outlookMonths = 360;
         const outlook =
           inputs.acquisition.holdPeriodMonths >= outlookMonths
             ? base
             : runUnderwritingNoSensitivity({
                 ...inputs,
-                acquisition: {
-                  ...inputs.acquisition,
-                  holdPeriodMonths: outlookMonths,
-                },
+                acquisition: { ...inputs.acquisition, holdPeriodMonths: outlookMonths },
               });
 
         setBaseResults(base);
@@ -66,7 +116,7 @@ function ResultsContent() {
     }, 0);
 
     return () => window.clearTimeout(id);
-  }, [inputs]);
+  }, [inputs, propertyAddress, isFromSaved, displayInputs]);
 
   // Auto-open print dialog when user clicks "Run Analysis" (Save as PDF)
   useEffect(() => {
@@ -88,39 +138,56 @@ function ResultsContent() {
     }, 250);
   }, [baseResults]);
 
-  if (error) {
-    return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="max-w-lg w-full text-center space-y-4">
-          <p className="text-foreground font-semibold">Report generation failed</p>
-          <p className="text-sm text-muted-foreground">
-            {error}
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            <Button variant="outline" onClick={() => navigate("/underwrite")}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to inputs
-            </Button>
-            <Button variant="hero" onClick={() => window.location.reload()}>
-              Retry
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Auto-save new analyses
+  useEffect(() => {
+    if (!baseResults || !displayAddress || !displayInputs || isSaved || isFromSaved) return;
+    if (!displayAddress.zipCode) return;
+    
+    handleSaveAnalysis();
+  }, [baseResults, displayAddress, displayInputs, isSaved, isFromSaved]);
 
-  if (!baseResults || !outlookResults) {
-    return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Building your lender-ready report…</p>
-        </div>
-      </div>
-    );
-  }
+  const handleSaveAnalysis = async () => {
+    if (!user || !baseResults || !displayAddress || !displayInputs) return;
+    if (!displayAddress.address || !displayAddress.zipCode) {
+      toast.error("Missing address information");
+      return;
+    }
 
+    setSaving(true);
+    try {
+      // Save analysis
+      const { error: saveError } = await supabase.from("saved_analyses").insert([{
+        user_id: user.id,
+        address: displayAddress.address,
+        city: displayAddress.city || null,
+        state: displayAddress.state || null,
+        zip_code: displayAddress.zipCode,
+        inputs: JSON.parse(JSON.stringify(displayInputs)) as Json,
+        results: JSON.parse(JSON.stringify(baseResults)) as Json,
+      }]);
+
+      if (saveError) throw saveError;
+
+      // Track ZIP code (fire and forget)
+      supabase.functions.invoke("track-zip", {
+        body: {
+          zip_code: displayAddress.zipCode,
+          city: displayAddress.city,
+          state: displayAddress.state,
+        },
+      }).catch((err) => console.error("ZIP tracking failed:", err));
+
+      setIsSaved(true);
+      toast.success("Analysis saved");
+    } catch (err) {
+      console.error("Failed to save analysis:", err);
+      toast.error("Failed to save analysis");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const currentInputs = displayInputs || inputs;
   const results = baseResults;
   const monthlyData = outlookResults.monthlyData;
   const annualSummary = outlookResults.annualSummary;
@@ -501,10 +568,19 @@ function ResultsContent() {
           </dl>
         </section>
 
-        {/* Privacy Note */}
+        {/* Save Status Note */}
         <section className="flex items-center justify-center gap-2 text-sm text-muted-foreground print:hidden">
-          <CheckCircle2 className="h-4 w-4 text-primary" />
-          <span>This data exists only in your browser and will be cleared on refresh.</span>
+          {isSaved ? (
+            <>
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <span>Analysis saved to your account.</span>
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              <span>Analysis will be saved automatically.</span>
+            </>
+          )}
         </section>
       </div>
     </div>
