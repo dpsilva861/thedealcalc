@@ -13,6 +13,7 @@ import Signup from "./pages/Signup";
 import Account from "./pages/Account";
 import Underwrite from "./pages/Underwrite";
 import Results from "./pages/Results";
+import SavedAnalyses from "./pages/SavedAnalyses";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/account" element={<Account />} />
               <Route path="/underwrite" element={<Underwrite />} />
               <Route path="/results" element={<Results />} />
+              <Route path="/saved" element={<SavedAnalyses />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </UnderwritingProvider>
