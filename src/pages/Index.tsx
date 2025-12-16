@@ -295,13 +295,13 @@ export default function Index() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="secondary" size="xl" asChild>
               <Link to="/signup">
-                Get Started for $5/month
+                Start Free Trial
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
           </div>
           <p className="text-primary-foreground/60 text-sm mt-6">
-            Cancel anytime. No questions asked.
+            3 free analyses included. No credit card required.
           </p>
         </div>
       </section>
