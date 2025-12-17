@@ -57,12 +57,12 @@ export function InputField({
           {label}
         </Label>
         {tooltip && (
-          <TooltipProvider>
+          <TooltipProvider delayDuration={100}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
               </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
+              <TooltipContent side="top" className="max-w-xs z-50 bg-popover text-popover-foreground shadow-md">
                 <p className="text-sm">{tooltip}</p>
               </TooltipContent>
             </Tooltip>

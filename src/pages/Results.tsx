@@ -56,7 +56,7 @@ function ResultsContent() {
   const [isFromSaved, setIsFromSaved] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<PropertyAddress | null>(null);
   const [displayInputs, setDisplayInputs] = useState<UnderwritingInputs | null>(null);
-  const hasAutoPrinted = useRef(false);
+  
 
   // Check if viewing a saved analysis
   useEffect(() => {
@@ -123,25 +123,10 @@ function ResultsContent() {
     }
   }, [inputs, propertyAddress, isFromSaved]);
 
-  // Auto-open print dialog when user clicks "Run Analysis" (Save as PDF)
+  // Clear any stale auto-print flag (print is now manual via Export dropdown)
   useEffect(() => {
-    if (!baseResults) return;
-
-    const shouldAutoPrint = sessionStorage.getItem("uw:autoPrint") === "1";
-    if (!shouldAutoPrint) return;
-
-    if (hasAutoPrinted.current) return;
-    hasAutoPrinted.current = true;
     sessionStorage.removeItem("uw:autoPrint");
-
-    window.setTimeout(() => {
-      try {
-        window.print();
-      } catch (e) {
-        console.error("Print failed:", e);
-      }
-    }, 250);
-  }, [baseResults]);
+  }, []);
 
   // Auto-save new analyses
   useEffect(() => {
