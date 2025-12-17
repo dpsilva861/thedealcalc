@@ -33,8 +33,10 @@ import {
   Edit,
   List,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +54,7 @@ function ResultsContent() {
   const [outlookResults, setOutlookResults] = useState<UnderwritingResults | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isFromSaved, setIsFromSaved] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<PropertyAddress | null>(null);
@@ -224,8 +227,320 @@ function ResultsContent() {
     },
   ];
 
-  const handleExportPDF = () => {
-    window.print();
+  const handleExportPDF = async () => {
+    if (generatingPDF) return;
+
+    setGeneratingPDF(true);
+    try {
+      const addressLine = displayAddress
+        ? `${displayAddress.address || ""}, ${displayAddress.city || ""}, ${displayAddress.state || ""} ${displayAddress.zipCode || ""}`.trim()
+        : "N/A";
+      const reportDate = new Date().toLocaleDateString();
+
+      const fileBase = (displayAddress?.address || "analysis")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: "letter",
+      });
+
+      const margin = 40;
+      let y = 48;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("Underwriting Report", margin, y);
+      y += 18;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+
+      const metaLines = [
+        addressLine,
+        `Report Date: ${reportDate}`,
+        `${currentInputs.income.unitCount} units • Purchase: ${formatCurrency(currentInputs.acquisition.purchasePrice)} • Hold: ${currentInputs.acquisition.holdPeriodMonths} months`,
+      ];
+
+      metaLines.forEach((line) => {
+        doc.text(line, margin, y);
+        y += 14;
+      });
+
+      y += 6;
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Key Metrics", "Value"]],
+        body: [
+          ["IRR", formatPercent(metrics.irr)],
+          ["Cash-on-Cash (Year 1)", formatPercent(metrics.cocYear1)],
+          ["Equity Multiple", formatMultiple(metrics.equityMultiple)],
+          ["DSCR", metrics.dscr.toFixed(2)],
+          ["Breakeven Occupancy", formatPercent(metrics.breakevenOccupancy)],
+          ["NOI (Stabilized Annual)", formatCurrency(metrics.stabilizedNoiAnnual)],
+        ],
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fontStyle: "bold" },
+      });
+
+      let nextY = (((doc as any).lastAutoTable?.finalY as number | undefined) ?? y) + 18;
+
+      if (redFlags.length > 0) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Potential Concerns", margin, nextY);
+        nextY += 14;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+
+        const maxWidth = doc.internal.pageSize.getWidth() - margin * 2 - 14;
+
+        redFlags.forEach((flag) => {
+          const lines = doc.splitTextToSize(flag, maxWidth) as string[];
+          doc.text("•", margin, nextY);
+          doc.text(lines, margin + 12, nextY);
+          nextY += lines.length * 12 + 4;
+
+          const pageBottom = doc.internal.pageSize.getHeight() - 60;
+          if (nextY > pageBottom) {
+            doc.addPage();
+            nextY = 48;
+          }
+        });
+
+        nextY += 6;
+      }
+
+      autoTable(doc, {
+        startY: nextY,
+        margin: { left: margin, right: margin },
+        head: [["Sources of Funds", "Amount"]],
+        body: [
+          ...(sourcesAndUses.sources.loanAmount > 0
+            ? [["Loan Amount", formatCurrency(sourcesAndUses.sources.loanAmount)]]
+            : []),
+          ["Equity Required", formatCurrency(sourcesAndUses.sources.equity)],
+          ["Total Sources", formatCurrency(sourcesAndUses.sources.total)],
+        ],
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fontStyle: "bold" },
+      });
+
+      nextY = (((doc as any).lastAutoTable?.finalY as number | undefined) ?? nextY) + 14;
+
+      autoTable(doc, {
+        startY: nextY,
+        margin: { left: margin, right: margin },
+        head: [["Uses of Funds", "Amount"]],
+        body: [
+          ["Purchase Price", formatCurrency(sourcesAndUses.uses.purchasePrice)],
+          ["Closing Costs", formatCurrency(sourcesAndUses.uses.closingCosts)],
+          ...(sourcesAndUses.uses.originationFee > 0
+            ? [["Loan Origination", formatCurrency(sourcesAndUses.uses.originationFee)]]
+            : []),
+          ["Renovation Budget", formatCurrency(sourcesAndUses.uses.renoBudget)],
+          ["Total Uses", formatCurrency(sourcesAndUses.uses.total)],
+        ],
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fontStyle: "bold" },
+      });
+
+      nextY = (((doc as any).lastAutoTable?.finalY as number | undefined) ?? nextY) + 14;
+
+      autoTable(doc, {
+        startY: nextY,
+        margin: { left: margin, right: margin },
+        head: [["Exit Analysis", "Value"]],
+        body: [
+          ["Stabilized NOI", formatCurrency(saleAnalysis.stabilizedNoi)],
+          ["Sale Price", formatCurrency(saleAnalysis.salePrice)],
+          ["Sale Costs", formatCurrency(saleAnalysis.saleCosts)],
+          ["Loan Payoff", formatCurrency(saleAnalysis.loanPayoff)],
+          ["Net Proceeds", formatCurrency(saleAnalysis.netSaleProceeds)],
+        ],
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fontStyle: "bold" },
+      });
+
+      // PAGE 2
+      doc.addPage();
+      y = 48;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Sensitivity Analysis", margin, y);
+      y += 14;
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Rent Sensitivity", "IRR", "CoC"]],
+        body: sensitivityTables.rent.map((r) => [
+          r.label,
+          formatPercent(r.irr),
+          formatPercent(r.coc),
+        ]),
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fontStyle: "bold" },
+      });
+
+      y = (((doc as any).lastAutoTable?.finalY as number | undefined) ?? y) + 10;
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Exit Cap Sensitivity", "IRR", "CoC"]],
+        body: sensitivityTables.exitCap.map((r) => [
+          r.label,
+          formatPercent(r.irr),
+          formatPercent(r.coc),
+        ]),
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fontStyle: "bold" },
+      });
+
+      y = (((doc as any).lastAutoTable?.finalY as number | undefined) ?? y) + 10;
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Reno Budget Sensitivity", "IRR", "CoC"]],
+        body: sensitivityTables.renoBudget.map((r) => [
+          r.label,
+          formatPercent(r.irr),
+          formatPercent(r.coc),
+        ]),
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fontStyle: "bold" },
+      });
+
+      y = (((doc as any).lastAutoTable?.finalY as number | undefined) ?? y) + 16;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Metric Definitions", margin, y);
+      y += 10;
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Metric", "Definition"]],
+        body: [
+          [
+            "IRR (Internal Rate of Return)",
+            "Annualized rate at which cash flows equal the initial investment.",
+          ],
+          [
+            "Cash-on-Cash Return",
+            "Annual pre-tax cash flow divided by total equity invested.",
+          ],
+          ["Equity Multiple", "Total cash received divided by total cash invested."],
+          [
+            "DSCR (Debt Service Coverage Ratio)",
+            "NOI divided by debt service. Lenders often require 1.20x+.",
+          ],
+        ],
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 4 },
+        headStyles: { fontStyle: "bold" },
+        columnStyles: { 1: { cellWidth: 560 } },
+      });
+
+      // PAGE 3+
+      doc.addPage();
+      y = 48;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("30-Year Annual Summary", margin, y);
+      y += 10;
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [["Year", "GPR", "EGI", "NOI", "Debt Service", "Cash Flow", "DSCR", "CoC"]],
+        body: annualSummary.map((yr) => [
+          String(yr.year),
+          formatCurrency(yr.gpr),
+          formatCurrency(yr.egi),
+          formatCurrency(yr.noi),
+          formatCurrency(yr.debtService),
+          formatCurrency(yr.cashFlow),
+          yr.dscr.toFixed(2),
+          formatPercent(yr.coc),
+        ]),
+        theme: "grid",
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fontStyle: "bold" },
+      });
+
+      y = (((doc as any).lastAutoTable?.finalY as number | undefined) ?? y) + 16;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Monthly Cash Flow & Amortization", margin, y);
+      y += 10;
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [[
+          "Mo",
+          "Rent/Unit",
+          "GPR",
+          "EGI",
+          "Opex",
+          "NOI",
+          "Debt",
+          "Prin",
+          "Int",
+          "CapEx",
+          "CF",
+          "Balance",
+        ]],
+        body: monthlyData.map((m) => {
+          const capex = m.renoSpend + m.makeReady + m.leasingCosts;
+          return [
+            String(m.month),
+            formatCurrency(m.rent),
+            formatCurrency(m.gpr),
+            formatCurrency(m.egi),
+            formatCurrency(m.totalOpex),
+            formatCurrency(m.noi),
+            formatCurrency(m.debtService),
+            formatCurrency(m.principalPayment),
+            formatCurrency(m.interestPayment),
+            formatCurrency(capex),
+            formatCurrency(m.cashFlowBeforeTax),
+            formatCurrency(m.loanBalance),
+          ];
+        }),
+        theme: "grid",
+        styles: { fontSize: 6.5, cellPadding: 2 },
+        headStyles: { fontStyle: "bold" },
+      });
+
+      doc.save(`underwriting-report-${fileBase || "analysis"}.pdf`);
+      toast.success("PDF downloaded");
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      toast.error("Failed to generate PDF");
+    } finally {
+      setGeneratingPDF(false);
+    }
   };
 
   const handleExportCSV = () => {
