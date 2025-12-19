@@ -34,7 +34,7 @@ export function FreeTrialBanner() {
           <span className="text-foreground">
             <strong className="font-semibold">Free trial used.</strong>{" "}
             <Link to="/pricing" className="text-primary hover:underline">
-              Subscribe for $5/month
+              Subscribe for $3/month
             </Link>{" "}
             for unlimited analyses.
           </span>

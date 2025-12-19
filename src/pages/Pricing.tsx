@@ -131,7 +131,7 @@ export default function Pricing() {
                 </p>
 
                 <div className="flex items-baseline gap-2 mb-8">
-                  <span className="text-5xl font-display font-bold text-foreground">$5</span>
+                  <span className="text-5xl font-display font-bold text-foreground">$3</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
 
@@ -258,7 +258,7 @@ export default function Pricing() {
                 
                 <div className="text-center mb-6">
                   <h3 className="font-display text-xl font-bold text-foreground mb-1">Pro Plan</h3>
-                  <p className="text-primary font-semibold">$5/month</p>
+                  <p className="text-primary font-semibold">$3/month</p>
                 </div>
                 
                 <ul className="space-y-4">
@@ -395,7 +395,7 @@ export default function Pricing() {
               </>
             ) : (
               <>
-                Get Started for $5/month
+                Get Started for $3/month
                 <ArrowRight className="h-5 w-5" />
               </>
             )}

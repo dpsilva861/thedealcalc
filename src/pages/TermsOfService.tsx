@@ -61,7 +61,7 @@ export default function TermsOfService() {
             </h2>
             <div className="space-y-4 text-muted-foreground">
               <p className="leading-relaxed">
-                DealCalc offers a subscription service at $5 per month for unlimited analyses. By 
+                DealCalc offers a subscription service at $3 per month for unlimited analyses. By 
                 subscribing, you agree to the following:
               </p>
               <ul className="list-disc list-inside space-y-2">
