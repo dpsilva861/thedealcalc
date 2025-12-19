@@ -156,7 +156,7 @@ serve(async (req) => {
         method: "POST",
         form: {
           product: product.id,
-          unit_amount: "500",
+          unit_amount: "300",
           currency: "usd",
           "recurring[interval]": "month",
         },
