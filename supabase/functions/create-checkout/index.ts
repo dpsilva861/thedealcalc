@@ -23,7 +23,7 @@ async function stripeFetch<T>(
     query?: Record<string, string>;
   } = {}
 ): Promise<T> {
-  const secret = requireEnv("STRIPE_SECRET_KEY");
+  const secret = requireEnv("STRIPE_SECRET_KEY").trim();
   const method = opts.method ?? "GET";
 
   const url = new URL(`${STRIPE_API_BASE}${path}`);
