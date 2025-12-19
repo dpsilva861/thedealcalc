@@ -804,9 +804,22 @@ function ResultsContent() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={handleExportPDF}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Export PDF (Free)
+                  <DropdownMenuItem 
+                    onClick={handleExportPDF}
+                    disabled={generatingPDF}
+                    className="transition-colors"
+                  >
+                    {generatingPDF ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        <span className="text-muted-foreground">Generating PDF…</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4 mr-2" />
+                        Export PDF (Free)
+                      </>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
