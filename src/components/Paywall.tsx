@@ -49,7 +49,7 @@ export function Paywall({
         {/* Pricing Card */}
         <div className="bg-card border-2 border-primary rounded-2xl p-6 mb-6 shadow-elevated">
           <div className="flex items-baseline justify-center gap-2 mb-4">
-            <span className="text-4xl font-display font-bold text-foreground">$5</span>
+            <span className="text-4xl font-display font-bold text-foreground">$3</span>
             <span className="text-muted-foreground">/month</span>
           </div>
 

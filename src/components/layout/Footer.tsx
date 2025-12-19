@@ -18,7 +18,7 @@ export function Footer() {
             </Link>
             <p className="text-muted-foreground text-sm max-w-md">
               Professional residential real estate underwriting made simple. 
-              Run unlimited analyses for just $5/month. We never store your deal data.
+              Run unlimited analyses for just $3/month. We never store your deal data.
             </p>
           </div>
 

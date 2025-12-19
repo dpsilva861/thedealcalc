@@ -160,7 +160,7 @@ export default function Account() {
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {isSubscribed 
-                        ? "$5/month • Unlimited analyses"
+                        ? "$3/month • Unlimited analyses"
                         : "Subscribe to access the underwriting tool"
                       }
                     </p>
@@ -196,7 +196,7 @@ export default function Account() {
               </Button>
             ) : (
               <Button variant="hero" onClick={handleSubscribe}>
-                Subscribe Now — $5/month
+                Subscribe Now — $3/month
               </Button>
             )}
           </section>
