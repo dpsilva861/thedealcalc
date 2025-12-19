@@ -23,7 +23,7 @@ async function stripeFetch<T>(
     query?: Record<string, string>;
   } = {}
 ): Promise<T> {
-  const secret = requireEnv("STRIPE_SECRET_KEY").trim();
+  const secret = (() => { const raw = requireEnv("STRIPE_SECRET_KEY"); const s = raw.replace(/\s+/g, "").replace(/[^\x21-\x7E]/g, ""); if (!s.startsWith("sk_")) throw new Error("Invalid STRIPE_SECRET_KEY. Please update your Stripe secret key in the backend."); if (s !== raw) console.warn("Sanitized STRIPE_SECRET_KEY (removed whitespace/non-ASCII characters)."); return s; })();
   const method = opts.method ?? "GET";
 
   const url = new URL(`${STRIPE_API_BASE}${path}`);
@@ -56,7 +56,7 @@ type StripeListResponse<T> = { data: T[] };
 
 type StripeCustomer = { id: string; email: string | null };
 type StripeProduct = { id: string; name: string };
-type StripePrice = { id: string };
+type StripePrice = { id: string; unit_amount: number | null; currency: string; recurring?: { interval: string } | null; active?: boolean };
 type StripeCheckoutSession = { id: string; url: string | null };
 
 serve(async (req) => {
@@ -171,13 +171,33 @@ serve(async (req) => {
           query: {
             product: existingProduct.id,
             active: "true",
-            limit: "1",
+            limit: "100",
           },
         }
       );
 
-      if (!prices.data[0]?.id) throw new Error("No active price found");
-      priceId = prices.data[0].id;
+      const matchingPrice = prices.data.find(
+        (p) =>
+          p.unit_amount === 300 &&
+          p.currency === "usd" &&
+          p.recurring?.interval === "month"
+      );
+
+      if (matchingPrice?.id) {
+        priceId = matchingPrice.id;
+      } else {
+        console.log("No $3/month price found; creating a new $3/month price");
+        const price = await stripeFetch<StripePrice>("/prices", {
+          method: "POST",
+          form: {
+            product: existingProduct.id,
+            unit_amount: "300",
+            currency: "usd",
+            "recurring[interval]": "month",
+          },
+        });
+        priceId = price.id;
+      }
     }
 
     console.log("Using price ID:", priceId);
