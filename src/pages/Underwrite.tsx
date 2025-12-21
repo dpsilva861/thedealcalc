@@ -13,6 +13,7 @@ import { useUnderwriting } from "@/contexts/UnderwritingContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 import { useAuth } from "@/contexts/AuthContext";
+import { validateInputs } from "@/lib/validation";
 import { ArrowLeft, ArrowRight, Play, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,7 +29,7 @@ const STEPS = [
 
 function UnderwriteContent() {
   const navigate = useNavigate();
-  const { currentStep, setCurrentStep, runAnalysis, resetInputs, propertyAddress } = useUnderwriting();
+  const { currentStep, setCurrentStep, runAnalysis, resetInputs, propertyAddress, inputs } = useUnderwriting();
   const { isSubscribed, freeTrialRemaining, incrementAnalysisCount } = useAuth();
 
   const CurrentStepComponent = STEPS[currentStep].component;
@@ -67,7 +68,22 @@ function UnderwriteContent() {
 
   const handleRunAnalysis = async () => {
     try {
-      // Run analysis first so the user can view full results (even if this uses their last free run)
+      // Validate inputs before running analysis
+      const validation = validateInputs(inputs);
+      
+      if (!validation.isValid) {
+        validation.errors.forEach((err) => {
+          toast.error(err.message);
+        });
+        return; // Block analysis
+      }
+      
+      // Show warnings but allow analysis to proceed
+      validation.warnings.forEach((warn) => {
+        toast.warning(warn.message);
+      });
+
+      // Run analysis
       runAnalysis();
 
       // Tell the Results page to auto-open the print dialog (Save as PDF)
