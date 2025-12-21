@@ -42,8 +42,8 @@ export default function Pricing() {
       answer: "Run as many deal analyses as you want each month. No caps, no per-deal fees. Analyze 1 deal or 100—same price."
     },
     {
-      question: "Is my deal data really not stored?",
-      answer: "Correct. All calculations happen in your browser. We never receive, store, or have access to your deal inputs. Only your email and subscription status are stored."
+      question: "Is my deal data stored?",
+      answer: "Calculations run in your browser. If you choose to save an analysis, it's encrypted and private to your account. You can delete saved analyses anytime."
     },
     {
       question: "Can I cancel anytime?",
@@ -124,10 +124,10 @@ export default function Pricing() {
 
               <div className="p-8">
                 <h2 className="font-display text-2xl font-bold text-foreground mb-2">
-                  Pro Plan
+                  Basic Plan
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Everything you need for professional underwriting
+                  Full access to the residential underwriting calculator
                 </p>
 
                 <div className="flex items-baseline gap-2 mb-8">
@@ -198,10 +198,10 @@ export default function Pricing() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="font-display text-3xl font-bold text-foreground text-center mb-4">
-              Free vs Pro Comparison
+              Free vs Basic Comparison
             </h2>
             <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-              See what you get with each plan. Pro unlocks powerful export and editing features.
+              See what you get with each plan. Basic unlocks powerful export and editing features.
             </p>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -257,7 +257,7 @@ export default function Pricing() {
                 </div>
                 
                 <div className="text-center mb-6">
-                  <h3 className="font-display text-xl font-bold text-foreground mb-1">Pro Plan</h3>
+                  <h3 className="font-display text-xl font-bold text-foreground mb-1">Basic Plan</h3>
                   <p className="text-primary font-semibold">$3/month</p>
                 </div>
                 
@@ -315,7 +315,7 @@ export default function Pricing() {
                   ) : isSubscribed ? (
                     "You're Subscribed!"
                   ) : (
-                    "Upgrade to Pro"
+                    "Upgrade to Basic"
                   )}
                 </Button>
                 {checkoutError && (
@@ -336,10 +336,10 @@ export default function Pricing() {
             <Shield className="h-12 w-12 text-primary" />
             <div>
               <h3 className="font-semibold text-foreground text-lg">
-                We Don't Store Your Deal Data
+                Your Data, Your Control
               </h3>
               <p className="text-muted-foreground">
-                All calculations happen in your browser. Your sensitive deal information never touches our servers.
+                Calculations run in your browser. Saved analyses are encrypted and private to your account.
               </p>
             </div>
           </div>
