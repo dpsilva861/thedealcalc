@@ -3,15 +3,24 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calculator, CheckCircle2, Sparkles } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Calculator, CheckCircle2, Sparkles, AlertCircle } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { validatePassword, parsePasswordError } from "@/lib/password-validation";
+import { PasswordRequirements } from "@/components/PasswordRequirements";
 
+// Zod schema that mirrors backend requirements
 const signupSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.string().trim().email("Please enter a valid email address").max(255, "Email is too long"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain an uppercase letter")
+    .regex(/[a-z]/, "Password must contain a lowercase letter")
+    .regex(/[0-9]/, "Password must contain a number")
+    .regex(/[!@#$%^&*()_+\-=\[\]{};'\\:"|<>?,./`~]/, "Password must contain a symbol"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -23,9 +32,14 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showRequirements, setShowRequirements] = useState(false);
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Real-time password validation
+  const passwordValidation = useMemo(() => validatePassword(password), [password]);
+  const passwordsMatch = password === confirmPassword || confirmPassword === "";
 
   // Redirect if already logged in
   useEffect(() => {
@@ -37,7 +51,7 @@ export default function Signup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate inputs
+    // Validate inputs with Zod
     const result = signupSchema.safeParse({ email, password, confirmPassword });
     
     if (!result.success) {
@@ -50,20 +64,27 @@ export default function Signup() {
       return;
     }
 
+    // Additional client-side validation for password requirements
+    if (!passwordValidation.isValid) {
+      toast({
+        title: "Password requirements not met",
+        description: passwordValidation.errorMessage || "Please meet all password requirements.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     
-    const { error } = await signUp(email, password);
+    const { error } = await signUp(email.trim(), password);
     
     if (error) {
-      let message = error.message;
-      
-      if (error.message.includes("already registered")) {
-        message = "This email is already registered. Please sign in instead.";
-      }
+      // Parse and display user-friendly error message
+      const userMessage = parsePasswordError(error);
       
       toast({
         title: "Sign up failed",
-        description: message,
+        description: userMessage,
         variant: "destructive",
       });
       setLoading(false);
@@ -134,6 +155,7 @@ export default function Signup() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
+                  maxLength={255}
                 />
               </div>
 
@@ -145,13 +167,21 @@ export default function Signup() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setShowRequirements(true)}
                   required
-                  minLength={8}
                   autoComplete="new-password"
+                  aria-describedby="password-requirements"
                 />
-                <p className="text-xs text-muted-foreground">
-                  At least 8 characters
-                </p>
+                
+                {/* Password requirements - shown when focused or has content */}
+                {(showRequirements || password.length > 0) && (
+                  <div id="password-requirements" className="mt-3 p-3 bg-muted/50 rounded-lg">
+                    <PasswordRequirements
+                      requirements={passwordValidation.requirements}
+                      password={password}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -164,7 +194,18 @@ export default function Signup() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   autoComplete="new-password"
+                  className={
+                    confirmPassword && !passwordsMatch
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }
                 />
+                {confirmPassword && !passwordsMatch && (
+                  <p className="flex items-center gap-1 text-xs text-destructive">
+                    <AlertCircle className="h-3 w-3" />
+                    Passwords do not match
+                  </p>
+                )}
               </div>
 
               <Button 
@@ -172,7 +213,7 @@ export default function Signup() {
                 variant="hero" 
                 className="w-full" 
                 size="lg"
-                disabled={loading}
+                disabled={loading || !passwordValidation.isValid || !passwordsMatch}
               >
                 {loading ? "Creating account..." : "Create Free Account"}
               </Button>
