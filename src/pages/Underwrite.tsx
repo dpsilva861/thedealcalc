@@ -11,6 +11,7 @@ import { FinancingStep } from "@/components/underwriting/steps/FinancingStep";
 import { ReviewStep } from "@/components/underwriting/steps/ReviewStep";
 import { useUnderwriting } from "@/contexts/UnderwritingContext";
 import { AuthGuard } from "@/components/AuthGuard";
+import { CalculatorAccessGuard } from "@/components/calculators/CalculatorAccessGuard";
 import { FreeTrialBanner } from "@/components/FreeTrialBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { validateInputs } from "@/lib/validation";
@@ -187,7 +188,9 @@ export default function Underwrite() {
   return (
     <Layout showFooter={false}>
       <AuthGuard requireSubscription={true}>
-        <UnderwriteContent />
+        <CalculatorAccessGuard calculatorId="residential">
+          <UnderwriteContent />
+        </CalculatorAccessGuard>
       </AuthGuard>
     </Layout>
   );
