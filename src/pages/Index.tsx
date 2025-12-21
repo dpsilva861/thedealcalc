@@ -23,7 +23,7 @@ export default function Index() {
     {
       icon: Shield,
       title: "Privacy First",
-      description: "Your deal data lives only in your browser. We never store, log, or access your sensitive information.",
+      description: "Your data is encrypted and secure. Save analyses only when you choose to—they're always private to your account.",
     },
     {
       icon: Zap,
@@ -208,16 +208,16 @@ export default function Index() {
                   Your Privacy is Our Priority
                 </h2>
                 <p className="text-muted-foreground mb-8">
-                  Unlike other platforms, we don't store your deal data. Every calculation 
-                  happens in your browser. When you close the tab, your data disappears. 
-                  It's that simple.
+                  Your data is always under your control. Calculations run in your browser, 
+                  and saved analyses are encrypted and private to your account. 
+                  Delete them anytime—it's that simple.
                 </p>
                 <ul className="space-y-4">
                   {[
-                    "No deal data stored on our servers",
                     "Calculations run entirely in your browser",
+                    "Saved analyses are private to your account",
                     "PDF exports generated locally",
-                    "Only account & subscription info retained",
+                    "Delete your data anytime",
                   ].map((item, index) => (
                     <li key={index} className="flex items-center gap-3 text-foreground">
                       <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />

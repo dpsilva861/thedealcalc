@@ -180,16 +180,15 @@ export default function HowItWorks() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sage-light text-primary text-sm font-medium mb-6">
-              Privacy Guaranteed
+              Your Data, Your Control
             </div>
             <h2 className="font-display text-3xl font-bold text-foreground mb-6">
-              Your Data Stays With You
+              Privacy by Design
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Every calculation runs entirely in your browser. When you refresh the page, 
-              your deal inputs are gone. We only store your account email and subscription 
-              status—nothing else. Your sensitive deal data is never transmitted to or 
-              stored on our servers.
+              All calculations run entirely in your browser. You choose when to save 
+              analyses—and saved data is encrypted and private to your account. 
+              Delete your saved analyses anytime from your dashboard.
             </p>
             <Button variant="hero" size="lg" asChild>
               <Link to="/signup">
