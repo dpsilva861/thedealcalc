@@ -1,6 +1,8 @@
 import { Layout } from "@/components/layout/Layout";
 import { AuthGuard } from "@/components/AuthGuard";
-import { BRRRRProvider, useBRRRR } from "@/contexts/BRRRRContext";
+import { CalculatorAccessGuard } from "@/components/calculators/CalculatorAccessGuard";
+import { useBRRRR } from "@/contexts/BRRRRContext";
+import { BRRRRSelfTest } from "@/components/brrrr/BRRRRSelfTest";
 import { formatCurrency, formatPercent } from "@/lib/calculators/types";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -34,6 +36,11 @@ function BRRRRResultsContent() {
           <Button variant="outline" asChild>
             <Link to="/brrrr"><ArrowLeft className="h-4 w-4 mr-2" />Edit Inputs</Link>
           </Button>
+        </div>
+
+        {/* Self-Test (Dev Mode Only) */}
+        <div className="mb-6">
+          <BRRRRSelfTest />
         </div>
 
         {/* Risk Flags */}
@@ -173,9 +180,9 @@ export default function BRRRRResults() {
   return (
     <Layout>
       <AuthGuard requireSubscription>
-        <BRRRRProvider>
+        <CalculatorAccessGuard calculatorId="brrrr">
           <BRRRRResultsContent />
-        </BRRRRProvider>
+        </CalculatorAccessGuard>
       </AuthGuard>
     </Layout>
   );

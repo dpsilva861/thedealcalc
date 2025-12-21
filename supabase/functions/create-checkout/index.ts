@@ -27,8 +27,23 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
 const STRIPE_API_BASE = "https://api.stripe.com/v1";
 
 // Allowed values for input validation
-const ALLOWED_CALCULATORS = ["residential", "commercial", "multifamily"];
+const ALLOWED_CALCULATORS = ["residential", "brrrr", "commercial", "multifamily"];
+const ALLOWED_PLAN_TIERS = ["basic", "pro"];
 const MAX_ORIGIN_LENGTH = 200;
+
+// Plan configuration with amounts in cents
+const PLAN_CONFIG = {
+  basic: {
+    amount: 300, // $3.00
+    name: "Basic Plan",
+    description: "Access to 1 calculator, unlimited scenarios",
+  },
+  pro: {
+    amount: 700, // $7.00
+    name: "Pro Plan",
+    description: "Access to ALL calculators, unlimited scenarios",
+  },
+} as const;
 
 function requireEnv(name: string) {
   const v = Deno.env.get(name);
@@ -64,6 +79,13 @@ function validateCalculator(input: unknown): string {
   if (typeof input !== "string") return "residential";
   const normalized = input.toLowerCase().trim().slice(0, 50);
   return ALLOWED_CALCULATORS.includes(normalized) ? normalized : "residential";
+}
+
+// Validate plan tier
+function validatePlanTier(input: unknown): "basic" | "pro" {
+  if (typeof input !== "string") return "basic";
+  const normalized = input.toLowerCase().trim();
+  return ALLOWED_PLAN_TIERS.includes(normalized) ? normalized as "basic" | "pro" : "basic";
 }
 
 // Validate origin URL
@@ -220,16 +242,21 @@ serve(async (req) => {
     const defaultOrigin = "https://yneaxuokgfqyoomycjam.lovableproject.com";
     let validatedOrigin = defaultOrigin;
     let selectedCalculator = "residential";
+    let planTier: "basic" | "pro" = "basic";
     
     try {
       const body = await req.json();
       validatedOrigin = validateOrigin(body?.origin, defaultOrigin);
       selectedCalculator = validateCalculator(body?.selectedCalculator);
+      planTier = validatePlanTier(body?.planTier);
     } catch {
       // Use defaults if body parsing fails
     }
 
-    console.log("Validated calculator:", selectedCalculator);
+    console.log("Validated plan:", planTier, "calculator:", selectedCalculator);
+
+    // Get plan configuration
+    const planConfig = PLAN_CONFIG[planTier];
 
     // Get or create customer
     const customers = await stripeFetch<StripeListResponse<StripeCustomer>>(
@@ -257,7 +284,7 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Get or create product + price for Basic Plan
+    // Get or create product + price for the selected plan
     const products = await stripeFetch<StripeListResponse<StripeProduct>>(
       "/products",
       {
@@ -270,25 +297,27 @@ serve(async (req) => {
     );
 
     const existingProduct = products.data.find(
-      (p) => p.name === "Basic Plan" || p.name === "Pro Subscription"
+      (p) => p.name === planConfig.name
     );
 
     let priceId: string;
 
     if (!existingProduct) {
+      // Create product
       const product = await stripeFetch<StripeProduct>("/products", {
         method: "POST",
         form: {
-          name: "Basic Plan",
-          description: "Unlimited access to one calculator",
+          name: planConfig.name,
+          description: planConfig.description,
         },
       });
 
+      // Create price
       const price = await stripeFetch<StripePrice>("/prices", {
         method: "POST",
         form: {
           product: product.id,
-          unit_amount: "300",
+          unit_amount: String(planConfig.amount),
           currency: "usd",
           "recurring[interval]": "month",
         },
@@ -296,6 +325,7 @@ serve(async (req) => {
 
       priceId = price.id;
     } else {
+      // Find existing price with matching amount
       const prices = await stripeFetch<StripeListResponse<StripePrice>>(
         "/prices",
         {
@@ -310,7 +340,7 @@ serve(async (req) => {
 
       const matchingPrice = prices.data.find(
         (p) =>
-          p.unit_amount === 300 &&
+          p.unit_amount === planConfig.amount &&
           p.currency === "usd" &&
           p.recurring?.interval === "month"
       );
@@ -318,11 +348,12 @@ serve(async (req) => {
       if (matchingPrice?.id) {
         priceId = matchingPrice.id;
       } else {
+        // Create new price for existing product
         const price = await stripeFetch<StripePrice>("/prices", {
           method: "POST",
           form: {
             product: existingProduct.id,
-            unit_amount: "300",
+            unit_amount: String(planConfig.amount),
             currency: "usd",
             "recurring[interval]": "month",
           },
@@ -345,16 +376,16 @@ serve(async (req) => {
           "line_items[0][quantity]": "1",
           client_reference_id: user.id,
           "metadata[user_id]": user.id,
-          "metadata[plan_tier]": "basic",
-          "metadata[selected_calculator]": selectedCalculator,
+          "metadata[plan_tier]": planTier,
+          "metadata[selected_calculator]": planTier === "basic" ? selectedCalculator : "",
           "subscription_data[metadata][user_id]": user.id,
-          "subscription_data[metadata][plan_tier]": "basic",
-          "subscription_data[metadata][selected_calculator]": selectedCalculator,
+          "subscription_data[metadata][plan_tier]": planTier,
+          "subscription_data[metadata][selected_calculator]": planTier === "basic" ? selectedCalculator : "",
         },
       }
     );
 
-    console.log("Created checkout session successfully");
+    console.log("Created checkout session for", planTier, "plan successfully");
 
     if (!session.url) throw new Error("Stripe did not return a checkout URL");
 

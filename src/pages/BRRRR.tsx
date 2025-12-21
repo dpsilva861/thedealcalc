@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { AuthGuard } from "@/components/AuthGuard";
-import { BRRRRProvider, useBRRRR } from "@/contexts/BRRRRContext";
+import { CalculatorAccessGuard } from "@/components/calculators/CalculatorAccessGuard";
+import { useBRRRR } from "@/contexts/BRRRRContext";
 import { BRRRRStepIndicator } from "@/components/brrrr/BRRRRStepIndicator";
 import { BRRRRPresetSelector } from "@/components/brrrr/BRRRRPresetSelector";
 import { BRRRRAcquisitionStep, BRRRRRefinanceStep, BRRRRRentalStep, BRRRRReviewStep } from "@/components/brrrr/steps";
@@ -115,9 +116,9 @@ export default function BRRRR() {
   return (
     <Layout>
       <AuthGuard requireSubscription>
-        <BRRRRProvider>
+        <CalculatorAccessGuard calculatorId="brrrr">
           <BRRRRContent />
-        </BRRRRProvider>
+        </CalculatorAccessGuard>
       </AuthGuard>
     </Layout>
   );

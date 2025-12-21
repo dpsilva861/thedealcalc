@@ -5,3 +5,4 @@ export * from "./types";
 export * from "./calculations";
 export * from "./presets";
 export * from "./validation";
+export * from "./selfTest";
