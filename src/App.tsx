@@ -20,6 +20,7 @@ import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import BRRRR from "./pages/BRRRR";
 import BRRRRResults from "./pages/BRRRRResults";
+import Syndication from "./pages/Syndication";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/brrrr" element={<BRRRR />} />
                 <Route path="/brrrr/results" element={<BRRRRResults />} />
+                <Route path="/syndication" element={<Syndication />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BRRRRProvider>
