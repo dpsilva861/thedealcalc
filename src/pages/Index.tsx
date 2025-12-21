@@ -1,16 +1,15 @@
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { InlineAd, MobileAd } from "@/components/ads";
 import { 
   Calculator, 
   Shield, 
   Zap, 
   FileText, 
-  TrendingUp,
   CheckCircle2,
   ArrowRight,
   Building2,
-  BarChart3
 } from "lucide-react";
 
 export default function Index() {
@@ -158,6 +157,12 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Inline Ad between Features and How It Works - desktop only */}
+      <InlineAd className="hidden md:block" />
+      
+      {/* Mobile Ad between Features and How It Works - mobile only */}
+      <MobileAd />
 
       {/* How It Works Section */}
       <section className="py-20 md:py-28 bg-cream-dark">
