@@ -197,6 +197,16 @@ export function calculateLoanBalance(
 
 // IRR calculation using Newton-Raphson method
 export function calculateIRR(cashFlows: number[], guess: number = 0.1): number {
+  // Guard: need at least 2 cash flows
+  if (cashFlows.length < 2) return 0;
+  
+  // Guard: first cash flow should be negative (investment)
+  if (cashFlows[0] >= 0) return 0;
+  
+  // Guard: check if there's any positive cash flow
+  const hasPositive = cashFlows.slice(1).some(cf => cf > 0);
+  if (!hasPositive) return 0;
+
   const maxIterations = 100;
   const tolerance = 1e-7;
   let rate = guess;
@@ -211,17 +221,30 @@ export function calculateIRR(cashFlows: number[], guess: number = 0.1): number {
       dnpv -= t * cashFlows[t] / (factor * (1 + rate));
     }
 
+    // Guard against division by zero or invalid values
+    if (dnpv === 0 || !isFinite(dnpv) || !isFinite(npv)) {
+      return 0;
+    }
+
     const newRate = rate - npv / dnpv;
+    
+    // Guard against invalid rate
+    if (!isFinite(newRate) || newRate <= -1) {
+      return 0;
+    }
     
     if (Math.abs(newRate - rate) < tolerance) {
       // Convert monthly IRR to annual
-      return Math.pow(1 + newRate, 12) - 1;
+      const annualIRR = Math.pow(1 + newRate, 12) - 1;
+      return isFinite(annualIRR) ? annualIRR : 0;
     }
     
     rate = newRate;
   }
 
-  return rate * 12; // Fallback: simple annualization
+  // Fallback: simple annualization with guard
+  const fallback = rate * 12;
+  return isFinite(fallback) ? fallback : 0;
 }
 
 export function runUnderwriting(
