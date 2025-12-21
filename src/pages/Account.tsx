@@ -11,7 +11,8 @@ import {
   CheckCircle2, 
   AlertCircle,
   ExternalLink,
-  Loader2
+  Loader2,
+  RefreshCw
 } from "lucide-react";
 
 export default function Account() {
@@ -19,6 +20,7 @@ export default function Account() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [portalLoading, setPortalLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -30,7 +32,7 @@ export default function Account() {
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
     if (sessionId) {
-      toast.success("Subscription activated! Welcome to Pro.");
+      toast.success("Subscription activated! Welcome to Basic.");
       refreshProfile();
       // Clean up URL
       navigate("/account", { replace: true });
@@ -89,6 +91,29 @@ export default function Account() {
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error("Failed to start checkout. Please try again.");
+    }
+  };
+
+  const handleSyncSubscription = async () => {
+    setSyncLoading(true);
+    try {
+      const response = await supabase.functions.invoke("sync-subscription");
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      await refreshProfile();
+      toast.success(`Subscription synced: ${response.data?.status || 'unknown'}`);
+    } catch (error) {
+      console.error("Sync error:", error);
+      toast.error("Failed to sync subscription status");
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -156,7 +181,7 @@ export default function Account() {
                   )}
                   <div>
                     <p className="font-medium text-foreground">
-                      {isSubscribed ? "Pro Plan" : "No Active Subscription"}
+                      {isSubscribed ? "Basic Plan" : "No Active Subscription"}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {isSubscribed 
@@ -202,7 +227,25 @@ export default function Account() {
           </section>
 
           {/* Actions */}
-          <section className="flex justify-end">
+          <section className="flex justify-between items-center">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleSyncSubscription}
+              disabled={syncLoading}
+            >
+              {syncLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Sync Status
+                </>
+              )}
+            </Button>
             <Button 
               variant="outline" 
               onClick={async () => {

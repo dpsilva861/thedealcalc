@@ -40,8 +40,8 @@ export function AuthGuard({ children, requireSubscription = false }: AuthGuardPr
   if (requireSubscription && !canRunAnalysis) {
     return (
       <Paywall 
-        title="Upgrade to Pro"
-        description="You've used your free analysis. Subscribe to run unlimited deal analyses."
+        title="Upgrade to Basic"
+        description="You've used your free analyses. Subscribe to run unlimited deal analyses."
       />
     );
   }

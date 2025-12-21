@@ -73,7 +73,7 @@ export function Paywall({
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Cancel anytime. Your deal data is never stored.
+          Cancel anytime. Your data is encrypted and private to your account.
         </p>
       </div>
     </div>
