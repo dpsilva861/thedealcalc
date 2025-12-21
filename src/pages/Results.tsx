@@ -358,10 +358,17 @@ function ResultsContent() {
         headStyles: { fontStyle: "bold" },
       });
 
-      nextY = (((doc as any).lastAutoTable?.finalY as number | undefined) ?? nextY) + 14;
+      // PAGE 2: Exit Analysis
+      doc.addPage();
+      y = 48;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Exit Analysis", margin, y);
+      y += 14;
 
       autoTable(doc, {
-        startY: nextY,
+        startY: y,
         margin: { left: margin, right: margin },
         head: [["Exit Analysis", "Value"]],
         body: [
@@ -376,7 +383,7 @@ function ResultsContent() {
         headStyles: { fontStyle: "bold" },
       });
 
-      // PAGE 2
+      // PAGE 3: Sensitivity Analysis & Metric Definitions
       doc.addPage();
       y = 48;
 
@@ -463,7 +470,7 @@ function ResultsContent() {
         columnStyles: { 1: { cellWidth: 560 } },
       });
 
-      // PAGE 3+
+      // PAGE 4: 30-Year Annual Summary
       doc.addPage();
       y = 48;
 
@@ -491,7 +498,9 @@ function ResultsContent() {
         headStyles: { fontStyle: "bold" },
       });
 
-      y = (((doc as any).lastAutoTable?.finalY as number | undefined) ?? y) + 16;
+      // PAGE 5: Monthly Cash Flow & Amortization
+      doc.addPage();
+      y = 48;
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
