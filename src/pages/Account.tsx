@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useAuth, AVAILABLE_CALCULATORS } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { CALCULATOR_REGISTRY } from "@/lib/calculators/registry";
 import { 
   User, 
   CreditCard, 
@@ -132,7 +133,7 @@ export default function Account() {
     }
   };
 
-  const selectedCalcInfo = AVAILABLE_CALCULATORS.find(c => c.id === selectedCalculator);
+  const selectedCalcInfo = CALCULATOR_REGISTRY.find(c => c.id === selectedCalculator);
 
   return (
     <Layout>

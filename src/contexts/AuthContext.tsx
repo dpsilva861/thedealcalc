@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  canAccessCalculator as checkCanAccessCalculator, 
+  requiresBasicSelection,
+  PlanTier 
+} from "@/lib/entitlements";
 
 interface Profile {
   id: string;
@@ -17,16 +22,6 @@ interface Profile {
   selected_calculator: string | null;
 }
 
-// Available calculators - add more here as they become available
-export const AVAILABLE_CALCULATORS = [
-  { id: "residential", name: "Residential Underwriting", description: "Analyze single-family and small multifamily properties" },
-  // Future calculators will be added here
-  // { id: "commercial", name: "Commercial", description: "Analyze commercial properties" },
-  // { id: "multifamily", name: "Large Multifamily", description: "Analyze 50+ unit properties" },
-] as const;
-
-export type CalculatorId = typeof AVAILABLE_CALCULATORS[number]["id"];
-
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -36,9 +31,11 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isSubscribed: boolean;
-  planTier: string;
+  planTier: PlanTier;
   selectedCalculator: string | null;
   canAccessCalculator: (calculatorId: string) => boolean;
+  requiresCalculatorSelection: boolean;
+  updateSelectedCalculator: (calculatorId: string) => Promise<void>;
   canRunAnalysis: boolean;
   freeTrialRemaining: number;
   incrementAnalysisCount: () => Promise<void>;
@@ -189,8 +186,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Update selected calculator (for Basic plan first-time selection)
+  const updateSelectedCalculator = async (calculatorId: string) => {
+    if (!profile) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ selected_calculator: calculatorId })
+      .eq("user_id", profile.user_id);
+
+    if (!error) {
+      setProfile({ ...profile, selected_calculator: calculatorId });
+      // Also persist to localStorage as fallback
+      localStorage.setItem(`selected_calculator_${profile.user_id}`, calculatorId);
+    }
+  };
+
   // Plan and subscription status
-  const planTier = profile?.plan_tier || "free";
+  const planTier = (profile?.plan_tier || "free") as PlanTier;
   const selectedCalculator = profile?.selected_calculator || null;
   const isSubscribed = profile?.subscription_status === "active" && planTier !== "free";
   
@@ -199,26 +212,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ? Math.max(0, (profile.free_analyses_limit || 1) - (profile.analyses_used || 0))
     : 0;
   
+  // Check if Basic user needs to select their calculator
+  const requiresCalculatorSelection = requiresBasicSelection(planTier, selectedCalculator, isSubscribed);
+
   // Check if user can access a specific calculator
-  // NOTE: All access control is enforced server-side via RLS policies
-  // This is purely for UI/UX - the source of truth is the database
   const canAccessCalculator = (calculatorId: string): boolean => {
-    if (planTier === "basic" && isSubscribed) {
-      // Basic plan: only selected calculator
-      return calculatorId === selectedCalculator;
-    }
-    
-    if (planTier === "pro" && isSubscribed) {
-      // Pro plan: all calculators (future)
-      return true;
-    }
-    
-    // Free tier: use free trial logic
-    return freeTrialRemaining > 0;
+    return checkCanAccessCalculator(planTier, calculatorId, selectedCalculator, isSubscribed);
   };
   
   // User can run analysis if subscribed or has free trial remaining
-  // NOTE: This is for UI display only - actual access is enforced by RLS
   const canRunAnalysis = isSubscribed || freeTrialRemaining > 0;
 
   return (
@@ -235,6 +237,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         planTier,
         selectedCalculator,
         canAccessCalculator,
+        requiresCalculatorSelection,
+        updateSelectedCalculator,
         canRunAnalysis,
         freeTrialRemaining,
         incrementAnalysisCount,

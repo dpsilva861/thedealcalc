@@ -43,17 +43,38 @@ const getDefaultPropertyAddress = (): BRRRRPropertyAddress => ({
   zipCode: "",
 });
 
+const STORAGE_KEY = "brrrr_state";
+
+const loadFromStorage = (): { inputs: BRRRRInputs; address: BRRRRPropertyAddress } | null => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return null;
+};
+
+const saveToStorage = (inputs: BRRRRInputs, address: BRRRRPropertyAddress) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ inputs, address }));
+  } catch { /* ignore */ }
+};
+
 export function BRRRRProvider({ children }: { children: React.ReactNode }) {
-  const [inputs, setInputs] = useState<BRRRRInputs>(getDefaultBRRRRInputs());
+  const stored = loadFromStorage();
+  const [inputs, setInputs] = useState<BRRRRInputs>(stored?.inputs || getDefaultBRRRRInputs());
   const [results, setResults] = useState<BRRRRResults | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [propertyAddress, setPropertyAddress] = useState<BRRRRPropertyAddress>(getDefaultPropertyAddress());
+  const [propertyAddress, setPropertyAddress] = useState<BRRRRPropertyAddress>(stored?.address || getDefaultPropertyAddress());
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
   const updateInputs = useCallback((updates: Partial<BRRRRInputs>) => {
-    setInputs(prev => ({ ...prev, ...updates }));
-    setSelectedPreset(null); // Clear preset when manually editing
-  }, []);
+    setInputs(prev => {
+      const next = { ...prev, ...updates };
+      saveToStorage(next, propertyAddress);
+      return next;
+    });
+    setSelectedPreset(null);
+  }, [propertyAddress]);
 
   const updateAcquisition = useCallback((updates: Partial<BRRRRInputs["acquisition"]>) => {
     setInputs(prev => ({
@@ -119,11 +140,14 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
   }, [inputs]);
 
   const resetInputs = useCallback(() => {
-    setInputs(getDefaultBRRRRInputs());
+    const defaultInputs = getDefaultBRRRRInputs();
+    const defaultAddress = getDefaultPropertyAddress();
+    setInputs(defaultInputs);
     setResults(null);
     setCurrentStep(0);
-    setPropertyAddress(getDefaultPropertyAddress());
+    setPropertyAddress(defaultAddress);
     setSelectedPreset(null);
+    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return (
