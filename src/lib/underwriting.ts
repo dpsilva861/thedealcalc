@@ -1,6 +1,10 @@
 // Deterministic Underwriting Calculator Module
 // All calculations are pure functions with no side effects
 
+// CALCULATION VERSION - increment this when calculation logic changes
+// This allows historical analyses to be flagged if they were computed with a different version
+export const CALCULATION_VERSION = "1.0.0";
+
 export interface AcquisitionInputs {
   purchasePrice: number;
   closingCosts: number;
