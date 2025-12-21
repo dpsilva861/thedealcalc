@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, AVAILABLE_CALCULATORS } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
@@ -12,15 +12,17 @@ import {
   AlertCircle,
   ExternalLink,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Calculator
 } from "lucide-react";
 
 export default function Account() {
-  const { user, profile, loading, isSubscribed, signOut, refreshProfile } = useAuth();
+  const { user, profile, loading, isSubscribed, planTier, selectedCalculator, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [portalLoading, setPortalLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -28,22 +30,50 @@ export default function Account() {
     }
   }, [user, loading, navigate]);
 
-  // Handle successful checkout redirect
+  // Handle successful checkout redirect - verify server-side
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
-    if (sessionId) {
-      toast.success("Subscription activated! Welcome to Basic.");
-      refreshProfile();
-      // Clean up URL
-      navigate("/account", { replace: true });
-    }
-  }, [searchParams, refreshProfile, navigate]);
+    if (sessionId && user && !verifying) {
+      setVerifying(true);
+      
+      const verifyCheckout = async () => {
+        try {
+          const response = await supabase.functions.invoke("verify-checkout", {
+            body: { session_id: sessionId },
+          });
 
-  if (loading) {
+          if (response.error) {
+            throw new Error(response.error.message);
+          }
+
+          if (response.data?.error) {
+            throw new Error(response.data.error);
+          }
+
+          toast.success("Subscription activated! Welcome to Basic.");
+          await refreshProfile();
+        } catch (error: any) {
+          console.error("Verification error:", error);
+          toast.error(error?.message || "Failed to verify subscription. Please try syncing.");
+        } finally {
+          setVerifying(false);
+          // Clean up URL
+          setSearchParams({}, { replace: true });
+        }
+      };
+
+      verifyCheckout();
+    }
+  }, [searchParams, user, refreshProfile, setSearchParams, verifying]);
+
+  if (loading || verifying) {
     return (
       <Layout showFooter={false}>
-        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">
+            {verifying ? "Verifying your subscription..." : "Loading..."}
+          </p>
         </div>
       </Layout>
     );
@@ -76,22 +106,7 @@ export default function Account() {
   };
 
   const handleSubscribe = async () => {
-    try {
-      const response = await supabase.functions.invoke("create-checkout", {
-        body: { origin: window.location.origin },
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      if (response.data?.url) {
-        window.location.href = response.data.url;
-      }
-    } catch (error) {
-      console.error("Checkout error:", error);
-      toast.error("Failed to start checkout. Please try again.");
-    }
+    navigate("/pricing");
   };
 
   const handleSyncSubscription = async () => {
@@ -116,6 +131,8 @@ export default function Account() {
       setSyncLoading(false);
     }
   };
+
+  const selectedCalcInfo = AVAILABLE_CALCULATORS.find(c => c.id === selectedCalculator);
 
   return (
     <Layout>
@@ -186,7 +203,7 @@ export default function Account() {
                     <p className="text-sm text-muted-foreground">
                       {isSubscribed 
                         ? "$3/month • Unlimited analyses"
-                        : "Subscribe to access the underwriting tool"
+                        : "Subscribe to unlock unlimited access"
                       }
                     </p>
                   </div>
@@ -196,10 +213,24 @@ export default function Account() {
                     ? "bg-primary/10 text-primary" 
                     : "bg-muted text-muted-foreground"
                 }`}>
-                  {(profile.subscription_status || "inactive").toUpperCase()}
+                  {planTier.toUpperCase()}
                 </span>
               </div>
             </div>
+
+            {/* Selected Calculator - only show for subscribed users */}
+            {isSubscribed && selectedCalcInfo && (
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mb-6">
+                <div className="flex items-center gap-3">
+                  <Calculator className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Your calculator:</p>
+                    <p className="font-medium text-foreground">{selectedCalcInfo.name}</p>
+                    <p className="text-xs text-muted-foreground">{selectedCalcInfo.description}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {isSubscribed ? (
               <Button 

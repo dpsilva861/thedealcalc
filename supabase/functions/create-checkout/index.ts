@@ -19,32 +19,28 @@ function getStripeSecret() {
   const raw = requireEnv("STRIPE_SECRET_KEY");
   const sanitized = raw.replace(/\s+/g, "").replace(/[^\x21-\x7E]/g, "");
 
-  // Fail fast if the key was pasted with hidden whitespace / special characters.
   if (sanitized !== raw) {
     console.warn("STRIPE_SECRET_KEY contains whitespace/non-ASCII characters.");
     throw new Error(
-      "STRIPE_SECRET_KEY looks corrupted (contains whitespace or special characters). In Stripe Dashboard → Developers → API keys, click the copy button for the Secret key (sk_test_... or sk_live_...) and paste that into the backend."
+      "STRIPE_SECRET_KEY looks corrupted. Re-copy from Stripe Dashboard → Developers → API keys."
     );
   }
 
-  // Common mistake: user pasted the publishable key.
   if (raw.startsWith("pk_")) {
     throw new Error(
-      "You pasted a publishable key (pk_...). This must be your Stripe Secret key (sk_test_... or sk_live_...). Update it in the backend using the Secret key."
+      "You pasted a publishable key (pk_...). Use the Secret key (sk_test_... or sk_live_...)."
     );
   }
 
-  // Common mistake: user pasted a masked/redacted key from UI/logs.
   if (/[\*•…]/.test(raw)) {
     throw new Error(
-      "You pasted a masked/redacted key (contains *, •, or …). In Stripe Dashboard → Developers → API keys, click the copy button for the Secret key (sk_test_... or sk_live_...) and paste that into the backend."
+      "You pasted a masked/redacted key. Re-copy from Stripe Dashboard."
     );
   }
 
-  // Expected formats: sk_test_... or sk_live_...
   if (!/^sk_(test|live)_[0-9a-zA-Z_]+$/.test(raw)) {
     throw new Error(
-      "Invalid STRIPE_SECRET_KEY format. Make sure you're using the Stripe Secret key that starts with sk_test_ or sk_live_ (not pk_), and re-copy it using the dashboard copy button."
+      "Invalid STRIPE_SECRET_KEY format. Use sk_test_ or sk_live_ key."
     );
   }
 
@@ -89,7 +85,6 @@ async function stripeFetch<T>(
 }
 
 type StripeListResponse<T> = { data: T[] };
-
 type StripeCustomer = { id: string; email: string | null };
 type StripeProduct = { id: string; name: string };
 type StripePrice = { id: string; unit_amount: number | null; currency: string; recurring?: { interval: string } | null; active?: boolean };
@@ -122,14 +117,19 @@ serve(async (req) => {
 
     console.log("Creating checkout for user:", user.id, user.email);
 
-    // Determine origin for redirects
+    // Parse request body
     let origin = "https://yneaxuokgfqyoomycjam.lovableproject.com";
+    let selectedCalculator = "residential"; // default calculator
+    
     try {
       const body = await req.json();
       if (body?.origin) origin = String(body.origin);
+      if (body?.selectedCalculator) selectedCalculator = String(body.selectedCalculator);
     } catch {
       // ignore
     }
+
+    console.log("Selected calculator:", selectedCalculator);
 
     // 1) Get or create customer
     const customers = await stripeFetch<StripeListResponse<StripeCustomer>>(
@@ -159,7 +159,7 @@ serve(async (req) => {
       console.log("Created new customer:", customerId);
     }
 
-    // 2) Get or create product + price
+    // 2) Get or create product + price for Basic Plan
     const products = await stripeFetch<StripeListResponse<StripeProduct>>(
       "/products",
       {
@@ -171,20 +171,21 @@ serve(async (req) => {
       }
     );
 
+    // Look for "Basic Plan" or "Pro Subscription" (legacy name)
     const existingProduct = products.data.find(
-      (p) => p.name === "Pro Subscription"
+      (p) => p.name === "Basic Plan" || p.name === "Pro Subscription"
     );
 
     let priceId: string;
 
     if (!existingProduct) {
-      console.log("Creating new product and price");
+      console.log("Creating new Basic Plan product and price");
 
       const product = await stripeFetch<StripeProduct>("/products", {
         method: "POST",
         form: {
-          name: "Pro Subscription",
-          description: "Unlimited deal analyses",
+          name: "Basic Plan",
+          description: "Unlimited access to one calculator",
         },
       });
 
@@ -222,7 +223,7 @@ serve(async (req) => {
       if (matchingPrice?.id) {
         priceId = matchingPrice.id;
       } else {
-        console.log("No $3/month price found; creating a new $3/month price");
+        console.log("No $3/month price found; creating a new one");
         const price = await stripeFetch<StripePrice>("/prices", {
           method: "POST",
           form: {
@@ -238,7 +239,7 @@ serve(async (req) => {
 
     console.log("Using price ID:", priceId);
 
-    // 3) Create checkout session
+    // 3) Create checkout session with metadata
     const session = await stripeFetch<StripeCheckoutSession>(
       "/checkout/sessions",
       {
@@ -247,10 +248,16 @@ serve(async (req) => {
           customer: customerId,
           mode: "subscription",
           success_url: `${origin}/account?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${origin}/pricing`,
+          cancel_url: `${origin}/pricing?checkout=cancel`,
           "line_items[0][price]": priceId,
           "line_items[0][quantity]": "1",
-          "metadata[supabase_user_id]": user.id,
+          client_reference_id: user.id,
+          "metadata[user_id]": user.id,
+          "metadata[plan_tier]": "basic",
+          "metadata[selected_calculator]": selectedCalculator,
+          "subscription_data[metadata][user_id]": user.id,
+          "subscription_data[metadata][plan_tier]": "basic",
+          "subscription_data[metadata][selected_calculator]": selectedCalculator,
         },
       }
     );

@@ -8,10 +8,6 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
 
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
-// In-memory set to track processed events (for idempotency within function lifetime)
-// For production, consider storing processed event IDs in the database
-const processedEvents = new Set<string>();
-
 serve(async (req) => {
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();
@@ -23,15 +19,12 @@ serve(async (req) => {
   try {
     if (!webhookSecret) {
       console.error("CRITICAL: STRIPE_WEBHOOK_SECRET is not configured");
-      // In production, we should reject requests without signature verification
-      // For now, parse but log a critical warning
-      console.warn("WARNING: Processing webhook without signature verification - this is insecure!");
+      console.warn("WARNING: Processing webhook without signature verification!");
       event = JSON.parse(body) as Stripe.Event;
     } else if (!signature) {
       console.error("No stripe-signature header present");
       return new Response("Missing stripe-signature header", { status: 400 });
     } else {
-      // Verify webhook signature for production security
       event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
       console.log("Webhook signature verified successfully");
     }
@@ -41,19 +34,25 @@ serve(async (req) => {
     return new Response("Webhook signature verification failed", { status: 400 });
   }
 
-  // Idempotency check - prevent duplicate processing
-  if (processedEvents.has(event.id)) {
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
+
+  // Idempotency check - check database for processed events
+  const { data: existingEvent } = await supabaseAdmin
+    .from("stripe_events")
+    .select("id")
+    .eq("id", event.id)
+    .maybeSingle();
+
+  if (existingEvent) {
     console.log(`Event ${event.id} already processed, skipping (idempotency)`);
     return new Response(JSON.stringify({ received: true, skipped: true }), {
       headers: { "Content-Type": "application/json" },
       status: 200,
     });
   }
-
-  const supabaseAdmin = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-  );
 
   try {
     switch (event.type) {
@@ -63,14 +62,20 @@ serve(async (req) => {
         
         const customerId = session.customer as string;
         const subscriptionId = session.subscription as string;
-        const userId = session.metadata?.supabase_user_id;
+        
+        // Get user_id from metadata or client_reference_id
+        const userId = session.metadata?.user_id || session.client_reference_id;
+        const planTier = session.metadata?.plan_tier || "basic";
+        const selectedCalculator = session.metadata?.selected_calculator || "residential";
 
         if (!userId) {
-          console.error("No supabase_user_id in session metadata");
+          console.error("No user_id in session metadata or client_reference_id");
           break;
         }
 
-        // Fetch subscription details from Stripe for accurate data
+        console.log("Activating subscription for user:", userId, "calculator:", selectedCalculator);
+
+        // Fetch subscription details for accurate end date
         let subscriptionEndDate: string | null = null;
         if (subscriptionId) {
           try {
@@ -88,6 +93,8 @@ serve(async (req) => {
             stripe_subscription_id: subscriptionId,
             subscription_status: "active",
             subscription_end_date: subscriptionEndDate,
+            plan_tier: planTier,
+            selected_calculator: selectedCalculator,
           })
           .eq("user_id", userId);
 
@@ -95,7 +102,42 @@ serve(async (req) => {
           console.error("Error updating profile for checkout:", error);
           throw error;
         }
-        console.log("Successfully activated subscription for user:", userId);
+        console.log("Successfully activated Basic subscription for user:", userId);
+        break;
+      }
+
+      case "customer.subscription.created": {
+        const subscription = event.data.object as Stripe.Subscription;
+        console.log("Processing subscription.created:", subscription.id);
+
+        const userId = subscription.metadata?.user_id;
+        const planTier = subscription.metadata?.plan_tier || "basic";
+        const selectedCalculator = subscription.metadata?.selected_calculator || "residential";
+        const customerId = subscription.customer as string;
+
+        if (userId) {
+          const endDate = subscription.current_period_end 
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : null;
+
+          const { error } = await supabaseAdmin
+            .from("profiles")
+            .update({
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscription.id,
+              subscription_status: "active",
+              subscription_end_date: endDate,
+              plan_tier: planTier,
+              selected_calculator: selectedCalculator,
+            })
+            .eq("user_id", userId);
+
+          if (error) {
+            console.error("Error updating profile for subscription.created:", error);
+          } else {
+            console.log("Subscription created for user:", userId);
+          }
+        }
         break;
       }
 
@@ -103,60 +145,63 @@ serve(async (req) => {
         const subscription = event.data.object as Stripe.Subscription;
         console.log("Processing subscription.updated:", subscription.id, "status:", subscription.status);
 
-        // Map Stripe status to our status
         let status: string;
+        let planTier: string;
+        
         switch (subscription.status) {
           case "active":
           case "trialing":
             status = "active";
+            planTier = subscription.metadata?.plan_tier || "basic";
             break;
           case "past_due":
             status = "past_due";
+            planTier = subscription.metadata?.plan_tier || "basic";
             break;
           case "canceled":
           case "unpaid":
             status = "canceled";
+            planTier = "free";
             break;
           default:
             status = "inactive";
+            planTier = "free";
         }
 
         const endDate = subscription.current_period_end 
           ? new Date(subscription.current_period_end * 1000).toISOString()
           : null;
 
-        // First try to update by subscription ID
+        // First try by subscription ID
         const { data, error } = await supabaseAdmin
           .from("profiles")
           .update({
             subscription_status: status,
             subscription_end_date: endDate,
+            plan_tier: planTier,
           })
           .eq("stripe_subscription_id", subscription.id)
           .select();
 
         if (error) {
-          console.error("Error updating subscription by subscription_id:", error);
+          console.error("Error updating subscription:", error);
           throw error;
         }
 
         if (!data || data.length === 0) {
-          // Fallback: try to find by customer ID
+          // Fallback: try by customer ID
           const customerId = subscription.customer as string;
-          console.log("No profile found by subscription_id, trying customer_id:", customerId);
+          console.log("No profile by subscription_id, trying customer_id:", customerId);
           
-          const { error: fallbackError } = await supabaseAdmin
+          await supabaseAdmin
             .from("profiles")
             .update({
               stripe_subscription_id: subscription.id,
               subscription_status: status,
               subscription_end_date: endDate,
+              plan_tier: planTier,
             })
             .eq("stripe_customer_id", customerId);
-
-          if (fallbackError) {
-            console.error("Fallback update also failed:", fallbackError);
-          }
         }
 
         console.log("Subscription updated successfully");
@@ -172,6 +217,8 @@ serve(async (req) => {
           .update({
             subscription_status: "canceled",
             stripe_subscription_id: null,
+            plan_tier: "free",
+            // Keep selected_calculator for re-subscription
           })
           .eq("stripe_subscription_id", subscription.id);
 
@@ -179,7 +226,27 @@ serve(async (req) => {
           console.error("Error canceling subscription:", error);
           throw error;
         }
-        console.log("Subscription canceled successfully");
+        console.log("Subscription canceled, user downgraded to free");
+        break;
+      }
+
+      case "invoice.payment_succeeded": {
+        const invoice = event.data.object as Stripe.Invoice;
+        console.log("Processing invoice.payment_succeeded:", invoice.id);
+
+        const subscriptionId = invoice.subscription as string;
+        if (subscriptionId) {
+          const { error } = await supabaseAdmin
+            .from("profiles")
+            .update({ subscription_status: "active" })
+            .eq("stripe_subscription_id", subscriptionId);
+
+          if (error) {
+            console.error("Error updating after payment success:", error);
+          } else {
+            console.log("Subscription reactivated after payment");
+          }
+        }
         break;
       }
 
@@ -203,39 +270,17 @@ serve(async (req) => {
         break;
       }
 
-      case "invoice.paid": {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log("Processing invoice.paid:", invoice.id);
-
-        const subscriptionId = invoice.subscription as string;
-        if (subscriptionId) {
-          // Reactivate subscription if it was past_due
-          const { error } = await supabaseAdmin
-            .from("profiles")
-            .update({ subscription_status: "active" })
-            .eq("stripe_subscription_id", subscriptionId)
-            .eq("subscription_status", "past_due");
-
-          if (error) {
-            console.error("Error reactivating subscription:", error);
-          } else {
-            console.log("Subscription reactivated after successful payment");
-          }
-        }
-        break;
-      }
-
       default:
         console.log("Unhandled event type:", event.type);
     }
 
-    // Mark event as processed
-    processedEvents.add(event.id);
-    
-    // Clean up old events to prevent memory bloat (keep last 1000)
-    if (processedEvents.size > 1000) {
-      const eventsToDelete = Array.from(processedEvents).slice(0, 500);
-      eventsToDelete.forEach(id => processedEvents.delete(id));
+    // Mark event as processed (idempotency)
+    const { error: insertError } = await supabaseAdmin
+      .from("stripe_events")
+      .insert({ id: event.id, event_type: event.type });
+
+    if (insertError) {
+      console.warn("Failed to record event for idempotency:", insertError);
     }
 
     return new Response(JSON.stringify({ received: true }), {
@@ -245,7 +290,6 @@ serve(async (req) => {
   } catch (error) {
     console.error("Webhook processing error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    // Return 500 so Stripe will retry
     return new Response(JSON.stringify({ error: message }), {
       headers: { "Content-Type": "application/json" },
       status: 500,

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, AVAILABLE_CALCULATORS } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   CheckCircle2, 
@@ -20,10 +20,12 @@ import {
 } from "lucide-react";
 
 export default function Pricing() {
-  const { user, isSubscribed } = useAuth();
+  const { user, isSubscribed, planTier, selectedCalculator } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [selectedCalc, setSelectedCalc] = useState<string>(AVAILABLE_CALCULATORS[0].id);
+
   const features = [
     { icon: Infinity, text: "Unlimited deal analyses" },
     { icon: Calculator, text: "Full underwriting calculator" },
@@ -70,10 +72,11 @@ export default function Pricing() {
 
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
       const response = await supabase.functions.invoke("create-checkout", {
-        body: { origin: window.location.origin },
+        body: { 
+          origin: window.location.origin,
+          selectedCalculator: selectedCalc,
+        },
       });
 
       if (response.error) {
@@ -97,6 +100,9 @@ export default function Pricing() {
       setLoading(false);
     }
   };
+
+  // Show calculator selector only if there's more than one calculator
+  const showCalculatorSelector = AVAILABLE_CALCULATORS.length > 1;
 
   return (
     <Layout>
@@ -127,13 +133,64 @@ export default function Pricing() {
                   Basic Plan
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Full access to the residential underwriting calculator
+                  Full access to one underwriting calculator
                 </p>
 
-                <div className="flex items-baseline gap-2 mb-8">
+                <div className="flex items-baseline gap-2 mb-6">
                   <span className="text-5xl font-display font-bold text-foreground">$3</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
+
+                {/* Calculator Selection - only show if multiple calculators */}
+                {showCalculatorSelector && !isSubscribed && user && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Choose your calculator:
+                    </label>
+                    <div className="space-y-2">
+                      {AVAILABLE_CALCULATORS.map((calc) => (
+                        <label
+                          key={calc.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                            selectedCalc === calc.id
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="calculator"
+                            value={calc.id}
+                            checked={selectedCalc === calc.id}
+                            onChange={(e) => setSelectedCalc(e.target.value)}
+                            className="sr-only"
+                          />
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                            selectedCalc === calc.id ? "border-primary" : "border-muted-foreground"
+                          }`}>
+                            {selectedCalc === calc.id && (
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{calc.name}</p>
+                            <p className="text-xs text-muted-foreground">{calc.description}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Show selected calculator for subscribed users */}
+                {isSubscribed && selectedCalculator && (
+                  <div className="mb-6 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <p className="text-sm text-muted-foreground">Your calculator:</p>
+                    <p className="font-medium text-foreground">
+                      {AVAILABLE_CALCULATORS.find(c => c.id === selectedCalculator)?.name || selectedCalculator}
+                    </p>
+                  </div>
+                )}
 
                 <Button 
                   variant="hero" 
@@ -171,7 +228,7 @@ export default function Pricing() {
                   </p>
                 )}
 
-                <ul className="space-y-4">
+                <ul className="space-y-4 mt-6">
                   {features.map((feature) => (
                     <li key={feature.text} className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-sage-light text-primary">
@@ -248,7 +305,7 @@ export default function Pricing() {
                 </ul>
               </div>
 
-              {/* Pro Plan */}
+              {/* Basic Plan */}
               <div className="rounded-2xl bg-card border-2 border-primary p-6 relative">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="gradient-sage text-primary-foreground text-xs font-semibold px-4 py-1 rounded-full">
