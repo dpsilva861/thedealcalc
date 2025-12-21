@@ -3,7 +3,15 @@
 
 // CALCULATION VERSION - increment this when calculation logic changes
 // This allows historical analyses to be flagged if they were computed with a different version
-export const CALCULATION_VERSION = "1.0.0";
+// v1.1.0: Added edge case guards, safe metric handling, breakeven/DSCR fixes
+export const CALCULATION_VERSION = "1.1.0";
+
+// ==================== CALCULATION WARNINGS ====================
+export interface CalculationWarning {
+  code: string;
+  message: string;
+  severity: "info" | "warn" | "error";
+}
 
 export interface AcquisitionInputs {
   purchasePrice: number;
@@ -128,10 +136,13 @@ export interface Metrics {
   irr: number;
   equityMultiple: number;
   dscr: number;
+  dscrDisplay: string; // "N/A" when no debt, otherwise formatted number
   breakevenOccupancy: number;
+  breakevenOccupancyDisplay: string; // "N/A" when GPR is 0
   totalEquityInvested: number;
   totalCashFlow: number;
   totalProfit: number;
+  warnings: CalculationWarning[];
 }
 
 export interface SourcesAndUses {
@@ -153,9 +164,11 @@ export interface SourcesAndUses {
 export interface SaleAnalysis {
   stabilizedNoi: number;
   salePrice: number;
+  salePriceDisplay: string; // "N/A" when cap rate is invalid
   saleCosts: number;
   loanPayoff: number;
   netSaleProceeds: number;
+  isValid: boolean; // false if exit cap rate causes invalid calculation
 }
 
 export interface SensitivityTables {
@@ -461,19 +474,34 @@ export function runUnderwriting(
   const stabilizedNoiAnnual = stabilizedNoiMonthly * 12;
   const stabilizedDebtService = last3Months.reduce((sum, m) => sum + m.debtService, 0) / 3 * 12;
 
-  // Sale analysis
-  const salePrice = stabilizedNoiAnnual / (acquisition.exitCapRate / 100);
-  const saleCosts = salePrice * (acquisition.saleCostPct / 100);
+  // Sale analysis with guard for invalid exit cap rate
+  const exitCapRateDecimal = acquisition.exitCapRate / 100;
+  const isSalePriceValid = exitCapRateDecimal > 0 && isFinite(exitCapRateDecimal);
+  const salePrice = isSalePriceValid ? stabilizedNoiAnnual / exitCapRateDecimal : 0;
+  const saleCosts = isSalePriceValid ? salePrice * (acquisition.saleCostPct / 100) : 0;
   const loanPayoff = monthlyData[monthlyData.length - 1]?.loanBalance || 0;
-  const netSaleProceeds = salePrice - saleCosts - loanPayoff;
+  const netSaleProceeds = isSalePriceValid ? salePrice - saleCosts - loanPayoff : 0;
 
   const saleAnalysis: SaleAnalysis = {
     stabilizedNoi: stabilizedNoiAnnual,
     salePrice,
+    salePriceDisplay: isSalePriceValid ? formatCurrency(salePrice) : "N/A (Invalid Cap Rate)",
     saleCosts,
     loanPayoff,
     netSaleProceeds,
+    isValid: isSalePriceValid,
   };
+
+  // Collect calculation warnings
+  const calculationWarnings: CalculationWarning[] = [];
+
+  if (!isSalePriceValid) {
+    calculationWarnings.push({
+      code: "INVALID_EXIT_CAP",
+      message: "Exit cap rate is 0% or invalid. Sale price cannot be calculated.",
+      severity: "error",
+    });
+  }
 
   // Cash flows for IRR
   const cashFlows = [-totalEquity];
@@ -485,9 +513,21 @@ export function runUnderwriting(
     }
   });
 
-  const irr = calculateIRR(cashFlows);
   const totalCashFlow = monthlyData.reduce((sum, m) => sum + m.cashFlowBeforeTax, 0);
   const totalProfit = totalCashFlow + netSaleProceeds;
+
+  const rawIrr = calculateIRR(cashFlows);
+  const irr = rawIrr * 100;
+  
+  // IRR warning if calculation may be unreliable
+  if (rawIrr === 0 && totalProfit > 0) {
+    calculationWarnings.push({
+      code: "IRR_CALC_FAILED",
+      message: "IRR calculation did not converge. Value shown as 0%.",
+      severity: "warn",
+    });
+  }
+
   const equityMultiple = totalEquity > 0 ? (totalEquity + totalProfit) / totalEquity : 0;
 
   // Year 1 CoC
@@ -498,29 +538,54 @@ export function runUnderwriting(
   const lastYear = annualSummary[annualSummary.length - 1];
   const cocStabilized = lastYear ? lastYear.coc : 0;
 
-  // DSCR
-  const dscr = stabilizedDebtService > 0 ? stabilizedNoiAnnual / stabilizedDebtService : 0;
+  // DSCR - show N/A when no debt
+  const hasDebt = financing.useFinancing && stabilizedDebtService > 0;
+  const dscr = hasDebt ? stabilizedNoiAnnual / stabilizedDebtService : 0;
+  const dscrDisplay = hasDebt ? dscr.toFixed(2) : "N/A (No Debt)";
 
-  // Breakeven occupancy
+  // Breakeven occupancy - guard against GPR = 0
   const stabilizedMonth = last3Months[0];
   const annualOpex = stabilizedMonth ? stabilizedMonth.totalOpex * 12 : 0;
   const annualGpi = stabilizedMonth ? (stabilizedMonth.gpr + stabilizedMonth.otherIncome) * 12 : 0;
-  const breakevenOccupancy = annualGpi > 0
+  const isBreakevenValid = annualGpi > 0;
+  const breakevenOccupancy = isBreakevenValid
     ? ((annualOpex + stabilizedDebtService) / annualGpi) * 100
     : 0;
+  const breakevenOccupancyDisplay = isBreakevenValid 
+    ? `${breakevenOccupancy.toFixed(1)}%` 
+    : "N/A (No Income)";
+
+  if (!isBreakevenValid) {
+    calculationWarnings.push({
+      code: "NO_INCOME_BREAKEVEN",
+      message: "Gross Potential Income is 0. Breakeven occupancy cannot be calculated.",
+      severity: "error",
+    });
+  }
+
+  if (breakevenOccupancy > 100) {
+    calculationWarnings.push({
+      code: "BREAKEVEN_EXCEEDS_100",
+      message: `Breakeven occupancy of ${breakevenOccupancy.toFixed(1)}% exceeds 100%. Property cannot cover expenses.`,
+      severity: "error",
+    });
+  }
 
   const metrics: Metrics = {
     stabilizedNoiAnnual,
     stabilizedNoiMonthly,
     cocYear1,
     cocStabilized,
-    irr: irr * 100,
+    irr,
     equityMultiple,
     dscr,
+    dscrDisplay,
     breakevenOccupancy,
+    breakevenOccupancyDisplay,
     totalEquityInvested: totalEquity,
     totalCashFlow,
     totalProfit,
+    warnings: calculationWarnings,
   };
 
   // Sensitivity tables (skip for "quick" calculations to avoid recursion)
