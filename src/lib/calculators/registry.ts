@@ -28,6 +28,17 @@ export const CALCULATORS: CalculatorMetadata[] = [
     path: "/brrrr",
   },
   {
+    id: "syndication",
+    name: "Syndication Analyzer",
+    shortDescription: "LP/GP waterfall structures",
+    description:
+      "Model complex syndication structures with preferred returns, promote calculations, investor distributions, and full waterfall audit trails.",
+    icon: "Users",
+    tier: "basic",
+    status: "available",
+    path: "/syndication",
+  },
+  {
     id: "commercial",
     name: "Commercial Underwriting",
     shortDescription: "Office, retail, and industrial properties",
@@ -45,17 +56,6 @@ export const CALCULATORS: CalculatorMetadata[] = [
     description:
       "Underwrite large apartment complexes with unit mix analysis, expense ratios, and institutional-grade reporting.",
     icon: "Building",
-    tier: "pro",
-    status: "coming_soon",
-    path: "/pricing",
-  },
-  {
-    id: "syndication",
-    name: "Syndication Analyzer",
-    shortDescription: "LP/GP waterfall structures",
-    description:
-      "Model complex syndication structures with preferred returns, promote calculations, and investor distributions.",
-    icon: "Users",
     tier: "pro",
     status: "coming_soon",
     path: "/pricing",
