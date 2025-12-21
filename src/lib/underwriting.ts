@@ -220,48 +220,82 @@ export function calculateIRR(cashFlows: number[], guess: number = 0.1): number {
   // Guard: first cash flow should be negative (investment)
   if (cashFlows[0] >= 0) return 0;
   
-  // Guard: check if there's any positive cash flow
-  const hasPositive = cashFlows.slice(1).some(cf => cf > 0);
-  if (!hasPositive) return 0;
+  // Calculate total sum to determine if there's any return at all
+  const totalSum = cashFlows.reduce((sum, cf) => sum + cf, 0);
+  
+  // If total sum is exactly zero or very close, IRR is effectively 0
+  if (Math.abs(totalSum) < 0.01) return 0;
 
-  const maxIterations = 100;
-  const tolerance = 1e-7;
-  let rate = guess;
+  const maxIterations = 200;
+  const tolerance = 1e-9;
+  
+  // Try multiple starting guesses to handle both positive and negative IRR scenarios
+  const guesses = totalSum > 0 
+    ? [0.01, 0.05, 0.1, 0.2, -0.01, -0.05] // Likely positive IRR
+    : [-0.01, -0.05, -0.1, 0.01, 0.05, -0.2]; // Likely negative IRR
 
-  for (let i = 0; i < maxIterations; i++) {
-    let npv = 0;
-    let dnpv = 0;
+  for (const startGuess of guesses) {
+    let rate = startGuess;
+    let converged = false;
+    let finalRate = 0;
 
-    for (let t = 0; t < cashFlows.length; t++) {
-      const factor = Math.pow(1 + rate, t);
-      npv += cashFlows[t] / factor;
-      dnpv -= t * cashFlows[t] / (factor * (1 + rate));
+    for (let i = 0; i < maxIterations; i++) {
+      let npv = 0;
+      let dnpv = 0;
+
+      for (let t = 0; t < cashFlows.length; t++) {
+        const factor = Math.pow(1 + rate, t);
+        if (factor === 0 || !isFinite(factor)) break;
+        npv += cashFlows[t] / factor;
+        dnpv -= t * cashFlows[t] / (factor * (1 + rate));
+      }
+
+      // Guard against division by zero or invalid values
+      if (dnpv === 0 || !isFinite(dnpv) || !isFinite(npv)) {
+        break;
+      }
+
+      const newRate = rate - npv / dnpv;
+      
+      // Guard against invalid rate (rate cannot go below -100%)
+      if (!isFinite(newRate) || newRate <= -1) {
+        break;
+      }
+      
+      if (Math.abs(newRate - rate) < tolerance) {
+        converged = true;
+        finalRate = newRate;
+        break;
+      }
+      
+      rate = newRate;
     }
 
-    // Guard against division by zero or invalid values
-    if (dnpv === 0 || !isFinite(dnpv) || !isFinite(npv)) {
-      return 0;
-    }
-
-    const newRate = rate - npv / dnpv;
-    
-    // Guard against invalid rate
-    if (!isFinite(newRate) || newRate <= -1) {
-      return 0;
-    }
-    
-    if (Math.abs(newRate - rate) < tolerance) {
+    if (converged) {
       // Convert monthly IRR to annual
-      const annualIRR = Math.pow(1 + newRate, 12) - 1;
-      return isFinite(annualIRR) ? annualIRR : 0;
+      const annualIRR = Math.pow(1 + finalRate, 12) - 1;
+      if (isFinite(annualIRR) && annualIRR > -1) {
+        return annualIRR;
+      }
     }
-    
-    rate = newRate;
   }
 
-  // Fallback: simple annualization with guard
-  const fallback = rate * 12;
-  return isFinite(fallback) ? fallback : 0;
+  // Fallback: if we have a negative total, return a rough negative IRR estimate
+  if (totalSum < 0) {
+    // Rough approximation for very negative scenarios
+    const investment = -cashFlows[0];
+    const months = cashFlows.length - 1;
+    if (investment > 0 && months > 0) {
+      const avgMonthlyReturn = totalSum / months;
+      const roughMonthlyRate = avgMonthlyReturn / investment;
+      const roughAnnual = Math.pow(1 + roughMonthlyRate, 12) - 1;
+      if (isFinite(roughAnnual) && roughAnnual > -1) {
+        return roughAnnual;
+      }
+    }
+  }
+
+  return 0;
 }
 
 export function runUnderwriting(
