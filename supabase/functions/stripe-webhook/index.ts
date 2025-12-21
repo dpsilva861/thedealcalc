@@ -2,44 +2,118 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+// Security headers for responses
+const securityHeaders = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Content-Type": "application/json",
+};
+
+// Startup validation - fail fast if secrets are missing
+const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
+const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+if (!STRIPE_SECRET_KEY) {
+  console.error("FATAL: STRIPE_SECRET_KEY is not configured");
+}
+if (!STRIPE_WEBHOOK_SECRET) {
+  console.error("FATAL: STRIPE_WEBHOOK_SECRET is not configured - webhook signature verification will fail");
+}
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("FATAL: Supabase credentials not configured");
+}
+
+const stripe = new Stripe(STRIPE_SECRET_KEY || "", {
   apiVersion: "2023-10-16",
 });
 
-const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+// Allowed plan tiers and calculator IDs for validation
+const ALLOWED_PLAN_TIERS = ["free", "basic", "pro"];
+const ALLOWED_CALCULATORS = ["residential", "commercial", "multifamily"];
+const ALLOWED_SUBSCRIPTION_STATUSES = ["active", "inactive", "past_due", "canceled"];
+
+// Validate and sanitize plan tier
+function validatePlanTier(tier: string | undefined): string {
+  const normalized = (tier || "basic").toLowerCase().trim();
+  return ALLOWED_PLAN_TIERS.includes(normalized) ? normalized : "basic";
+}
+
+// Validate and sanitize calculator
+function validateCalculator(calc: string | undefined): string {
+  const normalized = (calc || "residential").toLowerCase().trim();
+  return ALLOWED_CALCULATORS.includes(normalized) ? normalized : "residential";
+}
+
+// Validate subscription status
+function validateStatus(status: string): string {
+  return ALLOWED_SUBSCRIPTION_STATUSES.includes(status) ? status : "inactive";
+}
+
+// Redact sensitive data from logging
+function safeLog(message: string, data?: Record<string, unknown>) {
+  const safeData = data ? { ...data } : {};
+  // Never log these fields
+  delete safeData.email;
+  delete safeData.customer;
+  delete safeData.customerId;
+  console.log(message, Object.keys(safeData).length > 0 ? JSON.stringify(safeData) : "");
+}
 
 serve(async (req) => {
-  const signature = req.headers.get("stripe-signature");
-  const body = await req.text();
-
-  console.log("Received webhook request");
-
-  let event: Stripe.Event;
-  
-  try {
-    if (!webhookSecret) {
-      console.error("CRITICAL: STRIPE_WEBHOOK_SECRET is not configured");
-      console.warn("WARNING: Processing webhook without signature verification!");
-      event = JSON.parse(body) as Stripe.Event;
-    } else if (!signature) {
-      console.error("No stripe-signature header present");
-      return new Response("Missing stripe-signature header", { status: 400 });
-    } else {
-      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
-      console.log("Webhook signature verified successfully");
-    }
-    console.log("Webhook event type:", event.type, "| Event ID:", event.id);
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err);
-    return new Response("Webhook signature verification failed", { status: 400 });
+  // Rate limiting: basic request size check (10KB max for webhooks)
+  const contentLength = parseInt(req.headers.get("content-length") || "0");
+  if (contentLength > 10240) {
+    return new Response(JSON.stringify({ error: "Payload too large" }), {
+      headers: securityHeaders,
+      status: 413,
+    });
   }
 
-  const supabaseAdmin = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-  );
+  // Require webhook secret to be configured
+  if (!STRIPE_WEBHOOK_SECRET) {
+    console.error("CRITICAL: STRIPE_WEBHOOK_SECRET is not configured - rejecting webhook");
+    return new Response(JSON.stringify({ error: "Webhook not configured" }), {
+      headers: securityHeaders,
+      status: 500,
+    });
+  }
 
-  // Idempotency check - check database for processed events
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("CRITICAL: Supabase credentials not configured");
+    return new Response(JSON.stringify({ error: "Server configuration error" }), {
+      headers: securityHeaders,
+      status: 500,
+    });
+  }
+
+  const signature = req.headers.get("stripe-signature");
+  if (!signature) {
+    safeLog("Rejected: Missing stripe-signature header");
+    return new Response(JSON.stringify({ error: "Missing signature" }), {
+      headers: securityHeaders,
+      status: 400,
+    });
+  }
+
+  const body = await req.text();
+  let event: Stripe.Event;
+
+  try {
+    event = await stripe.webhooks.constructEventAsync(body, signature, STRIPE_WEBHOOK_SECRET);
+    safeLog("Webhook verified", { type: event.type, id: event.id });
+  } catch (err) {
+    safeLog("Webhook signature verification failed");
+    return new Response(JSON.stringify({ error: "Invalid signature" }), {
+      headers: securityHeaders,
+      status: 400,
+    });
+  }
+
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  // Idempotency check
   const { data: existingEvent } = await supabaseAdmin
     .from("stripe_events")
     .select("id")
@@ -47,9 +121,9 @@ serve(async (req) => {
     .maybeSingle();
 
   if (existingEvent) {
-    console.log(`Event ${event.id} already processed, skipping (idempotency)`);
+    safeLog("Event already processed (idempotency)", { id: event.id });
     return new Response(JSON.stringify({ received: true, skipped: true }), {
-      headers: { "Content-Type": "application/json" },
+      headers: securityHeaders,
       status: 200,
     });
   }
@@ -58,31 +132,38 @@ serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log("Processing checkout.session.completed:", session.id);
         
         const customerId = session.customer as string;
         const subscriptionId = session.subscription as string;
         
-        // Get user_id from metadata or client_reference_id
+        // CRITICAL: Get user_id from Stripe metadata only - never trust client
         const userId = session.metadata?.user_id || session.client_reference_id;
-        const planTier = session.metadata?.plan_tier || "basic";
-        const selectedCalculator = session.metadata?.selected_calculator || "residential";
+        
+        // Validate inputs
+        const planTier = validatePlanTier(session.metadata?.plan_tier);
+        const selectedCalculator = validateCalculator(session.metadata?.selected_calculator);
 
         if (!userId) {
-          console.error("No user_id in session metadata or client_reference_id");
+          safeLog("No user_id in session metadata or client_reference_id");
           break;
         }
 
-        console.log("Activating subscription for user:", userId, "calculator:", selectedCalculator);
+        // Validate userId format (UUID)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(userId)) {
+          safeLog("Invalid user_id format in metadata");
+          break;
+        }
 
-        // Fetch subscription details for accurate end date
+        safeLog("Activating subscription", { userId: userId.substring(0, 8) + "...", planTier });
+
         let subscriptionEndDate: string | null = null;
         if (subscriptionId) {
           try {
             const subscription = await stripe.subscriptions.retrieve(subscriptionId);
             subscriptionEndDate = new Date(subscription.current_period_end * 1000).toISOString();
           } catch (subErr) {
-            console.error("Failed to fetch subscription details:", subErr);
+            safeLog("Failed to fetch subscription details");
           }
         }
 
@@ -91,7 +172,7 @@ serve(async (req) => {
           .update({
             stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId,
-            subscription_status: "active",
+            subscription_status: validateStatus("active"),
             subscription_end_date: subscriptionEndDate,
             plan_tier: planTier,
             selected_calculator: selectedCalculator,
@@ -99,23 +180,28 @@ serve(async (req) => {
           .eq("user_id", userId);
 
         if (error) {
-          console.error("Error updating profile for checkout:", error);
+          safeLog("Error updating profile for checkout");
           throw error;
         }
-        console.log("Successfully activated Basic subscription for user:", userId);
+        safeLog("Subscription activated", { userId: userId.substring(0, 8) + "..." });
         break;
       }
 
       case "customer.subscription.created": {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log("Processing subscription.created:", subscription.id);
 
         const userId = subscription.metadata?.user_id;
-        const planTier = subscription.metadata?.plan_tier || "basic";
-        const selectedCalculator = subscription.metadata?.selected_calculator || "residential";
+        const planTier = validatePlanTier(subscription.metadata?.plan_tier);
+        const selectedCalculator = validateCalculator(subscription.metadata?.selected_calculator);
         const customerId = subscription.customer as string;
 
         if (userId) {
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!uuidRegex.test(userId)) {
+            safeLog("Invalid user_id format in subscription metadata");
+            break;
+          }
+
           const endDate = subscription.current_period_end 
             ? new Date(subscription.current_period_end * 1000).toISOString()
             : null;
@@ -125,7 +211,7 @@ serve(async (req) => {
             .update({
               stripe_customer_id: customerId,
               stripe_subscription_id: subscription.id,
-              subscription_status: "active",
+              subscription_status: validateStatus("active"),
               subscription_end_date: endDate,
               plan_tier: planTier,
               selected_calculator: selectedCalculator,
@@ -133,9 +219,9 @@ serve(async (req) => {
             .eq("user_id", userId);
 
           if (error) {
-            console.error("Error updating profile for subscription.created:", error);
+            safeLog("Error updating profile for subscription.created");
           } else {
-            console.log("Subscription created for user:", userId);
+            safeLog("Subscription created", { userId: userId.substring(0, 8) + "..." });
           }
         }
         break;
@@ -143,7 +229,6 @@ serve(async (req) => {
 
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log("Processing subscription.updated:", subscription.id, "status:", subscription.status);
 
         let status: string;
         let planTier: string;
@@ -152,11 +237,11 @@ serve(async (req) => {
           case "active":
           case "trialing":
             status = "active";
-            planTier = subscription.metadata?.plan_tier || "basic";
+            planTier = validatePlanTier(subscription.metadata?.plan_tier);
             break;
           case "past_due":
             status = "past_due";
-            planTier = subscription.metadata?.plan_tier || "basic";
+            planTier = validatePlanTier(subscription.metadata?.plan_tier);
             break;
           case "canceled":
           case "unpaid":
@@ -172,11 +257,10 @@ serve(async (req) => {
           ? new Date(subscription.current_period_end * 1000).toISOString()
           : null;
 
-        // First try by subscription ID
         const { data, error } = await supabaseAdmin
           .from("profiles")
           .update({
-            subscription_status: status,
+            subscription_status: validateStatus(status),
             subscription_end_date: endDate,
             plan_tier: planTier,
           })
@@ -184,67 +268,63 @@ serve(async (req) => {
           .select();
 
         if (error) {
-          console.error("Error updating subscription:", error);
+          safeLog("Error updating subscription");
           throw error;
         }
 
         if (!data || data.length === 0) {
-          // Fallback: try by customer ID
           const customerId = subscription.customer as string;
-          console.log("No profile by subscription_id, trying customer_id:", customerId);
+          safeLog("No profile by subscription_id, trying customer_id");
           
           await supabaseAdmin
             .from("profiles")
             .update({
               stripe_subscription_id: subscription.id,
-              subscription_status: status,
+              subscription_status: validateStatus(status),
               subscription_end_date: endDate,
               plan_tier: planTier,
             })
             .eq("stripe_customer_id", customerId);
         }
 
-        console.log("Subscription updated successfully");
+        safeLog("Subscription updated", { status });
         break;
       }
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log("Processing subscription.deleted:", subscription.id);
 
         const { error } = await supabaseAdmin
           .from("profiles")
           .update({
-            subscription_status: "canceled",
+            subscription_status: validateStatus("canceled"),
             stripe_subscription_id: null,
             plan_tier: "free",
-            // Keep selected_calculator for re-subscription
           })
           .eq("stripe_subscription_id", subscription.id);
 
         if (error) {
-          console.error("Error canceling subscription:", error);
+          safeLog("Error canceling subscription");
           throw error;
         }
-        console.log("Subscription canceled, user downgraded to free");
+        safeLog("Subscription canceled, user downgraded to free");
         break;
       }
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log("Processing invoice.payment_succeeded:", invoice.id);
 
         const subscriptionId = invoice.subscription as string;
         if (subscriptionId) {
           const { error } = await supabaseAdmin
             .from("profiles")
-            .update({ subscription_status: "active" })
+            .update({ subscription_status: validateStatus("active") })
             .eq("stripe_subscription_id", subscriptionId);
 
           if (error) {
-            console.error("Error updating after payment success:", error);
+            safeLog("Error updating after payment success");
           } else {
-            console.log("Subscription reactivated after payment");
+            safeLog("Subscription reactivated after payment");
           }
         }
         break;
@@ -252,26 +332,25 @@ serve(async (req) => {
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log("Processing invoice.payment_failed:", invoice.id);
 
         const subscriptionId = invoice.subscription as string;
         if (subscriptionId) {
           const { error } = await supabaseAdmin
             .from("profiles")
-            .update({ subscription_status: "past_due" })
+            .update({ subscription_status: validateStatus("past_due") })
             .eq("stripe_subscription_id", subscriptionId);
 
           if (error) {
-            console.error("Error updating payment status:", error);
+            safeLog("Error updating payment status");
             throw error;
           }
-          console.log("Profile updated to past_due status");
+          safeLog("Profile updated to past_due status");
         }
         break;
       }
 
       default:
-        console.log("Unhandled event type:", event.type);
+        safeLog("Unhandled event type", { type: event.type });
     }
 
     // Mark event as processed (idempotency)
@@ -280,18 +359,17 @@ serve(async (req) => {
       .insert({ id: event.id, event_type: event.type });
 
     if (insertError) {
-      console.warn("Failed to record event for idempotency:", insertError);
+      safeLog("Failed to record event for idempotency");
     }
 
     return new Response(JSON.stringify({ received: true }), {
-      headers: { "Content-Type": "application/json" },
+      headers: securityHeaders,
       status: 200,
     });
   } catch (error) {
-    console.error("Webhook processing error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
-      headers: { "Content-Type": "application/json" },
+    safeLog("Webhook processing error");
+    return new Response(JSON.stringify({ error: "Processing failed" }), {
+      headers: securityHeaders,
       status: 500,
     });
   }

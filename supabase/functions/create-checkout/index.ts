@@ -1,17 +1,38 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+// CORS configuration - restrict to known origins in production
+const ALLOWED_ORIGINS = [
+  "https://yneaxuokgfqyoomycjam.lovableproject.com",
+  "https://dealcalc.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.some(o => origin.startsWith(o.replace(/\/$/, "")))
+    ? origin
+    : ALLOWED_ORIGINS[0];
+  
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Content-Type": "application/json",
+  };
+}
 
 const STRIPE_API_BASE = "https://api.stripe.com/v1";
 
+// Allowed values for input validation
+const ALLOWED_CALCULATORS = ["residential", "commercial", "multifamily"];
+const MAX_ORIGIN_LENGTH = 200;
+
 function requireEnv(name: string) {
   const v = Deno.env.get(name);
-  if (!v) throw new Error(`Missing environment variable: ${name}`);
+  if (!v) throw new Error(`Missing required environment variable: ${name}`);
   return v;
 }
 
@@ -20,31 +41,49 @@ function getStripeSecret() {
   const sanitized = raw.replace(/\s+/g, "").replace(/[^\x21-\x7E]/g, "");
 
   if (sanitized !== raw) {
-    console.warn("STRIPE_SECRET_KEY contains whitespace/non-ASCII characters.");
-    throw new Error(
-      "STRIPE_SECRET_KEY looks corrupted. Re-copy from Stripe Dashboard → Developers → API keys."
-    );
+    throw new Error("STRIPE_SECRET_KEY contains invalid characters");
   }
 
   if (raw.startsWith("pk_")) {
-    throw new Error(
-      "You pasted a publishable key (pk_...). Use the Secret key (sk_test_... or sk_live_...)."
-    );
+    throw new Error("Invalid key type: use secret key (sk_*), not publishable key");
   }
 
   if (/[\*•…]/.test(raw)) {
-    throw new Error(
-      "You pasted a masked/redacted key. Re-copy from Stripe Dashboard."
-    );
+    throw new Error("STRIPE_SECRET_KEY appears to be masked/redacted");
   }
 
   if (!/^sk_(test|live)_[0-9a-zA-Z_]+$/.test(raw)) {
-    throw new Error(
-      "Invalid STRIPE_SECRET_KEY format. Use sk_test_ or sk_live_ key."
-    );
+    throw new Error("Invalid STRIPE_SECRET_KEY format");
   }
 
   return raw;
+}
+
+// Validate and sanitize calculator selection
+function validateCalculator(input: unknown): string {
+  if (typeof input !== "string") return "residential";
+  const normalized = input.toLowerCase().trim().slice(0, 50);
+  return ALLOWED_CALCULATORS.includes(normalized) ? normalized : "residential";
+}
+
+// Validate origin URL
+function validateOrigin(input: unknown, defaultOrigin: string): string {
+  if (typeof input !== "string") return defaultOrigin;
+  const trimmed = input.trim().slice(0, MAX_ORIGIN_LENGTH);
+  
+  // Must be a valid HTTPS URL (or localhost for dev)
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol === "https:" || url.hostname === "localhost") {
+      // Check against allowed origins
+      if (ALLOWED_ORIGINS.some(o => trimmed.startsWith(o.replace(/\/$/, "")))) {
+        return trimmed;
+      }
+    }
+  } catch {
+    // Invalid URL
+  }
+  return defaultOrigin;
 }
 
 async function stripeFetch<T>(
@@ -76,9 +115,7 @@ async function stripeFetch<T>(
   const res = await fetch(url.toString(), { method, headers, body });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const message =
-      (json && (json.error?.message as string)) ||
-      `Stripe request failed: ${res.status}`;
+    const message = (json && (json.error?.message as string)) || `Stripe request failed: ${res.status}`;
     throw new Error(message);
   }
   return json as T;
@@ -90,19 +127,71 @@ type StripeProduct = { id: string; name: string };
 type StripePrice = { id: string; unit_amount: number | null; currency: string; recurring?: { interval: string } | null; active?: boolean };
 type StripeCheckoutSession = { id: string; url: string | null };
 
+// Simple in-memory rate limiting (per user, resets on function cold start)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+  
+  entry.count++;
+  return true;
+}
+
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Only allow POST
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      headers: corsHeaders,
+      status: 405,
+    });
+  }
+
+  // Request size limit (16KB should be more than enough for checkout request)
+  const contentLength = parseInt(req.headers.get("content-length") || "0");
+  if (contentLength > 16384) {
+    return new Response(JSON.stringify({ error: "Request too large" }), {
+      headers: corsHeaders,
+      status: 413,
+    });
+  }
+
   try {
+    // Validate required env vars at request time
+    requireEnv("STRIPE_SECRET_KEY");
+    requireEnv("SUPABASE_URL");
+    requireEnv("SUPABASE_ANON_KEY");
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        headers: corsHeaders,
+        status: 401,
+      });
+    }
 
     const token = authHeader.replace("Bearer ", "");
     const {
@@ -111,27 +200,38 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser(token);
 
     if (userError || !user) {
-      console.error("Auth error:", userError);
-      throw new Error("User not authenticated");
+      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+        headers: corsHeaders,
+        status: 401,
+      });
     }
 
-    console.log("Creating checkout for user:", user.id, user.email);
+    // Rate limiting
+    if (!checkRateLimit(user.id)) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please wait a minute." }), {
+        headers: corsHeaders,
+        status: 429,
+      });
+    }
 
-    // Parse request body
-    let origin = "https://yneaxuokgfqyoomycjam.lovableproject.com";
-    let selectedCalculator = "residential"; // default calculator
+    console.log("Creating checkout for user:", user.id.substring(0, 8) + "...");
+
+    // Parse and validate request body
+    const defaultOrigin = "https://yneaxuokgfqyoomycjam.lovableproject.com";
+    let validatedOrigin = defaultOrigin;
+    let selectedCalculator = "residential";
     
     try {
       const body = await req.json();
-      if (body?.origin) origin = String(body.origin);
-      if (body?.selectedCalculator) selectedCalculator = String(body.selectedCalculator);
+      validatedOrigin = validateOrigin(body?.origin, defaultOrigin);
+      selectedCalculator = validateCalculator(body?.selectedCalculator);
     } catch {
-      // ignore
+      // Use defaults if body parsing fails
     }
 
-    console.log("Selected calculator:", selectedCalculator);
+    console.log("Validated calculator:", selectedCalculator);
 
-    // 1) Get or create customer
+    // Get or create customer
     const customers = await stripeFetch<StripeListResponse<StripeCustomer>>(
       "/customers",
       {
@@ -146,7 +246,6 @@ serve(async (req) => {
     let customerId: string;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      console.log("Found existing customer:", customerId);
     } else {
       const customer = await stripeFetch<StripeCustomer>("/customers", {
         method: "POST",
@@ -156,10 +255,9 @@ serve(async (req) => {
         },
       });
       customerId = customer.id;
-      console.log("Created new customer:", customerId);
     }
 
-    // 2) Get or create product + price for Basic Plan
+    // Get or create product + price for Basic Plan
     const products = await stripeFetch<StripeListResponse<StripeProduct>>(
       "/products",
       {
@@ -171,7 +269,6 @@ serve(async (req) => {
       }
     );
 
-    // Look for "Basic Plan" or "Pro Subscription" (legacy name)
     const existingProduct = products.data.find(
       (p) => p.name === "Basic Plan" || p.name === "Pro Subscription"
     );
@@ -179,8 +276,6 @@ serve(async (req) => {
     let priceId: string;
 
     if (!existingProduct) {
-      console.log("Creating new Basic Plan product and price");
-
       const product = await stripeFetch<StripeProduct>("/products", {
         method: "POST",
         form: {
@@ -223,7 +318,6 @@ serve(async (req) => {
       if (matchingPrice?.id) {
         priceId = matchingPrice.id;
       } else {
-        console.log("No $3/month price found; creating a new one");
         const price = await stripeFetch<StripePrice>("/prices", {
           method: "POST",
           form: {
@@ -237,9 +331,7 @@ serve(async (req) => {
       }
     }
 
-    console.log("Using price ID:", priceId);
-
-    // 3) Create checkout session with metadata
+    // Create checkout session with validated metadata
     const session = await stripeFetch<StripeCheckoutSession>(
       "/checkout/sessions",
       {
@@ -247,8 +339,8 @@ serve(async (req) => {
         form: {
           customer: customerId,
           mode: "subscription",
-          success_url: `${origin}/account?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${origin}/pricing?checkout=cancel`,
+          success_url: `${validatedOrigin}/account?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${validatedOrigin}/pricing?checkout=cancel`,
           "line_items[0][price]": priceId,
           "line_items[0][quantity]": "1",
           client_reference_id: user.id,
@@ -262,19 +354,19 @@ serve(async (req) => {
       }
     );
 
-    console.log("Created checkout session:", session.id);
+    console.log("Created checkout session successfully");
 
     if (!session.url) throw new Error("Stripe did not return a checkout URL");
 
     return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: corsHeaders,
       status: 200,
     });
   } catch (error) {
-    console.error("Checkout error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error("Checkout error occurred");
+    // Return generic error message - don't expose internal details
+    return new Response(JSON.stringify({ error: "Failed to create checkout session" }), {
+      headers: corsHeaders,
       status: 400,
     });
   }

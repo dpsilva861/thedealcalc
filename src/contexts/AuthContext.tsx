@@ -196,14 +196,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const selectedCalculator = profile?.selected_calculator || null;
   const isSubscribed = profile?.subscription_status === "active" && planTier !== "free";
   
-  // Admin emails get unlimited free access
-  const ADMIN_EMAILS = ["dpsilva861@gmail.com"];
-  const isAdminUser = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+  // Free trial calculation
+  const freeTrialRemaining = profile 
+    ? Math.max(0, (profile.free_analyses_limit || 1) - (profile.analyses_used || 0))
+    : 0;
   
   // Check if user can access a specific calculator
+  // NOTE: All access control is enforced server-side via RLS policies
+  // This is purely for UI/UX - the source of truth is the database
   const canAccessCalculator = (calculatorId: string): boolean => {
-    if (isAdminUser) return true;
-    
     if (planTier === "basic" && isSubscribed) {
       // Basic plan: only selected calculator
       return calculatorId === selectedCalculator;
@@ -218,15 +219,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return freeTrialRemaining > 0;
   };
   
-  const freeTrialRemaining = profile 
-    ? Math.max(0, (profile.free_analyses_limit || 1) - (profile.analyses_used || 0))
-    : 0;
-  
-  // User can run analysis if:
-  // - Subscribed and accessing their selected calculator
-  // - Has free trial remaining
-  // - Is admin
-  const canRunAnalysis = isSubscribed || freeTrialRemaining > 0 || isAdminUser;
+  // User can run analysis if subscribed or has free trial remaining
+  // NOTE: This is for UI display only - actual access is enforced by RLS
+  const canRunAnalysis = isSubscribed || freeTrialRemaining > 0;
 
   return (
     <AuthContext.Provider
