@@ -86,6 +86,8 @@ export function getCalculatorRoute(calculatorId: string): string {
       return "/underwrite";
     case "brrrr":
       return "/brrrr";
+    case "syndication":
+      return "/syndication";
     default:
       return "/underwrite";
   }
