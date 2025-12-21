@@ -2,53 +2,123 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// CORS configuration - restrict to known origins
+const ALLOWED_ORIGINS = [
+  "https://yneaxuokgfqyoomycjam.lovableproject.com",
+  "https://dealcalc.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.some(o => origin.startsWith(o.replace(/\/$/, "")))
+    ? origin
+    : ALLOWED_ORIGINS[0];
+  
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Content-Type": "application/json",
+  };
+}
+
+// Simple rate limiting
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60000;
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+  
+  entry.count++;
+  return true;
+}
 
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      headers: corsHeaders,
+      status: 405,
+    });
+  }
+
   try {
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
+
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY || !STRIPE_SECRET_KEY) {
+      throw new Error("Server configuration error");
+    }
+
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        headers: corsHeaders,
+        status: 401,
+      });
     }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     
     if (userError || !user) {
-      throw new Error("User not authenticated");
+      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+        headers: corsHeaders,
+        status: 401,
+      });
     }
 
-    console.log("Syncing subscription for user:", user.id);
+    // Rate limiting
+    if (!checkRateLimit(user.id)) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please wait." }), {
+        headers: corsHeaders,
+        status: 429,
+      });
+    }
 
-    // Get the user's profile
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    console.log("Syncing subscription for user:", user.id.substring(0, 8) + "...");
 
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Get the user's profile - use authenticated user's ID
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("*")
+      .select("stripe_customer_id")
       .eq("user_id", user.id)
       .single();
 
     if (profileError || !profile) {
-      throw new Error("Profile not found");
+      return new Response(JSON.stringify({ error: "Profile not found" }), {
+        headers: corsHeaders,
+        status: 404,
+      });
     }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripe = new Stripe(STRIPE_SECRET_KEY, {
       apiVersion: "2023-10-16",
     });
 
@@ -65,7 +135,6 @@ serve(async (req) => {
       });
       if (customers.data.length > 0) {
         syncedCustomerId = customers.data[0].id;
-        console.log("Found customer by email:", syncedCustomerId);
       }
     }
 
@@ -77,7 +146,6 @@ serve(async (req) => {
         limit: 10,
       });
 
-      // Find the most recent active or trialing subscription
       const activeSubscription = subscriptions.data.find(
         (sub: Stripe.Subscription) => sub.status === "active" || sub.status === "trialing"
       );
@@ -86,9 +154,7 @@ serve(async (req) => {
         syncedStatus = "active";
         syncedSubscriptionId = activeSubscription.id;
         syncedEndDate = new Date(activeSubscription.current_period_end * 1000).toISOString();
-        console.log("Found active subscription:", syncedSubscriptionId);
       } else {
-        // Check for past_due
         const pastDueSubscription = subscriptions.data.find(
           (sub: Stripe.Subscription) => sub.status === "past_due"
         );
@@ -96,16 +162,11 @@ serve(async (req) => {
           syncedStatus = "past_due";
           syncedSubscriptionId = pastDueSubscription.id;
           syncedEndDate = new Date(pastDueSubscription.current_period_end * 1000).toISOString();
-          console.log("Found past_due subscription:", syncedSubscriptionId);
-        } else {
-          console.log("No active subscriptions found");
         }
       }
-    } else {
-      console.log("No Stripe customer found for this user");
     }
 
-    // Update the profile with synced data
+    // Update the profile with synced data - only update the authenticated user's profile
     const { error: updateError } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -118,7 +179,7 @@ serve(async (req) => {
       .eq("user_id", user.id);
 
     if (updateError) {
-      console.error("Error updating profile:", updateError);
+      console.error("Error updating profile");
       throw updateError;
     }
 
@@ -127,17 +188,14 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       status: syncedStatus,
-      subscription_id: syncedSubscriptionId,
-      end_date: syncedEndDate,
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: corsHeaders,
       status: 200,
     });
   } catch (error) {
-    console.error("Sync error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error("Sync error occurred");
+    return new Response(JSON.stringify({ error: "Sync failed" }), {
+      headers: corsHeaders,
       status: 400,
     });
   }

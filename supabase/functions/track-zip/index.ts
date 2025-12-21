@@ -1,30 +1,91 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// CORS configuration - restrict to known origins
+const ALLOWED_ORIGINS = [
+  "https://yneaxuokgfqyoomycjam.lovableproject.com",
+  "https://dealcalc.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.some(o => origin.startsWith(o.replace(/\/$/, "")))
+    ? origin
+    : ALLOWED_ORIGINS[0];
+  
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Type": "application/json",
+  };
+}
+
+// Input validation
+function validateZipCode(input: unknown): string | null {
+  if (typeof input !== "string") return null;
+  const trimmed = input.trim();
+  // US ZIP code: 5 digits
+  if (!/^\d{5}$/.test(trimmed)) return null;
+  return trimmed;
+}
+
+function validateCityState(input: unknown): string | null {
+  if (typeof input !== "string") return null;
+  const trimmed = input.trim().slice(0, 100);
+  // Only allow alphanumeric, spaces, hyphens, periods
+  if (!/^[a-zA-Z0-9\s\-\.]*$/.test(trimmed)) return null;
+  return trimmed || null;
+}
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const { zip_code, city, state } = await req.json();
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Method not allowed" }),
+      { status: 405, headers: corsHeaders }
+    );
+  }
 
-    if (!zip_code) {
+  // Request size limit
+  const contentLength = parseInt(req.headers.get("content-length") || "0");
+  if (contentLength > 1024) {
+    return new Response(
+      JSON.stringify({ error: "Request too large" }),
+      { status: 413, headers: corsHeaders }
+    );
+  }
+
+  try {
+    const body = await req.json();
+    
+    const zipCode = validateZipCode(body?.zip_code);
+    if (!zipCode) {
       return new Response(
-        JSON.stringify({ error: "zip_code is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Invalid zip_code format" }),
+        { status: 400, headers: corsHeaders }
       );
     }
 
-    console.log(`Tracking ZIP code: ${zip_code}, city: ${city}, state: ${state}`);
+    const city = validateCityState(body?.city);
+    const state = validateCityState(body?.state);
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    console.log("Tracking ZIP code:", zipCode);
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Server configuration error");
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Upsert zip code - increment count if exists, insert if new
@@ -32,9 +93,9 @@ Deno.serve(async (req) => {
       .from("zip_codes")
       .upsert(
         {
-          zip_code,
-          city: city || null,
-          state: state || null,
+          zip_code: zipCode,
+          city: city,
+          state: state,
           analysis_count: 1,
         },
         {
@@ -44,27 +105,25 @@ Deno.serve(async (req) => {
       );
 
     if (error) {
-      // If upsert failed due to conflict, try updating the count
-      console.log("Upsert failed, trying to increment:", error.message);
-      
+      // If upsert failed, try incrementing
       const { error: updateError } = await supabase
-        .rpc("increment_zip_count", { p_zip_code: zip_code });
+        .rpc("increment_zip_count", { p_zip_code: zipCode });
       
       if (updateError) {
-        console.error("Failed to increment zip count:", updateError);
         // Don't fail the request - this is just analytics
+        console.error("Failed to track zip code");
       }
     }
 
     return new Response(
       JSON.stringify({ success: true }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: corsHeaders }
     );
   } catch (err) {
-    console.error("Error tracking ZIP:", err);
+    console.error("Error tracking ZIP");
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: corsHeaders }
     );
   }
 });

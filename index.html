@@ -4,18 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DealCalc - Professional Real Estate Underwriting</title>
-    <meta name="description" content="Analyze residential investment properties with confidence. Accurate calculations, beautiful reports, and complete privacy for $5/month." />
+    <meta name="description" content="Analyze residential investment properties with confidence. Accurate calculations, beautiful reports, and complete privacy for $3/month." />
     <meta name="author" content="DealCalc" />
     <link rel="canonical" href="https://dealcalc.app" />
 
+    <!-- Security headers via meta tags -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    
+    <!-- Content Security Policy - allow Stripe, self, and inline styles for Tailwind -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'none';" />
+    
+    <!-- Permissions Policy - disable unnecessary features -->
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(self https://js.stripe.com)" />
+
     <meta property="og:title" content="DealCalc - Professional Real Estate Underwriting" />
-    <meta property="og:description" content="Unlimited deal analyses for $5/month. Accurate calculations, professional PDF reports, and complete data privacy." />
+    <meta property="og:description" content="Unlimited deal analyses for $3/month. Accurate calculations, professional PDF reports, and complete data privacy." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="DealCalc - Professional Real Estate Underwriting" />
-    <meta name="twitter:description" content="Unlimited deal analyses for $5/month. Accurate calculations, professional PDF reports, and complete data privacy." />
+    <meta name="twitter:description" content="Unlimited deal analyses for $3/month. Accurate calculations, professional PDF reports, and complete data privacy." />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <style>
