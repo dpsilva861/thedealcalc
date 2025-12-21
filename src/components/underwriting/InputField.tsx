@@ -77,7 +77,7 @@ export function InputField({
         )}
         <Input
           type="number"
-          value={value}
+          value={typeof value === "number" ? Math.round(value * 1e10) / 1e10 : value}
           onChange={handleChange}
           placeholder={placeholder}
           min={min}

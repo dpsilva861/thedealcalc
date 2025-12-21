@@ -44,10 +44,19 @@ const getDefaultPropertyAddress = (): BRRRRPropertyAddress => ({
 });
 
 const STORAGE_KEY = "brrrr_state";
+const RESULTS_KEY = "brrrr_results";
 
 const loadFromStorage = (): { inputs: BRRRRInputs; address: BRRRRPropertyAddress } | null => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return null;
+};
+
+const loadResultsFromStorage = (): BRRRRResults | null => {
+  try {
+    const stored = localStorage.getItem(RESULTS_KEY);
     if (stored) return JSON.parse(stored);
   } catch { /* ignore */ }
   return null;
@@ -59,10 +68,20 @@ const saveToStorage = (inputs: BRRRRInputs, address: BRRRRPropertyAddress) => {
   } catch { /* ignore */ }
 };
 
+const saveResultsToStorage = (results: BRRRRResults | null) => {
+  try {
+    if (results) {
+      localStorage.setItem(RESULTS_KEY, JSON.stringify(results));
+    } else {
+      localStorage.removeItem(RESULTS_KEY);
+    }
+  } catch { /* ignore */ }
+};
+
 export function BRRRRProvider({ children }: { children: React.ReactNode }) {
   const stored = loadFromStorage();
   const [inputs, setInputs] = useState<BRRRRInputs>(stored?.inputs || getDefaultBRRRRInputs());
-  const [results, setResults] = useState<BRRRRResults | null>(null);
+  const [results, setResults] = useState<BRRRRResults | null>(loadResultsFromStorage());
   const [currentStep, setCurrentStep] = useState(0);
   const [propertyAddress, setPropertyAddress] = useState<BRRRRPropertyAddress>(stored?.address || getDefaultPropertyAddress());
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
@@ -133,9 +152,11 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
     try {
       const analysisResults = runBRRRRAnalysis(inputs);
       setResults(analysisResults);
+      saveResultsToStorage(analysisResults);
     } catch (err) {
       console.error("BRRRR analysis failed:", err);
       setResults(null);
+      saveResultsToStorage(null);
     }
   }, [inputs]);
 
@@ -148,6 +169,7 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
     setPropertyAddress(defaultAddress);
     setSelectedPreset(null);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(RESULTS_KEY);
   }, []);
 
   return (
