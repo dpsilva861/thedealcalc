@@ -203,27 +203,31 @@ function ResultsContent() {
   const keyMetrics = [
     { 
       label: "IRR", 
-      value: formatPercent(metrics.irr), 
+      value: isFinite(metrics.irr) ? formatPercent(metrics.irr) : "N/A", 
       icon: TrendingUp,
-      description: "Internal Rate of Return (Annualized)"
+      description: "Internal Rate of Return (Annualized)",
+      isWarning: metrics.irr > 100 || metrics.irr < -50,
     },
     { 
       label: "Cash-on-Cash (Year 1)", 
-      value: formatPercent(metrics.cocYear1), 
+      value: isFinite(metrics.cocYear1) ? formatPercent(metrics.cocYear1) : "N/A", 
       icon: DollarSign,
-      description: "First year cash return on equity"
+      description: "First year cash return on equity",
+      isWarning: metrics.cocYear1 < -20,
     },
     { 
       label: "Equity Multiple", 
-      value: formatMultiple(metrics.equityMultiple), 
+      value: isFinite(metrics.equityMultiple) ? formatMultiple(metrics.equityMultiple) : "N/A", 
       icon: BarChart3,
-      description: "Total return / Initial equity"
+      description: "Total return / Initial equity",
+      isWarning: metrics.equityMultiple < 1 || metrics.equityMultiple > 10,
     },
     { 
       label: "DSCR", 
-      value: metrics.dscr.toFixed(2), 
+      value: metrics.dscrDisplay,
       icon: Percent,
-      description: "Debt Service Coverage Ratio"
+      description: "Debt Service Coverage Ratio",
+      isWarning: metrics.dscr > 0 && metrics.dscr < 1.2,
     },
   ];
 
@@ -755,19 +759,42 @@ function ResultsContent() {
     navigate("/underwrite");
   };
 
-  // Red flags / breakpoints
+  // Red flags / breakpoints - include calculation engine warnings
   const redFlags: string[] = [];
+  
+  // Add calculation engine warnings
+  metrics.warnings.forEach(w => {
+    if (w.severity === "error" || w.severity === "warn") {
+      redFlags.push(w.message);
+    }
+  });
+
+  // Sale price warnings
+  if (!saleAnalysis.isValid) {
+    redFlags.push("Exit cap rate is invalid. Sale price cannot be calculated.");
+  }
+  if (saleAnalysis.isValid && saleAnalysis.salePrice > currentInputs.acquisition.purchasePrice * 5) {
+    redFlags.push(`Sale price of ${formatCurrency(saleAnalysis.salePrice)} is over 5x purchase price. Verify exit cap rate assumption.`);
+  }
+
+  // DSCR warning
   if (metrics.dscr < 1.2 && metrics.dscr > 0) {
     redFlags.push(`DSCR of ${metrics.dscr.toFixed(2)} is below typical lender requirement of 1.20`);
   }
-  if (metrics.breakevenOccupancy > 90) {
+  if (metrics.breakevenOccupancy > 90 && metrics.breakevenOccupancy <= 100) {
     redFlags.push(`Breakeven occupancy of ${formatPercent(metrics.breakevenOccupancy)} is very high`);
   }
   if (metrics.irr < 0) {
     redFlags.push("Negative IRR indicates a loss on this investment");
   }
+  if (metrics.irr > 100) {
+    redFlags.push(`IRR of ${formatPercent(metrics.irr)} is exceptionally high. Verify inputs.`);
+  }
   if (metrics.cocYear1 < 0) {
     redFlags.push("Negative Year 1 cash-on-cash indicates cash shortfall");
+  }
+  if (metrics.equityMultiple < 1) {
+    redFlags.push("Equity multiple below 1.0x indicates loss of principal");
   }
 
   return (
@@ -890,13 +917,20 @@ function ResultsContent() {
               {keyMetrics.map((metric) => (
                 <div 
                   key={metric.label}
-                  className="p-5 rounded-xl bg-card border border-border shadow-card"
+                  className={`p-5 rounded-xl border shadow-card ${
+                    metric.isWarning 
+                      ? "bg-destructive/5 border-destructive/30" 
+                      : "bg-card border-border"
+                  }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <metric.icon className="h-4 w-4 text-primary" />
+                    <metric.icon className={`h-4 w-4 ${metric.isWarning ? "text-destructive" : "text-primary"}`} />
                     <span className="text-sm text-muted-foreground">{metric.label}</span>
+                    {metric.isWarning && <AlertTriangle className="h-3 w-3 text-destructive" />}
                   </div>
-                  <div className="text-2xl font-display font-bold text-foreground">
+                  <div className={`text-2xl font-display font-bold ${
+                    metric.isWarning ? "text-destructive" : "text-foreground"
+                  }`}>
                     {metric.value}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -977,8 +1011,17 @@ function ResultsContent() {
           </section>
 
           {/* Exit Analysis */}
-          <section className="p-5 rounded-xl bg-card border border-border shadow-card">
-            <h3 className="font-semibold text-foreground mb-4">Exit Analysis</h3>
+          <section className={`p-5 rounded-xl border shadow-card ${
+            !saleAnalysis.isValid ? "bg-destructive/5 border-destructive/30" : "bg-card border-border"
+          }`}>
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="font-semibold text-foreground">Exit Analysis</h3>
+              {!saleAnalysis.isValid && (
+                <span className="text-xs px-2 py-0.5 bg-destructive/20 text-destructive rounded-full">
+                  Invalid
+                </span>
+              )}
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Stabilized NOI</p>
@@ -986,11 +1029,13 @@ function ResultsContent() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Sale Price</p>
-                <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.salePrice)}</p>
+                <p className={`font-semibold ${!saleAnalysis.isValid ? "text-destructive" : "text-foreground"}`}>
+                  {saleAnalysis.salePriceDisplay}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Sale Costs</p>
-                <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.saleCosts)}</p>
+                <p className="font-semibold text-foreground">{saleAnalysis.isValid ? formatCurrency(saleAnalysis.saleCosts) : "N/A"}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Loan Payoff</p>
@@ -998,7 +1043,9 @@ function ResultsContent() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Net Proceeds</p>
-                <p className="font-bold text-primary">{formatCurrency(saleAnalysis.netSaleProceeds)}</p>
+                <p className={`font-bold ${!saleAnalysis.isValid ? "text-destructive" : "text-primary"}`}>
+                  {saleAnalysis.isValid ? formatCurrency(saleAnalysis.netSaleProceeds) : "N/A"}
+                </p>
               </div>
             </div>
           </section>
