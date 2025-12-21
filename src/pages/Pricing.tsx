@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useAuth, AVAILABLE_CALCULATORS } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { CALCULATOR_REGISTRY } from "@/lib/calculators/registry";
+import { PLAN_PRICING } from "@/lib/entitlements";
 import { 
   CheckCircle2, 
   ArrowRight, 
@@ -14,25 +16,17 @@ import {
   Zap,
   Loader2,
   X,
-  FileSpreadsheet,
-  Edit,
-  Download
+  Crown
 } from "lucide-react";
+
+const AVAILABLE_CALCULATORS = CALCULATOR_REGISTRY.filter(c => c.status === "available");
 
 export default function Pricing() {
   const { user, isSubscribed, planTier, selectedCalculator } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<"basic" | "pro" | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [selectedCalc, setSelectedCalc] = useState<string>(AVAILABLE_CALCULATORS[0].id);
-
-  const features = [
-    { icon: Infinity, text: "Unlimited deal analyses" },
-    { icon: Calculator, text: "Full underwriting calculator" },
-    { icon: FileText, text: "Professional PDF reports" },
-    { icon: Shield, text: "Complete data privacy" },
-    { icon: Zap, text: "Instant calculations" },
-  ];
+  const [selectedCalc, setSelectedCalc] = useState<string>(AVAILABLE_CALCULATORS[0]?.id || "residential");
 
   const faqs = [
     {
@@ -44,20 +38,20 @@ export default function Pricing() {
       answer: "Run as many deal analyses as you want each month. No caps, no per-deal fees. Analyze 1 deal or 100—same price."
     },
     {
-      question: "Is my deal data stored?",
-      answer: "Calculations run in your browser. If you choose to save an analysis, it's encrypted and private to your account. You can delete saved analyses anytime."
+      question: "What's the difference between Basic and Pro?",
+      answer: "Basic gives you unlimited access to 1 calculator of your choice. Pro unlocks ALL calculators (current and future) so you can switch freely between different analysis types."
+    },
+    {
+      question: "Can I upgrade from Basic to Pro?",
+      answer: "Yes! You can upgrade anytime from your account page. Your billing will be prorated automatically."
     },
     {
       question: "Can I cancel anytime?",
       answer: "Yes, cancel with one click from your account page. No questions, no hassle. You'll retain access until the end of your billing period."
     },
-    {
-      question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards through Stripe. Your payment information is securely processed and never stored on our servers."
-    },
   ];
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = async (plan: "basic" | "pro") => {
     setCheckoutError(null);
     
     if (!user) {
@@ -65,17 +59,18 @@ export default function Pricing() {
       return;
     }
 
-    if (isSubscribed) {
+    if (isSubscribed && planTier === plan) {
       navigate("/underwrite");
       return;
     }
 
-    setLoading(true);
+    setLoading(plan);
     try {
       const response = await supabase.functions.invoke("create-checkout", {
         body: { 
           origin: window.location.origin,
-          selectedCalculator: selectedCalc,
+          selectedCalculator: plan === "basic" ? selectedCalc : null,
+          planTier: plan,
         },
       });
 
@@ -97,12 +92,19 @@ export default function Pricing() {
       const errorMessage = error?.message || "Unknown error occurred";
       setCheckoutError(errorMessage);
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   };
 
-  // Show calculator selector only if there's more than one calculator
-  const showCalculatorSelector = AVAILABLE_CALCULATORS.length > 1;
+  const isCurrentPlan = (plan: "basic" | "pro") => {
+    return isSubscribed && planTier === plan;
+  };
+
+  const canUpgradeTo = (plan: "basic" | "pro") => {
+    if (!isSubscribed) return true;
+    if (plan === "pro" && planTier === "basic") return true;
+    return false;
+  };
 
   return (
     <Layout>
@@ -113,36 +115,33 @@ export default function Pricing() {
             Simple, Transparent Pricing
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            One plan. Unlimited analyses. No surprises.
+            Choose the plan that fits your investing style. Upgrade anytime.
           </p>
         </div>
       </section>
 
-      {/* Pricing Card */}
+      {/* Pricing Cards */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="max-w-md mx-auto">
-            <div className="relative rounded-3xl bg-card border-2 border-primary shadow-elevated overflow-hidden">
-              {/* Badge */}
-              <div className="absolute top-0 right-0 gradient-sage text-primary-foreground text-xs font-semibold px-4 py-2 rounded-bl-xl">
-                BEST VALUE
-              </div>
-
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+            
+            {/* Basic Plan */}
+            <div className="relative rounded-3xl bg-card border border-border shadow-lg overflow-hidden">
               <div className="p-8">
                 <h2 className="font-display text-2xl font-bold text-foreground mb-2">
-                  Basic Plan
+                  {PLAN_PRICING.basic.name}
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Full access to one underwriting calculator
+                  {PLAN_PRICING.basic.description}
                 </p>
 
                 <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-5xl font-display font-bold text-foreground">$3</span>
+                  <span className="text-5xl font-display font-bold text-foreground">${PLAN_PRICING.basic.price}</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
 
-                {/* Calculator Selection - only show if multiple calculators */}
-                {showCalculatorSelector && !isSubscribed && user && (
+                {/* Calculator Selection for Basic */}
+                {!isSubscribed && user && AVAILABLE_CALCULATORS.length > 1 && (
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-foreground mb-2">
                       Choose your calculator:
@@ -174,7 +173,7 @@ export default function Pricing() {
                           </div>
                           <div>
                             <p className="font-medium text-foreground">{calc.name}</p>
-                            <p className="text-xs text-muted-foreground">{calc.description}</p>
+                            <p className="text-xs text-muted-foreground">{calc.shortDescription}</p>
                           </div>
                         </label>
                       ))}
@@ -182,8 +181,8 @@ export default function Pricing() {
                   </div>
                 )}
 
-                {/* Show selected calculator for subscribed users */}
-                {isSubscribed && selectedCalculator && (
+                {/* Show selected calculator for Basic subscribers */}
+                {isSubscribed && planTier === "basic" && selectedCalculator && (
                   <div className="mb-6 p-3 rounded-lg bg-primary/5 border border-primary/20">
                     <p className="text-sm text-muted-foreground">Your calculator:</p>
                     <p className="font-medium text-foreground">
@@ -193,25 +192,104 @@ export default function Pricing() {
                 )}
 
                 <Button 
-                  variant="hero" 
-                  size="xl" 
+                  variant={isCurrentPlan("basic") ? "outline" : "hero"} 
+                  size="lg" 
                   className="w-full mb-2" 
-                  onClick={handleSubscribe}
-                  disabled={loading}
+                  onClick={() => handleSubscribe("basic")}
+                  disabled={loading !== null || isCurrentPlan("basic")}
                 >
-                  {loading ? (
+                  {loading === "basic" ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin" />
                       Processing...
                     </>
-                  ) : isSubscribed ? (
+                  ) : isCurrentPlan("basic") ? (
+                    "Current Plan"
+                  ) : user ? (
                     <>
-                      Go to Dashboard
+                      Start Basic
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  ) : (
+                    <>
+                      Get Started
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+
+                <ul className="space-y-3 mt-6">
+                  {PLAN_PRICING.basic.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="text-foreground text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="px-8 py-4 bg-muted/50 border-t border-border">
+                <p className="text-sm text-muted-foreground text-center">
+                  Cancel anytime. No long-term commitment.
+                </p>
+              </div>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="relative rounded-3xl bg-card border-2 border-primary shadow-elevated overflow-hidden">
+              {/* Badge */}
+              <div className="absolute top-0 right-0 gradient-sage text-primary-foreground text-xs font-semibold px-4 py-2 rounded-bl-xl flex items-center gap-1">
+                <Crown className="h-3 w-3" />
+                BEST VALUE
+              </div>
+
+              <div className="p-8">
+                <h2 className="font-display text-2xl font-bold text-foreground mb-2">
+                  {PLAN_PRICING.pro.name}
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  {PLAN_PRICING.pro.description}
+                </p>
+
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-5xl font-display font-bold text-foreground">${PLAN_PRICING.pro.price}</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+
+                {/* Show all calculators for Pro */}
+                <div className="mb-6 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <p className="text-sm text-muted-foreground mb-2">Includes all calculators:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {AVAILABLE_CALCULATORS.map((calc) => (
+                      <span key={calc.id} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        {calc.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <Button 
+                  variant={isCurrentPlan("pro") ? "outline" : "hero"} 
+                  size="lg" 
+                  className="w-full mb-2" 
+                  onClick={() => handleSubscribe("pro")}
+                  disabled={loading !== null || isCurrentPlan("pro")}
+                >
+                  {loading === "pro" ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : isCurrentPlan("pro") ? (
+                    "Current Plan"
+                  ) : isSubscribed && planTier === "basic" ? (
+                    <>
+                      Upgrade to Pro
                       <ArrowRight className="h-5 w-5" />
                     </>
                   ) : user ? (
                     <>
-                      Subscribe Now
+                      Start Pro
                       <ArrowRight className="h-5 w-5" />
                     </>
                   ) : (
@@ -223,24 +301,22 @@ export default function Pricing() {
                 </Button>
 
                 {checkoutError && (
-                  <p className="text-destructive text-sm mb-6 text-center">
+                  <p className="text-destructive text-sm mb-4 text-center">
                     {checkoutError}
                   </p>
                 )}
 
-                <ul className="space-y-4 mt-6">
-                  {features.map((feature) => (
-                    <li key={feature.text} className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-sage-light text-primary">
-                        <feature.icon className="h-4 w-4" />
-                      </div>
-                      <span className="text-foreground">{feature.text}</span>
+                <ul className="space-y-3 mt-6">
+                  {PLAN_PRICING.pro.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="text-foreground text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="px-8 py-6 bg-muted/50 border-t border-border">
+              <div className="px-8 py-4 bg-muted/50 border-t border-border">
                 <p className="text-sm text-muted-foreground text-center">
                   Cancel anytime. No long-term commitment.
                 </p>
@@ -250,138 +326,21 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* Feature Comparison */}
-      <section className="py-20 bg-muted/30">
+      {/* Free Trial Section */}
+      <section className="py-12 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="font-display text-3xl font-bold text-foreground text-center mb-4">
-              Free vs Basic Comparison
-            </h2>
-            <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-              See what you get with each plan. Basic unlocks powerful export and editing features.
+          <div className="max-w-2xl mx-auto text-center">
+            <h3 className="font-display text-xl font-bold text-foreground mb-2">
+              Not ready to commit?
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              All new users get 3 free analyses to try the full tool. No credit card required.
             </p>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Free Plan */}
-              <div className="rounded-2xl bg-card border border-border p-6">
-                <div className="text-center mb-6">
-                  <h3 className="font-display text-xl font-bold text-foreground mb-1">Free Trial</h3>
-                  <p className="text-muted-foreground text-sm">3 analyses to get started</p>
-                </div>
-                
-                <ul className="space-y-4">
-                  <li className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Full underwriting calculator</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Basic PDF export</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-foreground">30-year projections</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Sensitivity analysis</span>
-                  </li>
-                  <li className="flex items-center gap-3 opacity-50">
-                    <X className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    <span className="text-muted-foreground">Excel export with styling</span>
-                  </li>
-                  <li className="flex items-center gap-3 opacity-50">
-                    <X className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    <span className="text-muted-foreground">CSV data export</span>
-                  </li>
-                  <li className="flex items-center gap-3 opacity-50">
-                    <X className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    <span className="text-muted-foreground">Edit & recalculate saved analyses</span>
-                  </li>
-                  <li className="flex items-center gap-3 opacity-50">
-                    <X className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                    <span className="text-muted-foreground">Unlimited analyses</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Basic Plan */}
-              <div className="rounded-2xl bg-card border-2 border-primary p-6 relative">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="gradient-sage text-primary-foreground text-xs font-semibold px-4 py-1 rounded-full">
-                    RECOMMENDED
-                  </span>
-                </div>
-                
-                <div className="text-center mb-6">
-                  <h3 className="font-display text-xl font-bold text-foreground mb-1">Basic Plan</h3>
-                  <p className="text-primary font-semibold">$3/month</p>
-                </div>
-                
-                <ul className="space-y-4">
-                  <li className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Full underwriting calculator</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Professional PDF reports</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-foreground">30-year projections</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-foreground">Sensitivity analysis</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground flex-shrink-0">
-                      <FileSpreadsheet className="h-3 w-3" />
-                    </div>
-                    <span className="text-foreground font-medium">Excel export with styling</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground flex-shrink-0">
-                      <Download className="h-3 w-3" />
-                    </div>
-                    <span className="text-foreground font-medium">CSV data export</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground flex-shrink-0">
-                      <Edit className="h-3 w-3" />
-                    </div>
-                    <span className="text-foreground font-medium">Edit & recalculate saved analyses</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent text-accent-foreground flex-shrink-0">
-                      <Infinity className="h-3 w-3" />
-                    </div>
-                    <span className="text-foreground font-medium">Unlimited analyses</span>
-                  </li>
-                </ul>
-
-                <Button 
-                  variant="hero" 
-                  className="w-full mt-6" 
-                  onClick={handleSubscribe}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : isSubscribed ? (
-                    "You're Subscribed!"
-                  ) : (
-                    "Upgrade to Basic"
-                  )}
-                </Button>
-                {checkoutError && (
-                  <p className="text-destructive text-sm mt-2 text-center">
-                    {checkoutError}
-                  </p>
-                )}
-              </div>
-            </div>
+            {!user && (
+              <Button variant="outline" asChild>
+                <Link to="/signup">Sign Up Free</Link>
+              </Button>
+            )}
           </div>
         </div>
       </section>
@@ -439,29 +398,25 @@ export default function Pricing() {
           <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
             Join thousands of investors who trust DealCalc for accurate, private underwriting.
           </p>
-          <Button 
-            variant="secondary" 
-            size="xl" 
-            onClick={handleSubscribe}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                Get Started for $3/month
-                <ArrowRight className="h-5 w-5" />
-              </>
-            )}
-          </Button>
-          {checkoutError && (
-            <p className="text-destructive-foreground text-sm mt-3">
-              {checkoutError}
-            </p>
-          )}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              variant="secondary" 
+              size="xl" 
+              onClick={() => handleSubscribe("basic")}
+              disabled={loading !== null}
+            >
+              Basic — ${PLAN_PRICING.basic.price}/mo
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="xl" 
+              onClick={() => handleSubscribe("pro")}
+              disabled={loading !== null}
+            >
+              Pro — ${PLAN_PRICING.pro.price}/mo
+              <Crown className="h-5 w-5 ml-2" />
+            </Button>
+          </div>
         </div>
       </section>
     </Layout>

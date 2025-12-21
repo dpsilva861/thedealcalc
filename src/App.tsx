@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UnderwritingProvider } from "@/contexts/UnderwritingContext";
+import { BRRRRProvider } from "@/contexts/BRRRRContext";
 import Index from "./pages/Index";
 import HowItWorks from "./pages/HowItWorks";
 import Pricing from "./pages/Pricing";
@@ -30,22 +31,24 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <UnderwritingProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/underwrite" element={<Underwrite />} />
-              <Route path="/results" element={<Results />} />
-              <Route path="/saved" element={<SavedAnalyses />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/brrrr" element={<BRRRR />} />
-              <Route path="/brrrr/results" element={<BRRRRResults />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <BRRRRProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/account" element={<Account />} />
+                <Route path="/underwrite" element={<Underwrite />} />
+                <Route path="/results" element={<Results />} />
+                <Route path="/saved" element={<SavedAnalyses />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/brrrr" element={<BRRRR />} />
+                <Route path="/brrrr/results" element={<BRRRRResults />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BRRRRProvider>
           </UnderwritingProvider>
         </AuthProvider>
       </BrowserRouter>

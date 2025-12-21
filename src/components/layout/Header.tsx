@@ -4,6 +4,8 @@ import { Home, Calculator, Menu, X, LogOut, FolderOpen } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
+
 export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -13,6 +15,7 @@ export function Header() {
     signOut,
     loading
   } = useAuth();
+
   const navLinks = [{
     href: "/",
     label: "Home",
@@ -24,11 +27,14 @@ export function Header() {
     href: "/pricing",
     label: "Pricing"
   }];
+
   const isActive = (path: string) => location.pathname === path;
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
+
   return <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
@@ -44,15 +50,15 @@ export function Header() {
           {navLinks.map(link => <Link key={link.href} to={link.href} className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-colors", isActive(link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
               {link.label}
             </Link>)}
-          {user && <>
-              <Link to="/underwrite" className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-colors", isActive("/underwrite") || isActive("/results") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
-                Underwrite
-              </Link>
+          {user && (
+            <>
+              <CalculatorSelector />
               <Link to="/saved" className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5", isActive("/saved") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
                 <FolderOpen className="h-4 w-4" />
                 Saved
               </Link>
-            </>}
+            </>
+          )}
         </nav>
 
         {/* Desktop Auth Buttons */}
@@ -88,9 +94,9 @@ export function Header() {
                 {link.label}
               </Link>)}
             {user && <>
-                <Link to="/underwrite" onClick={() => setMobileMenuOpen(false)} className={cn("px-4 py-3 rounded-lg text-sm font-medium transition-colors", isActive("/underwrite") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
-                  Underwrite
-                </Link>
+                <div className="px-4 py-2">
+                  <CalculatorSelector />
+                </div>
                 <Link to="/saved" onClick={() => setMobileMenuOpen(false)} className={cn("px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-2", isActive("/saved") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
                   <FolderOpen className="h-4 w-4" />
                   Saved Analyses
