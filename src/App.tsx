@@ -17,6 +17,8 @@ import SavedAnalyses from "./pages/SavedAnalyses";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
+import BRRRR from "./pages/BRRRR";
+import BRRRRResults from "./pages/BRRRRResults";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,8 @@ const App = () => (
               <Route path="/saved" element={<SavedAnalyses />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/brrrr" element={<BRRRR />} />
+              <Route path="/brrrr/results" element={<BRRRRResults />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </UnderwritingProvider>
