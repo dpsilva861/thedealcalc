@@ -23,14 +23,28 @@ function getStripeSecret() {
   if (sanitized !== raw) {
     console.warn("STRIPE_SECRET_KEY contains whitespace/non-ASCII characters.");
     throw new Error(
-      "STRIPE_SECRET_KEY looks corrupted (contains whitespace or special characters). Re-copy the Secret key from Stripe Dashboard → Developers → API keys and update it in the backend."
+      "STRIPE_SECRET_KEY looks corrupted (contains whitespace or special characters). In Stripe Dashboard → Developers → API keys, click the copy button for the Secret key (sk_test_... or sk_live_...) and paste that into the backend."
+    );
+  }
+
+  // Common mistake: user pasted the publishable key.
+  if (raw.startsWith("pk_")) {
+    throw new Error(
+      "You pasted a publishable key (pk_...). This must be your Stripe Secret key (sk_test_... or sk_live_...). Update it in the backend using the Secret key."
+    );
+  }
+
+  // Common mistake: user pasted a masked/redacted key from UI/logs.
+  if (/[\*•…]/.test(raw)) {
+    throw new Error(
+      "You pasted a masked/redacted key (contains *, •, or …). In Stripe Dashboard → Developers → API keys, click the copy button for the Secret key (sk_test_... or sk_live_...) and paste that into the backend."
     );
   }
 
   // Expected formats: sk_test_... or sk_live_...
   if (!/^sk_(test|live)_[0-9a-zA-Z_]+$/.test(raw)) {
     throw new Error(
-      "Invalid STRIPE_SECRET_KEY format. Re-copy the Secret key (sk_test_... or sk_live_...) from Stripe Dashboard → Developers → API keys and update it in the backend."
+      "Invalid STRIPE_SECRET_KEY format. Make sure you're using the Stripe Secret key that starts with sk_test_ or sk_live_ (not pk_), and re-copy it using the dashboard copy button."
     );
   }
 
