@@ -1,4 +1,4 @@
-import { useSyndication } from "@/contexts/SyndicationContext";
+import { useSyndication, SYNDICATION_PRESETS } from "@/contexts/SyndicationContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { HelpCircle, Play, RotateCcw } from "lucide-react";
-import { formatCurrency } from "@/lib/calculators/types";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { HelpCircle, Play, RotateCcw, AlertTriangle, XCircle } from "lucide-react";
 
 export default function SyndicationInputsPanel() {
-  const { inputs, setInputs, runAnalysis, resetInputs, isCalculating } = useSyndication();
+  const { inputs, setInputs, runAnalysis, resetInputs, loadPreset, validation, error, isCalculating } = useSyndication();
 
   const updateAcquisition = (field: string, value: any) => {
     setInputs((prev) => ({
@@ -57,19 +57,35 @@ export default function SyndicationInputsPanel() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <CardTitle>Deal Assumptions</CardTitle>
             <CardDescription>
               Configure acquisition, debt, operations, exit, and waterfall structure
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Select onValueChange={(v) => loadPreset(v as keyof typeof SYNDICATION_PRESETS)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Load Preset" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(SYNDICATION_PRESETS).map(([key, preset]) => (
+                  <SelectItem key={key} value={key}>
+                    {preset.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="sm" onClick={resetInputs}>
               <RotateCcw className="h-4 w-4 mr-1" />
               Reset
             </Button>
-            <Button size="sm" onClick={runAnalysis} disabled={isCalculating}>
+            <Button 
+              size="sm" 
+              onClick={runAnalysis} 
+              disabled={isCalculating || !validation.isValid}
+            >
               <Play className="h-4 w-4 mr-1" />
               {isCalculating ? "Calculating..." : "Run Analysis"}
             </Button>
@@ -77,6 +93,42 @@ export default function SyndicationInputsPanel() {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Validation Errors */}
+        {validation.errors.length > 0 && (
+          <Alert variant="destructive" className="mb-4">
+            <XCircle className="h-4 w-4" />
+            <AlertDescription>
+              <ul className="list-disc list-inside space-y-1">
+                {validation.errors.map((e, i) => (
+                  <li key={i}>{e.message}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Validation Warnings */}
+        {validation.warnings.length > 0 && (
+          <Alert className="mb-4 border-amber-500/50 bg-amber-500/5">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertDescription className="text-amber-700">
+              <ul className="list-disc list-inside space-y-1">
+                {validation.warnings.map((w, i) => (
+                  <li key={i}>{w.message}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Runtime Error */}
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <XCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <Accordion type="multiple" defaultValue={["acquisition", "debt", "operations"]} className="space-y-2">
           {/* Acquisition Section */}
           <AccordionItem value="acquisition" className="border rounded-lg px-4">

@@ -6,6 +6,8 @@ export * from "./types";
 export * from "./proforma";
 export * from "./waterfall";
 export * from "./metrics";
+export * from "./debt";
+export * from "./validation";
 
 import {
   SyndicationInputs,
@@ -15,12 +17,17 @@ import {
 import { calculateSourcesAndUses, buildCashFlows } from "./proforma";
 import { runWaterfall } from "./waterfall";
 import { calculateDealMetrics } from "./metrics";
+import { validateSyndicationInputs } from "./validation";
 
 /**
  * Run complete syndication underwriting analysis
  */
 export function runSyndicationAnalysis(inputs: SyndicationInputs): SyndicationResults {
   const warnings: SyndicationWarning[] = [];
+
+  // Step 0: Validate inputs
+  const validation = validateSyndicationInputs(inputs);
+  warnings.push(...validation.errors, ...validation.warnings);
 
   // Step 1: Calculate Sources & Uses
   const sourcesAndUses = calculateSourcesAndUses(inputs);
