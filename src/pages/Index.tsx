@@ -2,11 +2,12 @@ import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { InlineAd, MobileAd } from "@/components/ads";
-import { 
-  Calculator, 
-  Shield, 
-  Zap, 
-  FileText, 
+import { COMING_SOON_CALCULATORS } from "@/lib/calculators/registry";
+import {
+  Calculator,
+  Shield,
+  Zap,
+  FileText,
   CheckCircle2,
   ArrowRight,
   Building2,
@@ -268,20 +269,15 @@ export default function Index() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-            {[
-              { name: "BRRRR", description: "Buy, Rehab, Rent, Refinance, Repeat" },
-              { name: "Fix & Flip", description: "Renovation & resale analysis" },
-              { name: "Multifamily", description: "Large apartment complexes" },
-              { name: "Debt Sizing", description: "Loan qualification calculator" },
-            ].map((calc, index) => (
-              <div 
-                key={calc.name}
+            {COMING_SOON_CALCULATORS.map((calc, index) => (
+              <div
+                key={calc.id}
                 className="p-4 rounded-xl bg-card border border-border text-center animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <Building2 className="h-6 w-6 text-primary/60 mx-auto mb-2" />
                 <h3 className="font-semibold text-foreground text-sm mb-1">{calc.name}</h3>
-                <p className="text-xs text-muted-foreground">{calc.description}</p>
+                <p className="text-xs text-muted-foreground">{calc.shortDescription}</p>
               </div>
             ))}
           </div>
