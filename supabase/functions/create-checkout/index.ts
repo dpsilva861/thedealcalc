@@ -15,6 +15,28 @@ function requireEnv(name: string) {
   return v;
 }
 
+function getStripeSecret() {
+  const raw = requireEnv("STRIPE_SECRET_KEY");
+  const sanitized = raw.replace(/\s+/g, "").replace(/[^\x21-\x7E]/g, "");
+
+  // Fail fast if the key was pasted with hidden whitespace / special characters.
+  if (sanitized !== raw) {
+    console.warn("STRIPE_SECRET_KEY contains whitespace/non-ASCII characters.");
+    throw new Error(
+      "STRIPE_SECRET_KEY looks corrupted (contains whitespace or special characters). Re-copy the Secret key from Stripe Dashboard → Developers → API keys and update it in the backend."
+    );
+  }
+
+  // Expected formats: sk_test_... or sk_live_...
+  if (!/^sk_(test|live)_[0-9a-zA-Z_]+$/.test(raw)) {
+    throw new Error(
+      "Invalid STRIPE_SECRET_KEY format. Re-copy the Secret key (sk_test_... or sk_live_...) from Stripe Dashboard → Developers → API keys and update it in the backend."
+    );
+  }
+
+  return raw;
+}
+
 async function stripeFetch<T>(
   path: string,
   opts: {
@@ -23,7 +45,7 @@ async function stripeFetch<T>(
     query?: Record<string, string>;
   } = {}
 ): Promise<T> {
-  const secret = (() => { const raw = requireEnv("STRIPE_SECRET_KEY"); const s = raw.replace(/\s+/g, "").replace(/[^\x21-\x7E]/g, ""); if (!s.startsWith("sk_")) throw new Error("Invalid STRIPE_SECRET_KEY. Please update your Stripe secret key in the backend."); if (s !== raw) console.warn("Sanitized STRIPE_SECRET_KEY (removed whitespace/non-ASCII characters)."); return s; })();
+  const secret = getStripeSecret();
   const method = opts.method ?? "GET";
 
   const url = new URL(`${STRIPE_API_BASE}${path}`);
