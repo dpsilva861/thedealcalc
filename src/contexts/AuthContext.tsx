@@ -14,7 +14,19 @@ interface Profile {
   updated_at: string;
   analyses_used: number;
   free_analyses_limit: number;
+  plan_tier: string;
+  selected_calculator: string | null;
 }
+
+// Available calculators - add more here as they become available
+export const AVAILABLE_CALCULATORS = [
+  { id: "residential", name: "Residential Underwriting", description: "Analyze single-family and small multifamily properties" },
+  // Future calculators will be added here
+  // { id: "commercial", name: "Commercial", description: "Analyze commercial properties" },
+  // { id: "multifamily", name: "Large Multifamily", description: "Analyze 50+ unit properties" },
+] as const;
+
+export type CalculatorId = typeof AVAILABLE_CALCULATORS[number]["id"];
 
 interface AuthContextType {
   user: User | null;
@@ -25,6 +37,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isSubscribed: boolean;
+  planTier: string;
+  selectedCalculator: string | null;
+  canAccessCalculator: (calculatorId: string) => boolean;
   canRunAnalysis: boolean;
   freeTrialRemaining: number;
   incrementAnalysisCount: () => Promise<void>;
@@ -57,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const existing = await fetchProfile(u.id);
     if (existing) return existing;
 
-    // Create default profile so new users always receive 3 free analyses.
+    // Create default profile
     const { error: upsertError } = await supabase
       .from("profiles")
       .upsert(
@@ -67,6 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription_status: "inactive",
           analyses_used: 0,
           free_analyses_limit: 3,
+          plan_tier: "free",
+          selected_calculator: null,
         },
         { onConflict: "user_id" }
       );
@@ -87,7 +104,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -95,11 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // Keep the app in a loading state until we've ensured the user has a profile
-        // so we don't flash the paywall for brand-new users.
         setLoading(true);
-
-        // Defer profile calls to avoid auth deadlocks
         setTimeout(() => {
           ensureProfile(session.user)
             .then((p) => {
@@ -115,7 +127,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // THEN check for existing session
     setLoading(true);
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -180,17 +191,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const isSubscribed = profile?.subscription_status === "active";
+  // Plan and subscription status
+  const planTier = profile?.plan_tier || "free";
+  const selectedCalculator = profile?.selected_calculator || null;
+  const isSubscribed = profile?.subscription_status === "active" && planTier !== "free";
   
   // Admin emails get unlimited free access
   const ADMIN_EMAILS = ["dpsilva861@gmail.com"];
   const isAdminUser = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
   
-  // User can run analysis if subscribed OR has free trial remaining OR is admin
+  // Check if user can access a specific calculator
+  const canAccessCalculator = (calculatorId: string): boolean => {
+    if (isAdminUser) return true;
+    
+    if (planTier === "basic" && isSubscribed) {
+      // Basic plan: only selected calculator
+      return calculatorId === selectedCalculator;
+    }
+    
+    if (planTier === "pro" && isSubscribed) {
+      // Pro plan: all calculators (future)
+      return true;
+    }
+    
+    // Free tier: use free trial logic
+    return freeTrialRemaining > 0;
+  };
+  
   const freeTrialRemaining = profile 
     ? Math.max(0, (profile.free_analyses_limit || 1) - (profile.analyses_used || 0))
     : 0;
   
+  // User can run analysis if:
+  // - Subscribed and accessing their selected calculator
+  // - Has free trial remaining
+  // - Is admin
   const canRunAnalysis = isSubscribed || freeTrialRemaining > 0 || isAdminUser;
 
   return (
@@ -204,6 +239,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signOut,
         isSubscribed,
+        planTier,
+        selectedCalculator,
+        canAccessCalculator,
         canRunAnalysis,
         freeTrialRemaining,
         incrementAnalysisCount,

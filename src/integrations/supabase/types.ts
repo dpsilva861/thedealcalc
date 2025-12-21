@@ -21,6 +21,8 @@ export type Database = {
           email: string | null
           free_analyses_limit: number
           id: string
+          plan_tier: string
+          selected_calculator: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_end_date: string | null
@@ -34,6 +36,8 @@ export type Database = {
           email?: string | null
           free_analyses_limit?: number
           id?: string
+          plan_tier?: string
+          selected_calculator?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_end_date?: string | null
@@ -47,6 +51,8 @@ export type Database = {
           email?: string | null
           free_analyses_limit?: number
           id?: string
+          plan_tier?: string
+          selected_calculator?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_end_date?: string | null
@@ -92,6 +98,24 @@ export type Database = {
           updated_at?: string
           user_id?: string
           zip_code?: string
+        }
+        Relationships: []
+      }
+      stripe_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
         }
         Relationships: []
       }
