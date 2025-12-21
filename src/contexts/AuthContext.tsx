@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 interface Profile {
   id: string;
   user_id: string;
-  email: string | null;
   subscription_status: string;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
@@ -78,7 +77,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .upsert(
         {
           user_id: u.id,
-          email: u.email ?? null,
           subscription_status: "inactive",
           analyses_used: 0,
           free_analyses_limit: 3,

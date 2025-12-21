@@ -18,7 +18,6 @@ export type Database = {
         Row: {
           analyses_used: number
           created_at: string
-          email: string | null
           free_analyses_limit: number
           id: string
           plan_tier: string
@@ -33,7 +32,6 @@ export type Database = {
         Insert: {
           analyses_used?: number
           created_at?: string
-          email?: string | null
           free_analyses_limit?: number
           id?: string
           plan_tier?: string
@@ -48,7 +46,6 @@ export type Database = {
         Update: {
           analyses_used?: number
           created_at?: string
-          email?: string | null
           free_analyses_limit?: number
           id?: string
           plan_tier?: string

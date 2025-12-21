@@ -159,7 +159,7 @@ export default function Account() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-muted-foreground">Email</label>
-                <p className="font-medium text-foreground">{profile.email || user.email}</p>
+                <p className="font-medium text-foreground">{user.email}</p>
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">Member since</label>
