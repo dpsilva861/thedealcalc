@@ -3,15 +3,17 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calculator } from "lucide-react";
+import { Calculator, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { parsePasswordError } from "@/lib/password-validation";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showWeakPasswordWarning, setShowWeakPasswordWarning] = useState(false);
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -26,7 +28,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!email?.trim() || !password) {
       toast({
         title: "Missing fields",
         description: "Please enter both email and password.",
@@ -36,15 +38,29 @@ export default function Login() {
     }
 
     setLoading(true);
+    setShowWeakPasswordWarning(false);
     
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email.trim(), password);
     
     if (error) {
+      // Check for weak password error (user has old weak password)
+      const errorMessage = error.message.toLowerCase();
+      if (errorMessage.includes("weak") || errorMessage.includes("password strength")) {
+        setShowWeakPasswordWarning(true);
+        toast({
+          title: "Password update required",
+          description: "Your password no longer meets security requirements. Please reset your password.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Parse other errors
+      const userMessage = parsePasswordError(error);
       toast({
         title: "Sign in failed",
-        description: error.message === "Invalid login credentials" 
-          ? "Invalid email or password. Please try again."
-          : error.message,
+        description: userMessage,
         variant: "destructive",
       });
       setLoading(false);
@@ -109,6 +125,20 @@ export default function Login() {
                   autoComplete="current-password"
                 />
               </div>
+
+              {/* Weak password warning for existing users */}
+              {showWeakPasswordWarning && (
+                <div className="flex items-start gap-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-destructive">Password update required</p>
+                    <p className="text-muted-foreground mt-1">
+                      Your current password no longer meets our security requirements.
+                      Please contact support to reset your password.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <Button 
                 type="submit" 
