@@ -1,11 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { User, Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  canAccessCalculator as checkCanAccessCalculator, 
-  requiresBasicSelection,
-  PlanTier 
-} from "@/lib/entitlements";
+import { canAccessCalculator as checkCanAccessCalculator, requiresBasicSelection, PlanTier } from "@/lib/entitlements";
 
 interface Profile {
   id: string;
@@ -27,8 +23,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   isSubscribed: boolean;
   planTier: PlanTier;
@@ -50,177 +46,270 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+  const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    try {
+      const { data, error } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
 
-    if (error) {
-      console.error("Error fetching profile:", error);
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return null;
+      }
+      return data as Profile | null;
+    } catch (error) {
+      console.error("Unexpected error fetching profile:", error);
       return null;
     }
-    return data as Profile | null;
-  };
+  }, []);
 
-  const ensureProfile = async (u: User): Promise<Profile | null> => {
-    const existing = await fetchProfile(u.id);
-    if (existing) return existing;
+  const ensureProfile = useCallback(
+    async (u: User): Promise<Profile | null> => {
+      try {
+        const existing = await fetchProfile(u.id);
+        if (existing) return existing;
 
-    // Create default profile
-    const { error: upsertError } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          user_id: u.id,
-          subscription_status: "inactive",
-          analyses_used: 0,
-          free_analyses_limit: 3,
-          plan_tier: "free",
-          selected_calculator: null,
-        },
-        { onConflict: "user_id" }
-      );
+        // Create default profile
+        const { error: upsertError } = await supabase.from("profiles").upsert(
+          {
+            user_id: u.id,
+            subscription_status: "inactive",
+            analyses_used: 0,
+            free_analyses_limit: 3,
+            plan_tier: "free",
+            selected_calculator: null,
+          },
+          { onConflict: "user_id" },
+        );
 
-    if (upsertError) {
-      console.error("Error creating profile:", upsertError);
-      return null;
+        if (upsertError) {
+          console.error("Error creating profile:", upsertError);
+          return null;
+        }
+
+        return await fetchProfile(u.id);
+      } catch (error) {
+        console.error("Unexpected error ensuring profile:", error);
+        return null;
+      }
+    },
+    [fetchProfile],
+  );
+
+  const refreshProfile = useCallback(async () => {
+    if (!user) {
+      console.warn("Cannot refresh profile: no user logged in");
+      return;
     }
 
-    return await fetchProfile(u.id);
-  };
-
-  const refreshProfile = async () => {
-    if (user) {
+    try {
       const profileData = await ensureProfile(user);
       setProfile(profileData);
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
     }
-  };
+  }, [user, ensureProfile]);
 
   useEffect(() => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          const profileData = await ensureProfile(currentSession.user);
+          if (mounted) {
+            setProfile(profileData);
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (!mounted) return;
 
-      if (session?.user) {
+      console.log("Auth state changed:", event);
+
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      if (newSession?.user) {
         setLoading(true);
-        setTimeout(() => {
-          ensureProfile(session.user)
-            .then((p) => {
-              setProfile(p);
-            })
-            .finally(() => {
-              setLoading(false);
-            });
-        }, 0);
+        try {
+          const profileData = await ensureProfile(newSession.user);
+          if (mounted) {
+            setProfile(profileData);
+          }
+        } catch (error) {
+          console.error("Error handling auth state change:", error);
+        } finally {
+          if (mounted) {
+            setLoading(false);
+          }
+        }
       } else {
         setProfile(null);
         setLoading(false);
       }
     });
 
-    setLoading(true);
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        ensureProfile(session.user)
-          .then((profileData) => {
-            setProfile(profileData);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [ensureProfile]);
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-      },
-    });
+    try {
+      const redirectUrl = `${window.location.origin}/`;
 
-    return { error };
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
+      });
+
+      return { error };
+    } catch (error) {
+      console.error("Unexpected error during sign up:", error);
+      return {
+        error:
+          error instanceof Error
+            ? (error as AuthError)
+            : (new Error("An unexpected error occurred during sign up") as AuthError),
+      };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    return { error };
+      return { error };
+    } catch (error) {
+      console.error("Unexpected error during sign in:", error);
+      return {
+        error:
+          error instanceof Error
+            ? (error as AuthError)
+            : (new Error("An unexpected error occurred during sign in") as AuthError),
+      };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
+    try {
+      await supabase.auth.signOut();
+      setProfile(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
+      // Still clear local state even if API call fails
+      setProfile(null);
+      setUser(null);
+      setSession(null);
+    }
   };
 
-  const incrementAnalysisCount = async () => {
-    if (!profile) return;
+  const incrementAnalysisCount = useCallback(async () => {
+    if (!profile) {
+      console.warn("Cannot increment analysis count: no profile loaded");
+      return;
+    }
 
     const newCount = (profile.analyses_used || 0) + 1;
-    
-    const { error } = await supabase
-      .from("profiles")
-      .update({ analyses_used: newCount })
-      .eq("user_id", profile.user_id);
 
-    if (!error) {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ analyses_used: newCount })
+        .eq("user_id", profile.user_id);
+
+      if (error) {
+        console.error("Error incrementing analysis count:", error);
+        throw error;
+      }
+
+      // Optimistically update local state
       setProfile({ ...profile, analyses_used: newCount });
+    } catch (error) {
+      console.error("Failed to increment analysis count:", error);
+      throw error;
     }
-  };
+  }, [profile]);
 
-  // Update selected calculator (for Basic plan first-time selection)
-  const updateSelectedCalculator = async (calculatorId: string) => {
-    if (!profile) return;
+  const updateSelectedCalculator = useCallback(
+    async (calculatorId: string) => {
+      if (!profile) {
+        throw new Error("Cannot update calculator selection: no profile loaded");
+      }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ selected_calculator: calculatorId })
-      .eq("user_id", profile.user_id);
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ selected_calculator: calculatorId })
+          .eq("user_id", profile.user_id);
 
-    if (!error) {
-      setProfile({ ...profile, selected_calculator: calculatorId });
-      // Also persist to localStorage as fallback
-      localStorage.setItem(`selected_calculator_${profile.user_id}`, calculatorId);
-    }
-  };
+        if (error) {
+          console.error("Error updating selected calculator:", error);
+          throw error;
+        }
 
-  // Plan and subscription status
+        // Optimistically update local state
+        setProfile({ ...profile, selected_calculator: calculatorId });
+
+        // Persist to localStorage as fallback
+        try {
+          localStorage.setItem(`selected_calculator_${profile.user_id}`, calculatorId);
+        } catch (storageError) {
+          console.warn("Failed to save calculator selection to localStorage:", storageError);
+        }
+      } catch (error) {
+        console.error("Failed to update selected calculator:", error);
+        throw error;
+      }
+    },
+    [profile],
+  );
+
+  // Memoized computed values
   const planTier = (profile?.plan_tier || "free") as PlanTier;
   const selectedCalculator = profile?.selected_calculator || null;
   const isSubscribed = profile?.subscription_status === "active" && planTier !== "free";
-  
-  // Free trial calculation
-  const freeTrialRemaining = profile 
+
+  const freeTrialRemaining = profile
     ? Math.max(0, (profile.free_analyses_limit || 1) - (profile.analyses_used || 0))
     : 0;
-  
-  // Check if Basic user needs to select their calculator
+
   const requiresCalculatorSelection = requiresBasicSelection(planTier, selectedCalculator, isSubscribed);
 
-  // Check if user can access a specific calculator
-  const canAccessCalculator = (calculatorId: string): boolean => {
-    return checkCanAccessCalculator(planTier, calculatorId, selectedCalculator, isSubscribed);
-  };
-  
-  // User can run analysis if subscribed or has free trial remaining
+  const canAccessCalculator = useCallback(
+    (calculatorId: string): boolean => {
+      return checkCanAccessCalculator(planTier, calculatorId, selectedCalculator, isSubscribed);
+    },
+    [planTier, selectedCalculator, isSubscribed],
+  );
+
   const canRunAnalysis = isSubscribed || freeTrialRemaining > 0;
 
   return (
