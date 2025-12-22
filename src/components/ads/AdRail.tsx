@@ -7,6 +7,10 @@ interface AdRailProps {
   className?: string;
   /** Show secondary ad slot */
   showSecondary?: boolean;
+  /** Custom top offset for sticky positioning (default: 96px for header) */
+  topOffset?: number;
+  /** Maximum slots to show (1-2) */
+  maxSlots?: 1 | 2;
 }
 
 /**
@@ -14,11 +18,28 @@ interface AdRailProps {
  * Sticky within viewport after scrolling past header
  * Hidden on mobile - use inline AdSlot instead
  */
-export function AdRail({ className, showSecondary = true }: AdRailProps) {
+export function AdRail({
+  className,
+  showSecondary = true,
+  topOffset = 96, // 24 * 4 = 96px (top-24 in Tailwind)
+  maxSlots = 2,
+}: AdRailProps) {
   // Don't render if ads are disabled
   if (!adConfig.enabled) {
     return null;
   }
+
+  // Validate slot configuration
+  if (!adConfig.slots?.rightRail) {
+    console.warn("AdRail: Primary slot ID (rightRail) not configured");
+    return null;
+  }
+
+  if (showSecondary && maxSlots > 1 && !adConfig.slots?.rightRailSecondary) {
+    console.warn("AdRail: Secondary slot ID (rightRailSecondary) not configured");
+  }
+
+  const shouldShowSecondary = showSecondary && maxSlots > 1 && adConfig.slots?.rightRailSecondary;
 
   return (
     <aside
@@ -27,20 +48,20 @@ export function AdRail({ className, showSecondary = true }: AdRailProps) {
         "hidden lg:block",
         // Fixed width for rail
         "w-[336px] flex-shrink-0",
-        className
+        className,
       )}
       role="complementary"
       aria-label="Sponsored content"
     >
       <div
-        className={cn(
-          // Sticky positioning
-          "sticky top-24", // Account for header height
-          "space-y-6",
-          // Prevent covering content
-          "max-h-[calc(100vh-8rem)]",
-          "overflow-hidden"
-        )}
+        className="space-y-6"
+        style={{
+          position: "sticky",
+          top: `${topOffset}px`,
+          maxHeight: `calc(100vh - ${topOffset + 32}px)`, // 32px for bottom padding
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
       >
         {/* Primary ad slot */}
         <AdSlot
@@ -48,15 +69,17 @@ export function AdRail({ className, showSecondary = true }: AdRailProps) {
           format="rectangle"
           minHeight={250}
           className="bg-card rounded-xl border border-border shadow-card"
+          aria-label="Primary advertisement"
         />
 
         {/* Secondary ad slot with spacing */}
-        {showSecondary && (
+        {shouldShowSecondary && (
           <AdSlot
             slotId={adConfig.slots.rightRailSecondary}
             format="rectangle"
             minHeight={250}
             className="bg-card rounded-xl border border-border shadow-card"
+            aria-label="Secondary advertisement"
           />
         )}
       </div>
