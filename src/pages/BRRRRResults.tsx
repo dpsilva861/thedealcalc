@@ -11,6 +11,7 @@ import {
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
+import { devLog } from "@/lib/devLogger";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +46,7 @@ function BRRRRResultsContent() {
             const parsed = JSON.parse(storedResults);
             if (parsed && parsed.metrics && typeof parsed.metrics === 'object') {
               setLocalResults(parsed);
-              console.log(`[BRRRR Results] Loaded results from ${key}`);
+              devLog.resultsLoaded("BRRRR", key);
               break;
             }
           }
@@ -61,9 +62,9 @@ function BRRRRResultsContent() {
           const storedState = localStorage.getItem(key);
           if (storedState) {
             const parsedState = JSON.parse(storedState);
-            if (parsedState && parsedState.inputs) {
+          if (parsedState && parsedState.inputs) {
               setLocalInputs(parsedState.inputs);
-              console.log(`[BRRRR Results] Loaded inputs from ${key}`);
+              devLog.resultsLoaded("BRRRR", key);
               break;
             }
           }
@@ -101,6 +102,7 @@ function BRRRRResultsContent() {
   const handleExportPDF = async () => {
     if (generatingPDF) return;
     setGeneratingPDF(true);
+    devLog.exportClicked("BRRRR", "pdf");
     try {
       exportBRRRRToPDF(exportData);
       trackEvent("export_pdf", { calculator: "brrrr" });
@@ -114,6 +116,7 @@ function BRRRRResultsContent() {
   };
 
   const handleExportCSV = () => {
+    devLog.exportClicked("BRRRR", "csv");
     try {
       exportBRRRRToCSV(exportData);
       trackEvent("export_csv", { calculator: "brrrr" });
@@ -125,6 +128,7 @@ function BRRRRResultsContent() {
   };
 
   const handleExportExcel = async () => {
+    devLog.exportClicked("BRRRR", "excel");
     try {
       await exportBRRRRToExcel(exportData);
       trackEvent("export_excel", { calculator: "brrrr" });

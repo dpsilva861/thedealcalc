@@ -7,6 +7,7 @@ import {
   BRRRR_PRESETS,
   BRRRRPreset,
 } from "@/lib/calculators/brrrr";
+import { devLog } from "@/lib/devLogger";
 
 export interface BRRRRPropertyAddress {
   address: string;
@@ -223,9 +224,11 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
         // Also save timestamp for debugging
         localStorage.setItem("dealcalc:brrrr:lastUpdatedAt", new Date().toISOString());
         
+        // Dev logging
+        devLog.resultsSaved("BRRRR", RESULTS_KEY);
+        
         // Then update state
         setResults(analysisResults);
-        console.log("[BRRRR] Analysis complete, results saved to localStorage");
       } else {
         console.error("[BRRRR] Analysis returned invalid results");
         setResults(null);

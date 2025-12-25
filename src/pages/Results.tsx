@@ -26,6 +26,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
+import { devLog } from "@/lib/devLogger";
 import { exportToPDF, exportToCSV, exportToExcel } from "@/lib/exportUtils";
 import {
   DropdownMenu,
@@ -62,7 +63,7 @@ function ResultsContent() {
           if (parsed && parsed.inputs) {
             inputs = parsed.inputs;
             propertyAddress = parsed.address || contextAddress;
-            console.log("[Results] Loaded inputs from localStorage");
+            devLog.resultsLoaded("Underwriting", "dealcalc:underwrite:state");
           }
         }
       } catch (err) {
@@ -193,6 +194,7 @@ function ResultsContent() {
   const handleExportPDF = async () => {
     if (generatingPDF) return;
     setGeneratingPDF(true);
+    devLog.exportClicked("Underwriting", "pdf");
     try {
       exportToPDF(exportData);
       trackEvent("export_pdf", { calculator: "underwriting" });
@@ -206,6 +208,7 @@ function ResultsContent() {
   };
 
   const handleExportCSV = () => {
+    devLog.exportClicked("Underwriting", "csv");
     try {
       exportToCSV(exportData);
       trackEvent("export_csv", { calculator: "underwriting" });
@@ -217,6 +220,7 @@ function ResultsContent() {
   };
 
   const handleExportExcel = async () => {
+    devLog.exportClicked("Underwriting", "excel");
     try {
       await exportToExcel(exportData);
       trackEvent("export_excel", { calculator: "underwriting" });
