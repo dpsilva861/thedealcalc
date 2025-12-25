@@ -1,9 +1,17 @@
+import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Shield } from "lucide-react";
 
 export default function PrivacyPolicy() {
   return (
     <Layout>
+      <Helmet>
+        <title>Privacy Policy | TheDealCalc</title>
+        <meta name="description" content="Privacy policy for TheDealCalc explaining how we handle your data, use cookies, and protect your privacy." />
+        <link rel="canonical" href="https://thedealcalc.com/privacy" />
+      </Helmet>
+
       <div className="container mx-auto px-4 py-16 max-w-4xl">
         <div className="flex items-center gap-3 mb-8">
           <Shield className="h-8 w-8 text-primary" />
@@ -22,9 +30,13 @@ export default function PrivacyPolicy() {
               1. Introduction
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              DealCalc ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy 
-              explains how we collect, use, disclose, and safeguard your information when you use our 
-              real estate underwriting application.
+              TheDealCalc ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy 
+              explains how we collect, use, and safeguard your information when you use our free real estate 
+              underwriting calculators.
+            </p>
+            <p className="text-muted-foreground leading-relaxed mt-4">
+              <strong>Key Point:</strong> TheDealCalc is a free, ad-supported service. We do not require 
+              user accounts, and we do not store your deal calculations or property data on our servers.
             </p>
           </section>
 
@@ -34,40 +46,29 @@ export default function PrivacyPolicy() {
             </h2>
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Account Information</h3>
+                <h3 className="font-semibold text-foreground mb-2">Calculator Data</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  When you create an account, we collect your email address for authentication and 
-                  communication purposes.
+                  All calculations run entirely in your browser. <strong>We do not transmit, store, or 
+                  have access to the property data or financial information you enter into our calculators.</strong> 
+                  Your deal data stays on your device.
                 </p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Saved Analyses</h3>
+                <h3 className="font-semibold text-foreground mb-2">Analytics Data</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  If you choose to save your analyses, we store the property address, inputs, and 
-                  calculation results associated with your account.
+                  We use Google Analytics to understand how visitors use our website. This includes 
+                  information such as pages visited, time on site, browser type, device type, and 
+                  general geographic location. This data is aggregated and does not personally 
+                  identify you.
                 </p>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-2">Aggregate Analytics</h3>
+                <h3 className="font-semibold text-foreground mb-2">Advertising Data</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  We collect ZIP codes from analyses to understand market trends and improve our service. 
-                  This data is aggregated and not personally identifiable.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">Usage Data and Cookies</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  We automatically collect certain information when you visit our application, including 
-                  your IP address, browser type, operating system, referring URLs, and pages viewed. We 
-                  use cookies and similar tracking technologies to enhance your experience.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground mb-2">Payment Information</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Payment processing is handled by Stripe. We do not store your credit card information 
-                  on our servers. Please refer to Stripe's privacy policy for information about their 
-                  data handling practices.
+                  We use Google AdSense to display advertisements that fund our free service. 
+                  Google may collect data to serve personalized ads. See our{" "}
+                  <Link to="/cookies" className="text-primary hover:underline">Cookie Policy</Link>{" "}
+                  for details on how to opt out.
                 </p>
               </div>
             </div>
@@ -75,55 +76,69 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              3. How We Use Your Information
+              3. How We Use Information
             </h2>
             <ul className="list-disc list-inside text-muted-foreground space-y-2">
-              <li>To provide and maintain our service</li>
-              <li>To process your subscription and payments</li>
-              <li>To save and retrieve your analyses (when you choose to save them)</li>
-              <li>To analyze market trends using aggregated ZIP code data</li>
-              <li>To send you service-related communications</li>
-              <li>To improve our application and user experience</li>
-              <li>To detect and prevent fraud or abuse</li>
+              <li>To provide and maintain our free calculator service</li>
+              <li>To analyze usage patterns and improve our calculators</li>
+              <li>To display relevant advertisements that support our free service</li>
+              <li>To detect and prevent abuse or technical issues</li>
             </ul>
           </section>
 
           <section>
             <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              4. Data Sharing and Disclosure
+              4. Cookies and Tracking Technologies
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              We use cookies and similar technologies for analytics and advertising. For detailed 
+              information about the cookies we use, how to manage them, and how to opt out of 
+              personalized advertising, please see our{" "}
+              <Link to="/cookies" className="text-primary hover:underline">Cookie Policy</Link>.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
+              5. Third-Party Services
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              We do not sell your personal information. We may share your information only in the 
-              following circumstances:
+              We use the following third-party services:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2">
-              <li>With service providers who assist in operating our application (e.g., Stripe for payments)</li>
-              <li>To comply with legal obligations or respond to lawful requests</li>
-              <li>To protect our rights, privacy, safety, or property</li>
-              <li>In connection with a merger, acquisition, or sale of assets</li>
+              <li>
+                <strong>Google Analytics:</strong> For website analytics.{" "}
+                <a 
+                  href="https://policies.google.com/privacy" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Google Privacy Policy
+                </a>
+              </li>
+              <li>
+                <strong>Google AdSense:</strong> For advertising.{" "}
+                <a 
+                  href="https://policies.google.com/technologies/ads" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  How Google Uses Information
+                </a>
+              </li>
             </ul>
           </section>
 
           <section>
             <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              5. Data Security
+              6. Data Security
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              We implement appropriate technical and organizational measures to protect your information. 
-              However, no method of transmission over the Internet or electronic storage is 100% secure. 
-              While we strive to use commercially acceptable means to protect your information, we cannot 
-              guarantee its absolute security.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              6. Data Retention
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              We retain your account information and saved analyses for as long as your account is active 
-              or as needed to provide you services. You may delete your saved analyses at any time. If you 
-              wish to delete your account entirely, please contact us.
+              Because we do not store your calculator data, there is minimal risk of your financial 
+              information being compromised through our service. All data you enter stays in your 
+              browser and is cleared when you close the page or your browser.
             </p>
           </section>
 
@@ -132,41 +147,37 @@ export default function PrivacyPolicy() {
               7. Your Rights
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Depending on your location, you may have certain rights regarding your personal information:
+              Depending on your location, you may have rights regarding your personal information:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2">
-              <li>Access and receive a copy of your data</li>
-              <li>Rectify inaccurate information</li>
-              <li>Request deletion of your data</li>
-              <li>Object to or restrict certain processing</li>
-              <li>Data portability</li>
+              <li>Opt out of personalized advertising via{" "}
+                <a 
+                  href="https://www.google.com/settings/ads" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Google Ads Settings
+                </a>
+              </li>
+              <li>Opt out of Google Analytics via the{" "}
+                <a 
+                  href="https://tools.google.com/dlpage/gaoptout" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  GA Opt-out Browser Add-on
+                </a>
+              </li>
+              <li>Control cookies through your browser settings</li>
+              <li>Request information about data we may have collected</li>
             </ul>
           </section>
 
           <section>
             <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              8. Cookies
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              We use cookies and similar technologies to maintain your session, remember your preferences, 
-              and analyze usage patterns. You can control cookies through your browser settings, though 
-              disabling them may affect functionality.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              9. Third-Party Links
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Our application may contain links to third-party websites. We are not responsible for the 
-              privacy practices of these external sites. We encourage you to review their privacy policies.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              10. Children's Privacy
+              8. Children's Privacy
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               Our service is not directed to individuals under 18 years of age. We do not knowingly 
@@ -176,7 +187,7 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              11. Changes to This Policy
+              9. Changes to This Policy
             </h2>
             <p className="text-muted-foreground leading-relaxed">
               We may update this Privacy Policy from time to time. We will notify you of any changes by 
@@ -186,10 +197,10 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              12. Contact Us
+              10. Contact Us
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              If you have questions about this Privacy Policy or our data practices, please contact us at:{" "}
+              If you have questions about this Privacy Policy, please contact us at:{" "}
               <a href="mailto:support@dealcalc.com" className="text-primary hover:underline">
                 support@dealcalc.com
               </a>

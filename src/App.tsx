@@ -22,6 +22,8 @@ import FixAndFlipCalculator from "./pages/FixAndFlipCalculator";
 import CapRateCalculator from "./pages/CapRateCalculator";
 import CashOnCashCalculator from "./pages/CashOnCashCalculator";
 import RealEstateInvestmentCalculator from "./pages/RealEstateInvestmentCalculator";
+import Disclaimer from "./pages/Disclaimer";
+import CookiePolicy from "./pages/CookiePolicy";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +52,8 @@ const App = () => (
               <Route path="/cap-rate-calculator" element={<CapRateCalculator />} />
               <Route path="/cash-on-cash-calculator" element={<CashOnCashCalculator />} />
               <Route path="/real-estate-investment-calculator" element={<RealEstateInvestmentCalculator />} />
+              <Route path="/disclaimer" element={<Disclaimer />} />
+              <Route path="/cookies" element={<CookiePolicy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BRRRRProvider>
