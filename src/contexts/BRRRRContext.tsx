@@ -80,64 +80,79 @@ const saveResultsToStorage = (results: BRRRRResults | null) => {
 
 export function BRRRRProvider({ children }: { children: React.ReactNode }) {
   const stored = loadFromStorage();
+  const storedResults = loadResultsFromStorage();
   const [inputs, setInputs] = useState<BRRRRInputs>(stored?.inputs || getDefaultBRRRRInputs());
-  const [results, setResults] = useState<BRRRRResults | null>(loadResultsFromStorage());
+  const [results, setResults] = useState<BRRRRResults | null>(storedResults);
   const [currentStep, setCurrentStep] = useState(0);
   const [propertyAddress, setPropertyAddress] = useState<BRRRRPropertyAddress>(stored?.address || getDefaultPropertyAddress());
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
+  // Helper to save inputs whenever they change
+  const saveInputs = useCallback((newInputs: BRRRRInputs, address: BRRRRPropertyAddress) => {
+    saveToStorage(newInputs, address);
+  }, []);
+
   const updateInputs = useCallback((updates: Partial<BRRRRInputs>) => {
     setInputs(prev => {
       const next = { ...prev, ...updates };
-      saveToStorage(next, propertyAddress);
+      saveInputs(next, propertyAddress);
       return next;
     });
     setSelectedPreset(null);
-  }, [propertyAddress]);
+  }, [propertyAddress, saveInputs]);
 
   const updateAcquisition = useCallback((updates: Partial<BRRRRInputs["acquisition"]>) => {
-    setInputs(prev => ({
-      ...prev,
-      acquisition: { ...prev.acquisition, ...updates }
-    }));
+    setInputs(prev => {
+      const next = { ...prev, acquisition: { ...prev.acquisition, ...updates } };
+      saveInputs(next, propertyAddress);
+      return next;
+    });
     setSelectedPreset(null);
-  }, []);
+  }, [propertyAddress, saveInputs]);
 
   const updateBridgeFinancing = useCallback((updates: Partial<BRRRRInputs["bridgeFinancing"]>) => {
-    setInputs(prev => ({
-      ...prev,
-      bridgeFinancing: { ...prev.bridgeFinancing, ...updates }
-    }));
+    setInputs(prev => {
+      const next = { ...prev, bridgeFinancing: { ...prev.bridgeFinancing, ...updates } };
+      saveInputs(next, propertyAddress);
+      return next;
+    });
     setSelectedPreset(null);
-  }, []);
+  }, [propertyAddress, saveInputs]);
 
   const updateAfterRepairValue = useCallback((updates: Partial<BRRRRInputs["afterRepairValue"]>) => {
-    setInputs(prev => ({
-      ...prev,
-      afterRepairValue: { ...prev.afterRepairValue, ...updates }
-    }));
+    setInputs(prev => {
+      const next = { ...prev, afterRepairValue: { ...prev.afterRepairValue, ...updates } };
+      saveInputs(next, propertyAddress);
+      return next;
+    });
     setSelectedPreset(null);
-  }, []);
+  }, [propertyAddress, saveInputs]);
 
   const updateRefinance = useCallback((updates: Partial<BRRRRInputs["refinance"]>) => {
-    setInputs(prev => ({
-      ...prev,
-      refinance: { ...prev.refinance, ...updates }
-    }));
+    setInputs(prev => {
+      const next = { ...prev, refinance: { ...prev.refinance, ...updates } };
+      saveInputs(next, propertyAddress);
+      return next;
+    });
     setSelectedPreset(null);
-  }, []);
+  }, [propertyAddress, saveInputs]);
 
   const updateRentalOperations = useCallback((updates: Partial<BRRRRInputs["rentalOperations"]>) => {
-    setInputs(prev => ({
-      ...prev,
-      rentalOperations: { ...prev.rentalOperations, ...updates }
-    }));
+    setInputs(prev => {
+      const next = { ...prev, rentalOperations: { ...prev.rentalOperations, ...updates } };
+      saveInputs(next, propertyAddress);
+      return next;
+    });
     setSelectedPreset(null);
-  }, []);
+  }, [propertyAddress, saveInputs]);
 
   const updatePropertyAddress = useCallback((updates: Partial<BRRRRPropertyAddress>) => {
-    setPropertyAddress(prev => ({ ...prev, ...updates }));
-  }, []);
+    setPropertyAddress(prev => {
+      const next = { ...prev, ...updates };
+      saveToStorage(inputs, next);
+      return next;
+    });
+  }, [inputs]);
 
   const loadPreset = useCallback((presetId: string) => {
     const preset = BRRRR_PRESETS.find(p => p.id === presetId);
@@ -145,16 +160,26 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
       setInputs(preset.inputs);
       setSelectedPreset(presetId);
       setResults(null);
+      saveResultsToStorage(null);
     }
   }, []);
 
   const runAnalysis = useCallback(() => {
     try {
       const analysisResults = runBRRRRAnalysis(inputs);
-      setResults(analysisResults);
-      saveResultsToStorage(analysisResults);
+      if (analysisResults && analysisResults.metrics) {
+        setResults(analysisResults);
+        saveResultsToStorage(analysisResults);
+        // Also save inputs and timestamp for debugging
+        localStorage.setItem("dealcalc:brrrr:lastInputs", JSON.stringify(inputs));
+        localStorage.setItem("dealcalc:brrrr:lastUpdatedAt", new Date().toISOString());
+        console.log("[BRRRR] Analysis complete, results saved to localStorage");
+      } else {
+        console.error("[BRRRR] Analysis returned invalid results");
+        setResults(null);
+      }
     } catch (err) {
-      console.error("BRRRR analysis failed:", err);
+      console.error("[BRRRR] Analysis failed:", err);
       setResults(null);
       saveResultsToStorage(null);
     }

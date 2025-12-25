@@ -8,7 +8,7 @@ import {
   ArrowLeft, AlertTriangle, CheckCircle2, TrendingUp, DollarSign, 
   Percent, Home, Download, FileSpreadsheet, RefreshCw 
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -21,17 +21,52 @@ import {
   exportBRRRRToCSV, 
   exportBRRRRToPDF 
 } from "@/lib/calculators/brrrr/exports";
+import { BRRRRResults as BRRRRResultsType } from "@/lib/calculators/brrrr/types";
 
 function BRRRRResultsContent() {
-  const { results, inputs } = useBRRRR();
+  const { results: contextResults, inputs: contextInputs } = useBRRRR();
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [localResults, setLocalResults] = useState<BRRRRResultsType | null>(null);
+  const [localInputs, setLocalInputs] = useState<any>(null);
+
+  // On mount, check localStorage as fallback for refresh scenarios
+  useEffect(() => {
+    if (!contextResults) {
+      try {
+        const storedResults = localStorage.getItem("brrrr_results");
+        if (storedResults) {
+          const parsed = JSON.parse(storedResults);
+          if (parsed && parsed.metrics) {
+            setLocalResults(parsed);
+            console.log("[BRRRR Results] Loaded results from localStorage");
+          }
+        }
+        
+        // Also load inputs for export
+        const storedState = localStorage.getItem("brrrr_state");
+        if (storedState) {
+          const parsedState = JSON.parse(storedState);
+          if (parsedState && parsedState.inputs) {
+            setLocalInputs(parsedState.inputs);
+            console.log("[BRRRR Results] Loaded inputs from localStorage");
+          }
+        }
+      } catch (err) {
+        console.error("[BRRRR Results] Failed to load from localStorage:", err);
+      }
+    }
+  }, [contextResults]);
+
+  // Use context results if available, otherwise fall back to localStorage
+  const results = contextResults || localResults;
+  const inputs = contextInputs || localInputs;
 
   if (!results) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
         <p className="text-muted-foreground mb-4">No analysis results. Run an analysis first.</p>
         <Button asChild>
-          <Link to="/brrrr">Go to Calculator</Link>
+          <Link to="/brrrr">Go to BRRRR Calculator</Link>
         </Button>
       </div>
     );
