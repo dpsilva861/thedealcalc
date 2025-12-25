@@ -11,6 +11,7 @@ import { FinancingStep } from "@/components/underwriting/steps/FinancingStep";
 import { ReviewStep } from "@/components/underwriting/steps/ReviewStep";
 import { useUnderwriting } from "@/contexts/UnderwritingContext";
 import { validateInputs } from "@/lib/validation";
+import { trackEvent } from "@/lib/analytics";
 import { ArrowLeft, ArrowRight, Play, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
@@ -77,6 +78,29 @@ function UnderwriteContent() {
       // Show warnings but allow analysis to proceed
       validation.warnings.forEach((warn) => {
         toast.warning(warn.message);
+      });
+
+      const monthlyRent = inputs.income.unitCount * inputs.income.inPlaceMonthlyRentPerUnit;
+      const monthlyExpenses = (inputs.expenses.propertyTaxesAnnual + 
+        inputs.expenses.insuranceAnnual + 
+        inputs.expenses.utilitiesAnnual + 
+        inputs.expenses.hoaAnnual) / 12;
+      const loanAmount = inputs.financing.useFinancing 
+        ? (inputs.financing.useLtv 
+            ? inputs.acquisition.purchasePrice * (inputs.financing.loanLtv / 100) 
+            : inputs.financing.loanAmount)
+        : 0;
+      const monthlyRate = inputs.financing.interestRateAnnual / 100 / 12;
+      const amortMonths = inputs.financing.amortizationYears * 12;
+      const monthlyMortgage = loanAmount > 0 && monthlyRate > 0
+        ? (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, amortMonths)) / 
+          (Math.pow(1 + monthlyRate, amortMonths) - 1)
+        : 0;
+      const cashFlow = monthlyRent - monthlyExpenses - monthlyMortgage;
+
+      trackEvent("calculate_rental", {
+        monthly_rent: Math.round(monthlyRent),
+        cash_flow: Math.round(cashFlow)
       });
 
       runAnalysis();
