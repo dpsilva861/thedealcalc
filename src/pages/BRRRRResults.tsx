@@ -1,6 +1,4 @@
 import { Layout } from "@/components/layout/Layout";
-import { AuthGuard } from "@/components/AuthGuard";
-import { CalculatorAccessGuard } from "@/components/calculators/CalculatorAccessGuard";
 import { useBRRRR } from "@/contexts/BRRRRContext";
 import { BRRRRSelfTest } from "@/components/brrrr/BRRRRSelfTest";
 import { formatCurrency, formatPercent } from "@/lib/calculators/types";
@@ -179,11 +177,7 @@ function BRRRRResultsContent() {
 export default function BRRRRResults() {
   return (
     <Layout>
-      <AuthGuard requireSubscription>
-        <CalculatorAccessGuard calculatorId="brrrr">
-          <BRRRRResultsContent />
-        </CalculatorAccessGuard>
-      </AuthGuard>
+      <BRRRRResultsContent />
     </Layout>
   );
 }

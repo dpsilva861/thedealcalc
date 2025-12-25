@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { AuthGuard } from "@/components/AuthGuard";
-import { CalculatorAccessGuard } from "@/components/calculators/CalculatorAccessGuard";
 import { useBRRRR } from "@/contexts/BRRRRContext";
 import { BRRRRStepIndicator } from "@/components/brrrr/BRRRRStepIndicator";
 import { BRRRRPresetSelector } from "@/components/brrrr/BRRRRPresetSelector";
@@ -115,11 +113,7 @@ function BRRRRContent() {
 export default function BRRRR() {
   return (
     <Layout>
-      <AuthGuard requireSubscription>
-        <CalculatorAccessGuard calculatorId="brrrr">
-          <BRRRRContent />
-        </CalculatorAccessGuard>
-      </AuthGuard>
+      <BRRRRContent />
     </Layout>
   );
 }
