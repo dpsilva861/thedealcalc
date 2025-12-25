@@ -68,7 +68,7 @@ function applyHeaderStyle(row: ExcelJS.Row) {
   row.eachCell((cell) => {
     cell.font = { name: "Calibri", size: 11, bold: true, color: { argb: COLORS.headerText } };
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.headerBg } };
-    cell.alignment = { vertical: "middle", horizontal: "center" };
+    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
     cell.border = {
       top: { style: "thin", color: { argb: COLORS.borderLight } },
       bottom: { style: "thin", color: { argb: COLORS.borderLight } },
@@ -76,7 +76,7 @@ function applyHeaderStyle(row: ExcelJS.Row) {
       right: { style: "thin", color: { argb: COLORS.borderLight } },
     };
   });
-  row.height = 22;
+  row.height = 24; // Taller for wrapped headers
 }
 
 function applyDataRowStyle(row: ExcelJS.Row, isAlternate: boolean, isWarning = false) {
@@ -102,14 +102,15 @@ function applyDataRowStyle(row: ExcelJS.Row, isAlternate: boolean, isWarning = f
 function setupPrintArea(sheet: ExcelJS.Worksheet, options: { 
   landscape?: boolean; 
   fitToPage?: boolean;
+  fitToHeight?: number;
   repeatRows?: number;
 }) {
   sheet.pageSetup = {
     paperSize: 1 as ExcelJS.PaperSize, // Letter
     orientation: options.landscape ? "landscape" : "portrait",
-    fitToPage: options.fitToPage ?? true,
-    fitToWidth: 1,
-    fitToHeight: options.fitToPage ? 1 : 0,
+    fitToPage: true, // Always fit to page
+    fitToWidth: 1,   // Always 1 page wide
+    fitToHeight: options.fitToHeight ?? (options.fitToPage ? 1 : 0), // 0 = auto pages tall
     margins: {
       left: 0.5, right: 0.5,
       top: 0.75, bottom: 0.75,
@@ -138,10 +139,10 @@ export async function exportToExcel(data: ExportData): Promise<void> {
   workbook.created = new Date();
 
   // =========================================================================
-  // SHEET 1: SUMMARY (Print-ready, 1-page)
+  // SHEET 1: SUMMARY (Print-ready, 1 page wide x 1 page tall)
   // =========================================================================
   const summarySheet = workbook.addWorksheet("Summary");
-  setupPrintArea(summarySheet, { landscape: false, fitToPage: true });
+  setupPrintArea(summarySheet, { landscape: false, fitToPage: true, fitToHeight: 1 });
 
   // Column widths
   summarySheet.columns = [
@@ -318,14 +319,14 @@ export async function exportToExcel(data: ExportData): Promise<void> {
     row++;
   });
 
-  // Freeze panes
-  summarySheet.views = [{ state: "frozen", xSplit: 0, ySplit: 4 }];
+  // Freeze panes below header section (row 5 - after title, address, date, blank)
+  summarySheet.views = [{ state: "frozen", xSplit: 0, ySplit: 5 }];
 
   // =========================================================================
   // SHEET 2: INPUTS
   // =========================================================================
   const inputsSheet = workbook.addWorksheet("Inputs");
-  setupPrintArea(inputsSheet, { landscape: false, fitToPage: true });
+  setupPrintArea(inputsSheet, { landscape: false, fitToPage: true, fitToHeight: 1 });
 
   inputsSheet.columns = [{ width: 32 }, { width: 20 }];
 
@@ -412,20 +413,20 @@ export async function exportToExcel(data: ExportData): Promise<void> {
   // SHEET 3: CASH FLOW / PRO FORMA (Annual)
   // =========================================================================
   const annualSheet = workbook.addWorksheet("Annual Pro Forma");
-  setupPrintArea(annualSheet, { landscape: true, fitToPage: false, repeatRows: 1 });
+  setupPrintArea(annualSheet, { landscape: true, fitToPage: true, fitToHeight: 0, repeatRows: 1 });
 
   const annualHeaders = ["Year", "GPR", "Vacancy", "EGI", "OpEx", "NOI", "Debt Service", "Cash Flow", "DSCR", "CoC"];
   annualSheet.columns = [
-    { width: 8 },
-    { width: 14 },
-    { width: 14 },
-    { width: 14 },
-    { width: 14 },
-    { width: 14 },
-    { width: 14 },
-    { width: 14 },
-    { width: 10 },
-    { width: 10 },
+    { key: "year", width: 8 },
+    { key: "gpr", width: 14, style: { numFmt: '"$"#,##0' } },
+    { key: "vacancy", width: 14, style: { numFmt: '"$"#,##0' } },
+    { key: "egi", width: 14, style: { numFmt: '"$"#,##0' } },
+    { key: "opex", width: 14, style: { numFmt: '"$"#,##0' } },
+    { key: "noi", width: 14, style: { numFmt: '"$"#,##0' } },
+    { key: "debtService", width: 14, style: { numFmt: '"$"#,##0' } },
+    { key: "cashFlow", width: 14, style: { numFmt: '"$"#,##0' } },
+    { key: "dscr", width: 10, style: { numFmt: '0.00' } },
+    { key: "coc", width: 10, style: { numFmt: '0.00%' } },
   ];
 
   const headerRow = annualSheet.addRow(annualHeaders);
@@ -474,22 +475,22 @@ export async function exportToExcel(data: ExportData): Promise<void> {
   // SHEET 4: MONTHLY CASH FLOW
   // =========================================================================
   const monthlySheet = workbook.addWorksheet("Monthly Cash Flow");
-  setupPrintArea(monthlySheet, { landscape: true, fitToPage: false, repeatRows: 1 });
+  setupPrintArea(monthlySheet, { landscape: true, fitToPage: true, fitToHeight: 0, repeatRows: 1 });
 
   const monthlyHeaders = ["Month", "Rent/Unit", "GPR", "EGI", "OpEx", "NOI", "Debt Svc", "Principal", "Interest", "CapEx", "Cash Flow", "Loan Bal"];
   monthlySheet.columns = [
-    { width: 8 },
-    { width: 11 },
-    { width: 12 },
-    { width: 12 },
-    { width: 11 },
-    { width: 12 },
-    { width: 11 },
-    { width: 11 },
-    { width: 11 },
-    { width: 11 },
-    { width: 12 },
-    { width: 14 },
+    { key: "month", width: 8 },
+    { key: "rent", width: 12, style: { numFmt: '"$"#,##0.00' } },
+    { key: "gpr", width: 12, style: { numFmt: '"$"#,##0' } },
+    { key: "egi", width: 12, style: { numFmt: '"$"#,##0' } },
+    { key: "opex", width: 12, style: { numFmt: '"$"#,##0' } },
+    { key: "noi", width: 12, style: { numFmt: '"$"#,##0' } },
+    { key: "debtSvc", width: 12, style: { numFmt: '"$"#,##0' } },
+    { key: "principal", width: 12, style: { numFmt: '"$"#,##0' } },
+    { key: "interest", width: 12, style: { numFmt: '"$"#,##0' } },
+    { key: "capex", width: 12, style: { numFmt: '"$"#,##0' } },
+    { key: "cashFlow", width: 12, style: { numFmt: '"$"#,##0' } },
+    { key: "loanBal", width: 14, style: { numFmt: '"$"#,##0' } },
   ];
 
   const monthlyHeaderRow = monthlySheet.addRow(monthlyHeaders);
@@ -528,23 +529,45 @@ export async function exportToExcel(data: ExportData): Promise<void> {
   // =========================================================================
   if (redFlags.length > 0) {
     const flagsSheet = workbook.addWorksheet("Red Flags");
-    setupPrintArea(flagsSheet, { landscape: false, fitToPage: true });
+    setupPrintArea(flagsSheet, { landscape: false, fitToPage: true, fitToHeight: 1 });
 
     flagsSheet.columns = [{ width: 6 }, { width: 80 }];
 
+    // Title row
     flagsSheet.getCell("A1").value = "Potential Concerns";
     flagsSheet.getCell("A1").font = FONTS.title;
     flagsSheet.mergeCells("A1:B1");
+    flagsSheet.getRow(1).height = 28;
+
+    // Header row
+    const flagHeaderRow = flagsSheet.addRow(["#", "Description"]);
+    applyHeaderStyle(flagHeaderRow);
 
     redFlags.forEach((flag, idx) => {
       const r = flagsSheet.addRow([idx + 1, flag]);
       r.getCell(1).font = { ...FONTS.body, bold: true };
-      r.getCell(1).alignment = { horizontal: "center" };
+      r.getCell(1).alignment = { horizontal: "center", vertical: "middle" };
       r.getCell(2).font = FONTS.body;
-      r.getCell(2).alignment = { wrapText: true };
-      r.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.warningBg } };
-      r.height = 24;
+      r.getCell(2).alignment = { wrapText: true, vertical: "middle" };
+      // Light shading only - subtle warning background
+      r.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF3" } };
+      r.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF3" } };
+      r.getCell(1).border = {
+        top: { style: "thin", color: { argb: COLORS.borderLight } },
+        bottom: { style: "thin", color: { argb: COLORS.borderLight } },
+        left: { style: "thin", color: { argb: COLORS.borderLight } },
+        right: { style: "thin", color: { argb: COLORS.borderLight } },
+      };
+      r.getCell(2).border = {
+        top: { style: "thin", color: { argb: COLORS.borderLight } },
+        bottom: { style: "thin", color: { argb: COLORS.borderLight } },
+        left: { style: "thin", color: { argb: COLORS.borderLight } },
+        right: { style: "thin", color: { argb: COLORS.borderLight } },
+      };
+      r.height = 28;
     });
+
+    flagsSheet.views = [{ state: "frozen", xSplit: 0, ySplit: 2 }];
   }
 
   // =========================================================================
