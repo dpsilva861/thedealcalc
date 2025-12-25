@@ -37,16 +37,18 @@ export interface AdConfig {
 }
 
 export const adConfig: AdConfig = {
-  // Set to true and configure clientId to enable real ads
-  enabled: false,
+  // Set to true to show ads (enabled for production)
+  enabled: true,
   
-  // Change to "adsense" when ready to show real ads
+  // Use placeholder for development, adsense for production
+  // NOTE: Change to "adsense" and add your real client ID before go-live
   provider: "placeholder",
   
-  // Replace with your Google AdSense client ID
+  // Replace with your Google AdSense client ID when ready
+  // Get your client ID from https://www.google.com/adsense/
   clientId: "ca-pub-XXXXXXXXXXXXXXXX",
   
-  // Replace with your AdSense slot IDs
+  // Replace with your AdSense slot IDs from your AdSense account
   slots: {
     homeBetweenSections: "1234567890",
     rightRail: "2345678901",
