@@ -77,12 +77,26 @@ interface SyndicationContextType {
 
 const SyndicationContext = createContext<SyndicationContextType | null>(null);
 
-const STORAGE_KEY = "syndication_inputs";
-const RESULTS_KEY = "syndication_results";
+// Standardized storage keys
+const STORAGE_KEY = "dealcalc:syndication:state";
+const RESULTS_KEY = "dealcalc:syndication:results";
+
+// Legacy keys for migration
+const LEGACY_STORAGE_KEY = "syndication_inputs";
+const LEGACY_RESULTS_KEY = "syndication_results";
 
 function loadInputsFromStorage(): SyndicationInputs {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    // Try new key first, then legacy
+    let stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      stored = localStorage.getItem(LEGACY_STORAGE_KEY);
+      // Migrate to new key if found
+      if (stored) {
+        localStorage.setItem(STORAGE_KEY, stored);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+      }
+    }
     if (stored) {
       const parsed = JSON.parse(stored);
       // Deep merge to ensure all fields exist
@@ -98,7 +112,9 @@ function loadInputsFromStorage(): SyndicationInputs {
       };
     }
   } catch (e) {
-    console.error("Failed to load syndication inputs:", e);
+    console.error("[Syndication] Failed to load inputs:", e);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
   }
   return DEFAULT_SYNDICATION_INPUTS;
 }
@@ -107,27 +123,46 @@ function saveInputsToStorage(inputs: SyndicationInputs): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(inputs));
   } catch (e) {
-    console.error("Failed to save syndication inputs:", e);
+    console.error("[Syndication] Failed to save inputs:", e);
   }
 }
 
 function loadResultsFromStorage(): SyndicationResults | null {
   try {
-    const stored = localStorage.getItem(RESULTS_KEY);
+    // Try new key first, then legacy
+    let stored = localStorage.getItem(RESULTS_KEY);
+    if (!stored) {
+      stored = localStorage.getItem(LEGACY_RESULTS_KEY);
+      // Migrate to new key if found
+      if (stored) {
+        localStorage.setItem(RESULTS_KEY, stored);
+        localStorage.removeItem(LEGACY_RESULTS_KEY);
+      }
+    }
     if (stored) {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // Validate structure
+      if (parsed && parsed.kpis && typeof parsed.kpis === 'object') {
+        return parsed;
+      }
     }
   } catch (e) {
-    console.error("Failed to load syndication results:", e);
+    console.error("[Syndication] Failed to load results:", e);
+    localStorage.removeItem(RESULTS_KEY);
+    localStorage.removeItem(LEGACY_RESULTS_KEY);
   }
   return null;
 }
 
-function saveResultsToStorage(results: SyndicationResults): void {
+function saveResultsToStorage(results: SyndicationResults | null): void {
   try {
-    localStorage.setItem(RESULTS_KEY, JSON.stringify(results));
+    if (results) {
+      localStorage.setItem(RESULTS_KEY, JSON.stringify(results));
+    } else {
+      localStorage.removeItem(RESULTS_KEY);
+    }
   } catch (e) {
-    console.error("Failed to save syndication results:", e);
+    console.error("[Syndication] Failed to save results:", e);
   }
 }
 
@@ -173,12 +208,18 @@ export function SyndicationProvider({ children }: { children: React.ReactNode })
     setError(null);
     try {
       const analysisResults = runSyndicationAnalysis(inputs);
-      setResults(analysisResults);
+      // Save results FIRST before state updates
       saveResultsToStorage(analysisResults);
       saveInputsToStorage(inputs);
+      localStorage.setItem("dealcalc:syndication:lastUpdatedAt", new Date().toISOString());
+      
+      // Then update state
+      setResults(analysisResults);
+      console.log("[Syndication] Analysis complete, results saved to localStorage");
     } catch (e: any) {
       setError(e?.message || "Calculation failed");
       setResults(null);
+      saveResultsToStorage(null);
     } finally {
       setIsCalculating(false);
     }
@@ -188,8 +229,12 @@ export function SyndicationProvider({ children }: { children: React.ReactNode })
     setInputs(DEFAULT_SYNDICATION_INPUTS);
     setResults(null);
     setError(null);
+    // Clear all storage keys (new and legacy)
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(RESULTS_KEY);
+    localStorage.removeItem("syndication_inputs");
+    localStorage.removeItem("syndication_results");
+    localStorage.removeItem("dealcalc:syndication:lastUpdatedAt");
   }, []);
 
   const loadPreset = useCallback((presetId: keyof typeof SYNDICATION_PRESETS) => {
