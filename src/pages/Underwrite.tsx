@@ -123,7 +123,7 @@ function UnderwriteContent() {
   const isLastStep = currentStep === STEPS.length - 1;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-cream-dark">
+    <div className="min-h-[calc(100vh-4rem)] bg-cream-dark overflow-x-hidden">
       {/* Header */}
       <div className="border-b border-border bg-background">
         <div className="container mx-auto px-4 py-6">

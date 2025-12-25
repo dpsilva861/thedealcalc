@@ -28,7 +28,8 @@ interface BRRRRContextType {
   updateRefinance: (updates: Partial<BRRRRInputs["refinance"]>) => void;
   updateRentalOperations: (updates: Partial<BRRRRInputs["rentalOperations"]>) => void;
   updatePropertyAddress: (updates: Partial<BRRRRPropertyAddress>) => void;
-  loadPreset: (presetId: string) => void;
+  loadPreset: (presetId: string, autoRun?: boolean) => void;
+  loadPresetAndRun: (presetId: string) => BRRRRResults | null;
   runAnalysis: () => void;
   resetInputs: () => void;
   currentStep: number;
@@ -203,18 +204,67 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
     });
   }, [inputs]);
 
-  const loadPreset = useCallback((presetId: string) => {
+  const loadPreset = useCallback((presetId: string, autoRun: boolean = false) => {
     const preset = BRRRR_PRESETS.find(p => p.id === presetId);
     if (preset) {
+      devLog.presetLoaded("BRRRR", presetId, autoRun);
       setInputs(preset.inputs);
       setSelectedPreset(presetId);
-      setResults(null);
-      saveResultsToStorage(null);
+      saveToStorage(preset.inputs, propertyAddress);
+      
+      if (autoRun) {
+        // Run analysis immediately with preset inputs
+        try {
+          devLog.analysisStarted("BRRRR");
+          const analysisResults = runBRRRRAnalysis(preset.inputs);
+          if (analysisResults && analysisResults.metrics) {
+            saveResultsToStorage(analysisResults);
+            localStorage.setItem("dealcalc:brrrr:lastUpdatedAt", new Date().toISOString());
+            devLog.resultsSaved("BRRRR", RESULTS_KEY);
+            setResults(analysisResults);
+          }
+        } catch (err) {
+          console.error("[BRRRR] Analysis failed:", err);
+        }
+      } else {
+        setResults(null);
+        saveResultsToStorage(null);
+      }
     }
-  }, []);
+  }, [propertyAddress]);
+
+  // Convenience function for quick scenario buttons - loads preset and runs analysis, returns results
+  const loadPresetAndRun = useCallback((presetId: string): BRRRRResults | null => {
+    const preset = BRRRR_PRESETS.find(p => p.id === presetId);
+    if (!preset) return null;
+    
+    devLog.scenarioSelected("BRRRR", preset.name);
+    devLog.analysisStarted("BRRRR");
+    
+    // Update state
+    setInputs(preset.inputs);
+    setSelectedPreset(presetId);
+    saveToStorage(preset.inputs, propertyAddress);
+    
+    // Run analysis with preset inputs
+    try {
+      const analysisResults = runBRRRRAnalysis(preset.inputs);
+      if (analysisResults && analysisResults.metrics) {
+        saveResultsToStorage(analysisResults);
+        localStorage.setItem("dealcalc:brrrr:lastUpdatedAt", new Date().toISOString());
+        devLog.resultsSaved("BRRRR", RESULTS_KEY);
+        setResults(analysisResults);
+        return analysisResults;
+      }
+    } catch (err) {
+      console.error("[BRRRR] Analysis failed:", err);
+    }
+    return null;
+  }, [propertyAddress]);
 
   const runAnalysis = useCallback(() => {
     try {
+      devLog.analysisStarted("BRRRR");
       const analysisResults = runBRRRRAnalysis(inputs);
       if (analysisResults && analysisResults.metrics) {
         // Save results FIRST before any state updates
@@ -271,6 +321,7 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
         updateRentalOperations,
         updatePropertyAddress,
         loadPreset,
+        loadPresetAndRun,
         runAnalysis,
         resetInputs,
         currentStep,

@@ -191,6 +191,7 @@ export function UnderwritingProvider({ children }: { children: React.ReactNode }
 
   const runAnalysis = useCallback(() => {
     try {
+      devLog.analysisStarted("Underwriting");
       const analysisResults = runUnderwriting(inputs);
       if (analysisResults && analysisResults.metrics) {
         // Save results FIRST before any state updates

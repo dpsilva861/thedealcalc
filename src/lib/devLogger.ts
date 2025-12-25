@@ -10,6 +10,24 @@ const isDev = (): boolean => {
 };
 
 export const devLog = {
+  scenarioSelected: (calculator: string, scenario: string) => {
+    if (!isDev()) return;
+    console.log(
+      `%c[${calculator}] 🎯 Scenario selected: ${scenario}`,
+      'color: #8b5cf6; font-weight: bold',
+      `\n  Timestamp: ${new Date().toISOString()}`
+    );
+  },
+
+  analysisStarted: (calculator: string) => {
+    if (!isDev()) return;
+    console.log(
+      `%c[${calculator}] ⚙️ Analysis STARTED`,
+      'color: #f59e0b; font-weight: bold',
+      `\n  Timestamp: ${new Date().toISOString()}`
+    );
+  },
+
   resultsSaved: (calculator: string, key: string) => {
     if (!isDev()) return;
     console.log(
@@ -33,6 +51,15 @@ export const devLog = {
     console.log(
       `%c[${calculator}] 📥 Export ${format.toUpperCase()} clicked`,
       'color: #f59e0b; font-weight: bold',
+      `\n  Timestamp: ${new Date().toISOString()}`
+    );
+  },
+
+  presetLoaded: (calculator: string, presetId: string, autoRun: boolean) => {
+    if (!isDev()) return;
+    console.log(
+      `%c[${calculator}] 📋 Preset "${presetId}" loaded ${autoRun ? '(auto-running analysis)' : ''}`,
+      'color: #06b6d4; font-weight: bold',
       `\n  Timestamp: ${new Date().toISOString()}`
     );
   },
