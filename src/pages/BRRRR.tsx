@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { useBRRRR } from "@/contexts/BRRRRContext";
@@ -21,6 +22,10 @@ const STEPS = [
 function BRRRRContent() {
   const navigate = useNavigate();
   const { currentStep, setCurrentStep, runAnalysis, inputs } = useBRRRR();
+
+  useEffect(() => {
+    trackEvent("page_view", { page: "/brrrr" });
+  }, []);
 
   const CurrentStepComponent = STEPS[currentStep].component;
 
