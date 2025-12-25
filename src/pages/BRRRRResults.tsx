@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,6 +86,7 @@ function BRRRRResultsContent() {
     setGeneratingPDF(true);
     try {
       exportBRRRRToPDF(exportData);
+      trackEvent("export_pdf", { calculator: "brrrr" });
       toast.success("PDF downloaded");
     } catch (err) {
       console.error("PDF export failed:", err);
@@ -97,6 +99,7 @@ function BRRRRResultsContent() {
   const handleExportCSV = () => {
     try {
       exportBRRRRToCSV(exportData);
+      trackEvent("export_csv", { calculator: "brrrr" });
       toast.success("CSV exported successfully");
     } catch (err) {
       console.error("CSV export failed:", err);
@@ -107,6 +110,7 @@ function BRRRRResultsContent() {
   const handleExportExcel = async () => {
     try {
       await exportBRRRRToExcel(exportData);
+      trackEvent("export_excel", { calculator: "brrrr" });
       toast.success("Excel file exported successfully");
     } catch (err) {
       console.error("Excel export failed:", err);
