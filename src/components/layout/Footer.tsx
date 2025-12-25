@@ -18,7 +18,7 @@ export function Footer() {
             </Link>
             <p className="text-muted-foreground text-sm max-w-md">
               Professional residential real estate underwriting made simple. 
-              Run unlimited analyses for just $3/month. We never store your deal data.
+              100% free. We never store your deal data.
             </p>
           </div>
 
@@ -29,11 +29,6 @@ export function Footer() {
               <li>
                 <Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   How It Works
-                </Link>
-              </li>
-              <li>
-                <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Pricing
                 </Link>
               </li>
               <li>
