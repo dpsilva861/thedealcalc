@@ -17,15 +17,4 @@ export { MobileAd } from "./MobileAd";
 export { adConfig, shouldShowAds } from "@/config/ads";
 
 // Types
-export type {
-  AdConfig,
-  AdProvider,
-  AdFormat,
-  AdSlotConfig, // Export if it exists in your ads config
-} from "@/config/ads";
-
-// Re-export component prop types for external consumers
-export type { AdSlotProps } from "./AdSlot";
-export type { AdRailProps } from "./AdRail";
-export type { InlineAdProps } from "./InlineAd";
-export type { MobileAdProps } from "./MobileAd";
+export type { AdConfig, AdProvider, AdFormat } from "@/config/ads";
