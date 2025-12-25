@@ -1,14 +1,12 @@
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { InlineAd, MobileAd } from "@/components/ads";
 import { COMING_SOON_CALCULATORS } from "@/lib/calculators/registry";
 import {
   Calculator,
   Shield,
   Zap,
   FileText,
-  CheckCircle2,
   ArrowRight,
   Building2,
 } from "lucide-react";
@@ -22,18 +20,18 @@ export default function Index() {
     },
     {
       icon: Shield,
-      title: "Privacy First",
-      description: "Your data is encrypted and secure. Save analyses only when you choose to—they're always private to your account.",
+      title: "100% Free",
+      description: "No signups, no subscriptions, no limits. Just open the calculator and start analyzing deals.",
     },
     {
       icon: Zap,
-      title: "Unlimited Analyses",
-      description: "Run as many deals as you need for one flat monthly price. No per-deal fees, no surprises.",
+      title: "Instant Results",
+      description: "Run as many analyses as you want. No waiting, no restrictions, no hidden fees.",
     },
     {
       icon: FileText,
-      title: "Professional Reports",
-      description: "Generate beautiful PDF reports with key metrics, sensitivity tables, and clear visualizations.",
+      title: "Export Anywhere",
+      description: "Download professional PDF, CSV, or Excel reports instantly. Share with partners or lenders.",
     },
   ];
 
@@ -57,8 +55,8 @@ export default function Index() {
     },
     {
       number: "03",
-      title: "Review & Export",
-      description: "View your complete underwriting report and download a professional PDF to share with partners or lenders.",
+      title: "Export Report",
+      description: "Download a professional PDF, CSV, or Excel file to share with partners or lenders.",
     },
   ];
 
@@ -71,7 +69,7 @@ export default function Index() {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sage-light border border-primary/20 text-primary text-sm font-medium mb-6 animate-fade-in">
               <Zap className="h-4 w-4" />
-              <span>Unlimited analyses for $3/month</span>
+              <span>100% Free • No Signup Required</span>
             </div>
             
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-slide-up">
@@ -80,14 +78,14 @@ export default function Index() {
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: "0.1s" }}>
-              Analyze residential investment properties with confidence. Accurate calculations, 
-              beautiful reports, and complete privacy—all for less than a cup of coffee.
+              Analyze residential investment properties with confidence. Accurate calculations 
+              and professional reports—completely free.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
               <Button variant="hero" size="xl" asChild>
-                <Link to="/signup">
-                  Try Free Analysis
+                <Link to="/underwrite">
+                  Start Analyzing
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
@@ -95,10 +93,6 @@ export default function Index() {
                 <Link to="/how-it-works">See How It Works</Link>
               </Button>
             </div>
-
-            <p className="text-sm text-muted-foreground mt-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              3 free analyses included. No credit card required.
-            </p>
           </div>
         </div>
       </section>
@@ -159,12 +153,6 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Inline Ad between Features and How It Works - desktop only */}
-      <InlineAd className="hidden md:block" />
-      
-      {/* Mobile Ad between Features and How It Works - mobile only */}
-      <MobileAd />
-
       {/* How It Works Section */}
       <section className="py-20 md:py-28 bg-cream-dark">
         <div className="container mx-auto px-4">
@@ -204,85 +192,39 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Trust Section */}
-      <section className="py-20 md:py-28">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-6">
-                  Your Privacy is Our Priority
-                </h2>
-                <p className="text-muted-foreground mb-8">
-                  Your data is always under your control. Calculations run in your browser, 
-                  and saved analyses are encrypted and private to your account. 
-                  Delete them anytime—it's that simple.
-                </p>
-                <ul className="space-y-4">
-                  {[
-                    "Calculations run entirely in your browser",
-                    "Saved analyses are private to your account",
-                    "PDF exports generated locally",
-                    "Delete your data anytime",
-                  ].map((item, index) => (
-                    <li key={index} className="flex items-center gap-3 text-foreground">
-                      <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="relative">
-                <div className="aspect-square rounded-3xl bg-gradient-to-br from-sage-light to-secondary p-8 shadow-elevated">
-                  <div className="h-full w-full rounded-2xl bg-card border border-border shadow-card flex items-center justify-center">
-                    <div className="text-center">
-                      <Shield className="h-16 w-16 text-primary mx-auto mb-4" />
-                      <p className="font-display text-2xl font-semibold text-foreground">
-                        Privacy First
-                      </p>
-                      <p className="text-muted-foreground text-sm mt-2">
-                        Your data. Your control.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Coming Soon Section */}
-      <section className="py-16 md:py-20 border-t border-border">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-medium mb-4">
-              <Zap className="h-3.5 w-3.5" />
-              <span>Coming Soon</span>
-            </div>
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
-              More Calculators on the Way
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              We're building specialized tools for every investment strategy.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-            {COMING_SOON_CALCULATORS.map((calc, index) => (
-              <div
-                key={calc.id}
-                className="p-4 rounded-xl bg-card border border-border text-center animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <Building2 className="h-6 w-6 text-primary/60 mx-auto mb-2" />
-                <h3 className="font-semibold text-foreground text-sm mb-1">{calc.name}</h3>
-                <p className="text-xs text-muted-foreground">{calc.shortDescription}</p>
+      {COMING_SOON_CALCULATORS.length > 0 && (
+        <section className="py-16 md:py-20 border-t border-border">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-medium mb-4">
+                <Zap className="h-3.5 w-3.5" />
+                <span>Coming Soon</span>
               </div>
-            ))}
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-3">
+                More Calculators on the Way
+              </h2>
+              <p className="text-muted-foreground max-w-xl mx-auto">
+                We're building specialized tools for every investment strategy.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+              {COMING_SOON_CALCULATORS.map((calc, index) => (
+                <div
+                  key={calc.id}
+                  className="p-4 rounded-xl bg-card border border-border text-center animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <Building2 className="h-6 w-6 text-primary/60 mx-auto mb-2" />
+                  <h3 className="font-semibold text-foreground text-sm mb-1">{calc.name}</h3>
+                  <p className="text-xs text-muted-foreground">{calc.shortDescription}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-20 md:py-28 gradient-sage">
@@ -291,19 +233,14 @@ export default function Index() {
             Ready to Analyze Your Next Deal?
           </h2>
           <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
-            Join thousands of investors who trust DealCalc for accurate, private underwriting.
+            Jump in and start analyzing—no signup, no payment, just results.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="secondary" size="xl" asChild>
-              <Link to="/signup">
-                Start Free Trial
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-          <p className="text-primary-foreground/60 text-sm mt-6">
-            3 free analyses included. No credit card required.
-          </p>
+          <Button variant="secondary" size="xl" asChild>
+            <Link to="/underwrite">
+              Start Free Analysis
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </section>
     </Layout>

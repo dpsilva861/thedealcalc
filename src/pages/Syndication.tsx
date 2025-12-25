@@ -1,6 +1,4 @@
 import { Layout } from "@/components/layout/Layout";
-import { AuthGuard } from "@/components/AuthGuard";
-import { CalculatorAccessGuard } from "@/components/calculators/CalculatorAccessGuard";
 import { SyndicationProvider, useSyndication } from "@/contexts/SyndicationContext";
 import SyndicationInputsPanel from "@/components/syndication/SyndicationInputsPanel";
 import SyndicationResultsPanel from "@/components/syndication/SyndicationResultsPanel";
@@ -55,13 +53,9 @@ function SyndicationContent() {
 export default function Syndication() {
   return (
     <Layout showFooter={false}>
-      <AuthGuard>
-        <CalculatorAccessGuard calculatorId="syndication">
-          <SyndicationProvider>
-            <SyndicationContent />
-          </SyndicationProvider>
-        </CalculatorAccessGuard>
-      </AuthGuard>
+      <SyndicationProvider>
+        <SyndicationContent />
+      </SyndicationProvider>
     </Layout>
   );
 }

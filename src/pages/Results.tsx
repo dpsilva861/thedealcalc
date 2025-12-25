@@ -2,10 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useUnderwriting, PropertyAddress } from "@/contexts/UnderwritingContext";
-import { AuthGuard } from "@/components/AuthGuard";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
 import {
   formatCurrency,
   formatPercent,
@@ -23,15 +19,9 @@ import {
   Percent,
   BarChart3,
   AlertTriangle,
-  CheckCircle2,
   RefreshCw,
-  Save,
-  MapPin,
-  FolderOpen,
-  FileSpreadsheet,
-  Lock,
   Edit,
-  List,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -42,66 +32,21 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 function ResultsContent() {
   const navigate = useNavigate();
   const { inputs, propertyAddress } = useUnderwriting();
-  const { user, isSubscribed } = useAuth();
 
   const [baseResults, setBaseResults] = useState<UnderwritingResults | null>(null);
   const [outlookResults, setOutlookResults] = useState<UnderwritingResults | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [isFromSaved, setIsFromSaved] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<PropertyAddress | null>(null);
   const [displayInputs, setDisplayInputs] = useState<UnderwritingInputs | null>(null);
-  
 
-  // Check if viewing a saved analysis
+  // Compute results from context inputs
   useEffect(() => {
-    const savedAnalysisStr = sessionStorage.getItem("uw:savedAnalysis");
-    if (savedAnalysisStr) {
-      try {
-        const savedAnalysis = JSON.parse(savedAnalysisStr);
-        sessionStorage.removeItem("uw:savedAnalysis");
-        
-        setIsFromSaved(true);
-        setIsSaved(true);
-        setDisplayAddress({
-          address: savedAnalysis.address,
-          city: savedAnalysis.city || "",
-          state: savedAnalysis.state || "",
-          zipCode: savedAnalysis.zip_code,
-        });
-        setDisplayInputs(savedAnalysis.inputs as UnderwritingInputs);
-        
-        // Compute results from saved inputs
-        const savedInputs = savedAnalysis.inputs as UnderwritingInputs;
-        const base = runUnderwriting(savedInputs);
-        const outlookMonths = 360;
-        const outlook = savedInputs.acquisition.holdPeriodMonths >= outlookMonths
-          ? base
-          : runUnderwritingNoSensitivity({
-              ...savedInputs,
-              acquisition: { ...savedInputs.acquisition, holdPeriodMonths: outlookMonths },
-            });
-        setBaseResults(base);
-        setOutlookResults(outlook);
-      } catch (e) {
-        console.error("Failed to parse saved analysis:", e);
-        sessionStorage.removeItem("uw:savedAnalysis");
-      }
-    }
-  }, []);
-
-  // Compute results from context inputs if not from saved
-  useEffect(() => {
-    if (isFromSaved) return;
-    
     setError(null);
     setDisplayAddress(propertyAddress);
     setDisplayInputs(inputs);
@@ -124,61 +69,7 @@ function ResultsContent() {
       console.error("Underwriting report generation failed:", e);
       setError(message);
     }
-  }, [inputs, propertyAddress, isFromSaved]);
-
-  // Clear any stale auto-print flag (print is now manual via Export dropdown)
-  useEffect(() => {
-    sessionStorage.removeItem("uw:autoPrint");
-  }, []);
-
-  // Auto-save new analyses
-  useEffect(() => {
-    if (!baseResults || !displayAddress || !displayInputs || isSaved || isFromSaved) return;
-    if (!displayAddress.zipCode) return;
-    
-    handleSaveAnalysis();
-  }, [baseResults, displayAddress, displayInputs, isSaved, isFromSaved]);
-
-  const handleSaveAnalysis = async () => {
-    if (!user || !baseResults || !displayAddress || !displayInputs) return;
-    if (!displayAddress.address || !displayAddress.zipCode) {
-      toast.error("Missing address information");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      // Save analysis
-      const { error: saveError } = await supabase.from("saved_analyses").insert([{
-        user_id: user.id,
-        address: displayAddress.address,
-        city: displayAddress.city || null,
-        state: displayAddress.state || null,
-        zip_code: displayAddress.zipCode,
-        inputs: JSON.parse(JSON.stringify(displayInputs)) as Json,
-        results: JSON.parse(JSON.stringify(baseResults)) as Json,
-      }]);
-
-      if (saveError) throw saveError;
-
-      // Track ZIP code (fire and forget)
-      supabase.functions.invoke("track-zip", {
-        body: {
-          zip_code: displayAddress.zipCode,
-          city: displayAddress.city,
-          state: displayAddress.state,
-        },
-      }).catch((err) => console.error("ZIP tracking failed:", err));
-
-      setIsSaved(true);
-      toast.success("Analysis saved");
-    } catch (err) {
-      console.error("Failed to save analysis:", err);
-      toast.error("Failed to save analysis");
-    } finally {
-      setSaving(false);
-    }
-  };
+  }, [inputs, propertyAddress]);
 
   const currentInputs = displayInputs || inputs;
 
@@ -557,23 +448,11 @@ function ResultsContent() {
   };
 
   const handleExportCSV = () => {
-    if (!isSubscribed) {
-      toast.error("CSV export is a Pro feature", {
-        action: {
-          label: "Upgrade",
-          onClick: () => navigate("/pricing"),
-        },
-      });
-      return;
-    }
-
     const addressLine = displayAddress ? `${displayAddress.address || ""}, ${displayAddress.city || ""}, ${displayAddress.state || ""} ${displayAddress.zipCode || ""}`.trim() : "N/A";
     const reportDate = new Date().toLocaleDateString();
     
-    // Build comprehensive CSV with property info and metrics
     let csvLines: string[] = [];
     
-    // Header section
     csvLines.push("UNDERWRITING REPORT");
     csvLines.push(`Property Address,${addressLine}`);
     csvLines.push(`Report Date,${reportDate}`);
@@ -582,7 +461,6 @@ function ResultsContent() {
     csvLines.push(`Hold Period,${currentInputs.acquisition.holdPeriodMonths} months`);
     csvLines.push("");
     
-    // Key Metrics section
     csvLines.push("KEY METRICS");
     csvLines.push(`IRR,${formatPercent(metrics.irr)}`);
     csvLines.push(`Cash-on-Cash (Year 1),${formatPercent(metrics.cocYear1)}`);
@@ -592,7 +470,6 @@ function ResultsContent() {
     csvLines.push(`NOI (Stabilized Annual),${formatCurrency(metrics.stabilizedNoiAnnual)}`);
     csvLines.push("");
     
-    // Sources & Uses
     csvLines.push("SOURCES OF FUNDS");
     csvLines.push(`Loan Amount,${formatCurrency(sourcesAndUses.sources.loanAmount)}`);
     csvLines.push(`Equity Required,${formatCurrency(sourcesAndUses.sources.equity)}`);
@@ -605,7 +482,6 @@ function ResultsContent() {
     csvLines.push(`Total Uses,${formatCurrency(sourcesAndUses.uses.total)}`);
     csvLines.push("");
     
-    // Monthly Cash Flow Schedule
     csvLines.push("MONTHLY CASH FLOW SCHEDULE");
     const headers = ["Month", "Rent/Unit", "GPR", "EGI", "OpEx", "NOI", "Debt Service", "Principal", "Interest", "CapEx", "Cash Flow", "Loan Balance"];
     csvLines.push(headers.join(","));
@@ -639,20 +515,9 @@ function ResultsContent() {
   };
 
   const handleExportExcel = () => {
-    if (!isSubscribed) {
-      toast.error("Excel export is a Pro feature", {
-        action: {
-          label: "Upgrade",
-          onClick: () => navigate("/pricing"),
-        },
-      });
-      return;
-    }
-
     const addressLine = displayAddress ? `${displayAddress.address || ""}, ${displayAddress.city || ""}, ${displayAddress.state || ""} ${displayAddress.zipCode || ""}`.trim() : "N/A";
     const reportDate = new Date().toLocaleDateString();
 
-    // Build Excel-compatible XML (SpreadsheetML) with styles and multiple worksheets
     let xmlContent = `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
@@ -756,29 +621,18 @@ function ResultsContent() {
   };
 
   const handleEditInputs = () => {
-    if (!isSubscribed && isFromSaved) {
-      toast.error("Editing saved analyses is a Pro feature", {
-        action: {
-          label: "Upgrade",
-          onClick: () => navigate("/pricing"),
-        },
-      });
-      return;
-    }
     navigate("/underwrite");
   };
 
-  // Red flags / breakpoints - include calculation engine warnings
+  // Red flags / breakpoints
   const redFlags: string[] = [];
   
-  // Add calculation engine warnings
   metrics.warnings.forEach(w => {
     if (w.severity === "error" || w.severity === "warn") {
       redFlags.push(w.message);
     }
   });
 
-  // Sale price warnings
   if (!saleAnalysis.isValid) {
     redFlags.push("Exit cap rate is invalid. Sale price cannot be calculated.");
   }
@@ -786,7 +640,6 @@ function ResultsContent() {
     redFlags.push(`Sale price of ${formatCurrency(saleAnalysis.salePrice)} is over 5x purchase price. Verify exit cap rate assumption.`);
   }
 
-  // DSCR warning
   if (metrics.dscr < 1.2 && metrics.dscr > 0) {
     redFlags.push(`DSCR of ${metrics.dscr.toFixed(2)} is below typical lender requirement of 1.20`);
   }
@@ -815,8 +668,7 @@ function ResultsContent() {
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" onClick={handleEditInputs}>
                 <Edit className="h-4 w-4 mr-2" />
-                {isFromSaved ? "Edit & Recalculate" : "Edit Inputs"}
-                {!isSubscribed && isFromSaved && <Lock className="h-3 w-3 ml-1" />}
+                Edit Inputs
               </Button>
               <div>
                 <h1 className="font-display text-2xl font-bold text-foreground">
@@ -828,10 +680,6 @@ function ResultsContent() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate("/saved")}>
-                <FolderOpen className="h-4 w-4 mr-2" />
-                Saved Analyses
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="hero">
@@ -843,7 +691,6 @@ function ResultsContent() {
                   <DropdownMenuItem 
                     onClick={handleExportPDF}
                     disabled={generatingPDF}
-                    className="transition-colors"
                   >
                     {generatingPDF ? (
                       <>
@@ -853,29 +700,18 @@ function ResultsContent() {
                     ) : (
                       <>
                         <Download className="h-4 w-4 mr-2" />
-                        Export PDF (Free)
+                        Export PDF
                       </>
                     )}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                    Pro Exports
-                  </div>
                   <DropdownMenuItem onClick={handleExportCSV}>
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Export CSV
-                    {!isSubscribed && <Lock className="h-3 w-3 ml-auto text-muted-foreground" />}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleExportExcel}>
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Export Excel (with styling)
-                    {!isSubscribed && <Lock className="h-3 w-3 ml-auto text-muted-foreground" />}
+                    Export Excel
                   </DropdownMenuItem>
-                  {!isSubscribed && (
-                    <div className="px-2 py-1.5 text-xs text-muted-foreground border-t mt-1 pt-1">
-                      Upgrade to Pro for spreadsheet exports
-                    </div>
-                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -883,374 +719,286 @@ function ResultsContent() {
         </div>
       </div>
 
-      {/* Print Header with Table of Contents */}
-      <div className="hidden print:block p-8 border-b">
-        <h1 className="font-display text-3xl font-bold">Underwriting Report</h1>
-        <p className="text-muted-foreground mb-6">
-          {displayAddress?.address && `${displayAddress.address}, `}
-          {displayAddress?.city && `${displayAddress.city}, `}
-          {displayAddress?.state && `${displayAddress.state} `}
-          {displayAddress?.zipCode}
-        </p>
-        <p className="text-sm text-muted-foreground mb-6">
-          {inputs.income.unitCount} units • {formatCurrency(inputs.acquisition.purchasePrice)} • {inputs.acquisition.holdPeriodMonths} month hold
-        </p>
-        
-        {/* Table of Contents */}
-        <div className="border rounded-lg p-4 bg-muted/20">
-          <div className="flex items-center gap-2 mb-3">
-            <List className="h-4 w-4" />
-            <h2 className="font-semibold">Table of Contents</h2>
-          </div>
-          <ol className="text-sm space-y-1 list-decimal list-inside">
-            <li>Key Metrics & Investment Summary</li>
-            <li>Sources & Uses of Funds</li>
-            <li>Exit Analysis</li>
-            <li>Sensitivity Analysis (Rent, Exit Cap, Reno Budget)</li>
-            <li>Metric Definitions</li>
-            <li>30-Year Annual Summary</li>
-            <li>Monthly Cash Flow & Amortization Schedule</li>
-          </ol>
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* PAGE 1: Key Metrics, Sources & Uses, Exit Analysis */}
-        <div className="print:break-after-page">
-          {/* Key Metrics */}
-          <section className="mb-8">
-            <h2 className="font-display text-xl font-bold text-foreground mb-4">
-              Key Metrics
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {keyMetrics.map((metric) => (
-                <div 
-                  key={metric.label}
-                  className={`p-5 rounded-xl border shadow-card ${
-                    metric.isWarning 
-                      ? "bg-destructive/5 border-destructive/30" 
-                      : "bg-card border-border"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <metric.icon className={`h-4 w-4 ${metric.isWarning ? "text-destructive" : "text-primary"}`} />
-                    <span className="text-sm text-muted-foreground">{metric.label}</span>
-                    {metric.isWarning && <AlertTriangle className="h-3 w-3 text-destructive" />}
-                  </div>
-                  <div className={`text-2xl font-display font-bold ${
-                    metric.isWarning ? "text-destructive" : "text-foreground"
-                  }`}>
-                    {metric.value}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {metric.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Red Flags */}
-          {redFlags.length > 0 && (
-            <section className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 mb-8">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-                <h3 className="font-semibold text-foreground">Potential Concerns</h3>
-              </div>
-              <ul className="space-y-2">
-                {redFlags.map((flag, i) => (
-                  <li key={i} className="text-sm text-destructive flex items-start gap-2">
-                    <span className="mt-0.5">•</span>
-                    {flag}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* Sources & Uses */}
-          <section className="grid md:grid-cols-2 gap-6 mb-8">
-            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-              <h3 className="font-semibold text-foreground mb-4">Sources</h3>
-              <dl className="space-y-3">
-                {sourcesAndUses.sources.loanAmount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <dt className="text-muted-foreground">Loan</dt>
-                    <dd className="font-medium">{formatCurrency(sourcesAndUses.sources.loanAmount)}</dd>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <dt className="text-muted-foreground">Equity</dt>
-                  <dd className="font-medium">{formatCurrency(sourcesAndUses.sources.equity)}</dd>
-                </div>
-                <div className="flex justify-between text-sm pt-2 border-t">
-                  <dt className="font-semibold text-foreground">Total</dt>
-                  <dd className="font-bold text-primary">{formatCurrency(sourcesAndUses.sources.total)}</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-              <h3 className="font-semibold text-foreground mb-4">Uses</h3>
-              <dl className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <dt className="text-muted-foreground">Purchase Price</dt>
-                  <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.purchasePrice)}</dd>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <dt className="text-muted-foreground">Closing Costs</dt>
-                  <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.closingCosts)}</dd>
-                </div>
-                {sourcesAndUses.uses.originationFee > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <dt className="text-muted-foreground">Loan Origination</dt>
-                    <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.originationFee)}</dd>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <dt className="text-muted-foreground">Renovation</dt>
-                  <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.renoBudget)}</dd>
-                </div>
-                <div className="flex justify-between text-sm pt-2 border-t">
-                  <dt className="font-semibold text-foreground">Total</dt>
-                  <dd className="font-bold text-primary">{formatCurrency(sourcesAndUses.uses.total)}</dd>
-                </div>
-              </dl>
-            </div>
-          </section>
-
-          {/* Exit Analysis */}
-          <section className={`p-5 rounded-xl border shadow-card ${
-            !saleAnalysis.isValid ? "bg-destructive/5 border-destructive/30" : "bg-card border-border"
-          }`}>
-            <div className="flex items-center gap-2 mb-4">
-              <h3 className="font-semibold text-foreground">Exit Analysis</h3>
-              {!saleAnalysis.isValid && (
-                <span className="text-xs px-2 py-0.5 bg-destructive/20 text-destructive rounded-full">
-                  Invalid
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Stabilized NOI</p>
-                <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.stabilizedNoi)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Sale Price</p>
-                <p className={`font-semibold ${!saleAnalysis.isValid ? "text-destructive" : "text-foreground"}`}>
-                  {saleAnalysis.salePriceDisplay}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Sale Costs</p>
-                <p className="font-semibold text-foreground">{saleAnalysis.isValid ? formatCurrency(saleAnalysis.saleCosts) : "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Loan Payoff</p>
-                <p className="font-semibold text-foreground">{formatCurrency(saleAnalysis.loanPayoff)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Net Proceeds</p>
-                <p className={`font-bold ${!saleAnalysis.isValid ? "text-destructive" : "text-primary"}`}>
-                  {saleAnalysis.isValid ? formatCurrency(saleAnalysis.netSaleProceeds) : "N/A"}
-                </p>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* PAGE 2: Sensitivity Tables */}
-        <div className="print:break-before-page print:break-after-page">
-          <h2 className="font-display text-xl font-bold text-foreground mb-6 print:pt-4">
-            Sensitivity Analysis
+        {/* Key Metrics */}
+        <section className="mb-8">
+          <h2 className="font-display text-xl font-bold text-foreground mb-4">
+            Key Metrics
           </h2>
-          <section className="grid md:grid-cols-3 gap-6 mb-8">
-            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-              <h3 className="font-semibold text-foreground mb-4">Rent Sensitivity</h3>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 text-muted-foreground font-medium">Change</th>
-                    <th className="text-right py-2 text-muted-foreground font-medium">IRR</th>
-                    <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sensitivityTables.rent.map((row) => (
-                    <tr key={row.label} className={row.label === "Base" ? "bg-sage-light" : ""}>
-                      <td className="py-2">{row.label}</td>
-                      <td className="text-right py-2">{formatPercent(row.irr)}</td>
-                      <td className="text-right py-2">{formatPercent(row.coc)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {keyMetrics.map((metric) => (
+              <div 
+                key={metric.label}
+                className={`p-5 rounded-xl border shadow-card ${
+                  metric.isWarning 
+                    ? "bg-destructive/5 border-destructive/30" 
+                    : "bg-card border-border"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <metric.icon className={`h-4 w-4 ${metric.isWarning ? "text-destructive" : "text-primary"}`} />
+                  <span className="text-sm text-muted-foreground">{metric.label}</span>
+                  {metric.isWarning && <AlertTriangle className="h-3 w-3 text-destructive" />}
+                </div>
+                <div className={`text-2xl font-display font-bold ${
+                  metric.isWarning ? "text-destructive" : "text-foreground"
+                }`}>
+                  {metric.value}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {metric.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-              <h3 className="font-semibold text-foreground mb-4">Exit Cap Sensitivity</h3>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 text-muted-foreground font-medium">Change</th>
-                    <th className="text-right py-2 text-muted-foreground font-medium">IRR</th>
-                    <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sensitivityTables.exitCap.map((row) => (
-                    <tr key={row.label} className={row.label === "Base" ? "bg-sage-light" : ""}>
-                      <td className="py-2">{row.label}</td>
-                      <td className="text-right py-2">{formatPercent(row.irr)}</td>
-                      <td className="text-right py-2">{formatPercent(row.coc)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Red Flags */}
+        {redFlags.length > 0 && (
+          <section className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 mb-8">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <h3 className="font-semibold text-foreground">Potential Concerns</h3>
             </div>
-
-            <div className="p-5 rounded-xl bg-card border border-border shadow-card">
-              <h3 className="font-semibold text-foreground mb-4">Reno Budget Sensitivity</h3>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 text-muted-foreground font-medium">Change</th>
-                    <th className="text-right py-2 text-muted-foreground font-medium">IRR</th>
-                    <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sensitivityTables.renoBudget.map((row) => (
-                    <tr key={row.label} className={row.label === "Base" ? "bg-sage-light" : ""}>
-                      <td className="py-2">{row.label}</td>
-                      <td className="text-right py-2">{formatPercent(row.irr)}</td>
-                      <td className="text-right py-2">{formatPercent(row.coc)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ul className="space-y-2">
+              {redFlags.map((flag, i) => (
+                <li key={i} className="text-sm text-destructive flex items-start gap-2">
+                  <span className="mt-0.5">•</span>
+                  {flag}
+                </li>
+              ))}
+            </ul>
           </section>
+        )}
 
-          {/* Metric Definitions */}
-          <section className="p-5 rounded-xl bg-muted/50 border border-border">
-            <h3 className="font-semibold text-foreground mb-4">Metric Definitions</h3>
-            <dl className="grid md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <dt className="font-medium text-foreground">IRR (Internal Rate of Return)</dt>
-                <dd className="text-muted-foreground">The annualized rate at which cash flows equal the initial investment. Higher is better.</dd>
+        {/* Sources & Uses */}
+        <section className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+            <h3 className="font-semibold text-foreground mb-4">Sources</h3>
+            <dl className="space-y-3">
+              {sourcesAndUses.sources.loanAmount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <dt className="text-muted-foreground">Loan</dt>
+                  <dd className="font-medium">{formatCurrency(sourcesAndUses.sources.loanAmount)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between text-sm">
+                <dt className="text-muted-foreground">Equity</dt>
+                <dd className="font-medium">{formatCurrency(sourcesAndUses.sources.equity)}</dd>
               </div>
-              <div>
-                <dt className="font-medium text-foreground">Cash-on-Cash Return</dt>
-                <dd className="text-muted-foreground">Annual pre-tax cash flow divided by total equity invested. Measures cash yield.</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-foreground">Equity Multiple</dt>
-                <dd className="text-muted-foreground">Total cash received divided by total cash invested. 2.0x means you doubled your money.</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-foreground">DSCR (Debt Service Coverage Ratio)</dt>
-                <dd className="text-muted-foreground">NOI divided by annual debt service. Lenders typically require 1.20x or higher.</dd>
+              <div className="flex justify-between text-sm pt-2 border-t">
+                <dt className="font-semibold text-foreground">Total</dt>
+                <dd className="font-bold text-primary">{formatCurrency(sourcesAndUses.sources.total)}</dd>
               </div>
             </dl>
-          </section>
-        </div>
+          </div>
 
-        {/* PAGE 3+: Annual Summary and Amortization */}
-        <div className="print:break-before-page">
-          {/* Annual Summary (30-Year Outlook) */}
-          <section className="p-5 rounded-xl bg-card border border-border shadow-card overflow-x-auto mb-8">
-            <h3 className="font-semibold text-foreground mb-4">30-Year Annual Summary</h3>
+          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+            <h3 className="font-semibold text-foreground mb-4">Uses</h3>
+            <dl className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <dt className="text-muted-foreground">Purchase Price</dt>
+                <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.purchasePrice)}</dd>
+              </div>
+              <div className="flex justify-between text-sm">
+                <dt className="text-muted-foreground">Closing Costs</dt>
+                <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.closingCosts)}</dd>
+              </div>
+              {sourcesAndUses.uses.originationFee > 0 && (
+                <div className="flex justify-between text-sm">
+                  <dt className="text-muted-foreground">Loan Origination</dt>
+                  <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.originationFee)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between text-sm">
+                <dt className="text-muted-foreground">Renovation</dt>
+                <dd className="font-medium">{formatCurrency(sourcesAndUses.uses.renoBudget)}</dd>
+              </div>
+              <div className="flex justify-between text-sm pt-2 border-t">
+                <dt className="font-semibold text-foreground">Total</dt>
+                <dd className="font-bold text-primary">{formatCurrency(sourcesAndUses.uses.total)}</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
+        {/* Exit Analysis */}
+        <section className="p-5 rounded-xl bg-card border border-border shadow-card mb-8">
+          <h3 className="font-semibold text-foreground mb-4">Exit Analysis</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Stabilized NOI</p>
+              <p className="font-medium">{formatCurrency(saleAnalysis.stabilizedNoi)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Sale Price</p>
+              <p className="font-medium">{formatCurrency(saleAnalysis.salePrice)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Sale Costs</p>
+              <p className="font-medium">{formatCurrency(saleAnalysis.saleCosts)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Loan Payoff</p>
+              <p className="font-medium">{formatCurrency(saleAnalysis.loanPayoff)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Net Proceeds</p>
+              <p className="font-bold text-primary">{formatCurrency(saleAnalysis.netSaleProceeds)}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Sensitivity Tables */}
+        <section className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+            <h4 className="font-semibold text-foreground mb-3">Rent Sensitivity</h4>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 text-muted-foreground font-medium">Year</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">GPR</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">EGI</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">NOI</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Debt Service</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Cash Flow</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">DSCR</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
+                  <th className="text-left py-1 text-muted-foreground font-medium">Scenario</th>
+                  <th className="text-right py-1 text-muted-foreground font-medium">IRR</th>
+                  <th className="text-right py-1 text-muted-foreground font-medium">CoC</th>
                 </tr>
               </thead>
               <tbody>
-                {annualSummary.map((year) => (
-                  <tr key={year.year} className="border-b last:border-0">
-                    <td className="py-2 font-medium">{year.year}</td>
-                    <td className="text-right py-2">{formatCurrency(year.gpr)}</td>
-                    <td className="text-right py-2">{formatCurrency(year.egi)}</td>
-                    <td className="text-right py-2">{formatCurrency(year.noi)}</td>
-                    <td className="text-right py-2">{formatCurrency(year.debtService)}</td>
-                    <td className="text-right py-2 font-medium">{formatCurrency(year.cashFlow)}</td>
-                    <td className="text-right py-2">{year.dscr.toFixed(2)}</td>
-                    <td className="text-right py-2">{formatPercent(year.coc)}</td>
+                {sensitivityTables.rent.map((row, i) => (
+                  <tr key={i} className="border-b last:border-0">
+                    <td className="py-1.5">{row.label}</td>
+                    <td className="text-right py-1.5">{formatPercent(row.irr)}</td>
+                    <td className="text-right py-1.5">{formatPercent(row.coc)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </section>
+          </div>
 
-          {/* Monthly Cash Flow & Amortization */}
-          <section className="p-5 rounded-xl bg-card border border-border shadow-card overflow-x-auto">
-            <h3 className="font-semibold text-foreground mb-4">Monthly Cash Flow & Amortization</h3>
-            <table className="w-full text-xs">
+          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+            <h4 className="font-semibold text-foreground mb-3">Exit Cap Sensitivity</h4>
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 text-muted-foreground font-medium">Mo</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Rent/Unit</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">GPR</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">EGI</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Opex</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">NOI</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Debt</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Prin</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Int</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">CapEx</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">CF</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Balance</th>
+                  <th className="text-left py-1 text-muted-foreground font-medium">Scenario</th>
+                  <th className="text-right py-1 text-muted-foreground font-medium">IRR</th>
+                  <th className="text-right py-1 text-muted-foreground font-medium">CoC</th>
                 </tr>
               </thead>
               <tbody>
-                {monthlyData.map((m) => {
-                  const capex = m.renoSpend + m.makeReady + m.leasingCosts;
-                  return (
-                    <tr key={m.month} className="border-b last:border-0">
-                      <td className="py-1.5 font-medium">{m.month}</td>
-                      <td className="text-right py-1.5">{formatCurrency(m.rent)}</td>
-                      <td className="text-right py-1.5">{formatCurrency(m.gpr)}</td>
-                      <td className="text-right py-1.5">{formatCurrency(m.egi)}</td>
-                      <td className="text-right py-1.5">{formatCurrency(m.totalOpex)}</td>
-                      <td className="text-right py-1.5">{formatCurrency(m.noi)}</td>
-                      <td className="text-right py-1.5">{formatCurrency(m.debtService)}</td>
-                      <td className="text-right py-1.5">{formatCurrency(m.principalPayment)}</td>
-                      <td className="text-right py-1.5">{formatCurrency(m.interestPayment)}</td>
-                      <td className="text-right py-1.5">{formatCurrency(capex)}</td>
-                      <td className="text-right py-1.5 font-medium">{formatCurrency(m.cashFlowBeforeTax)}</td>
-                      <td className="text-right py-1.5">{formatCurrency(m.loanBalance)}</td>
-                    </tr>
-                  );
-                })}
+                {sensitivityTables.exitCap.map((row, i) => (
+                  <tr key={i} className="border-b last:border-0">
+                    <td className="py-1.5">{row.label}</td>
+                    <td className="text-right py-1.5">{formatPercent(row.irr)}</td>
+                    <td className="text-right py-1.5">{formatPercent(row.coc)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
-          </section>
-        </div>
+          </div>
 
-        {/* Save Status Note */}
-        <section className="flex items-center justify-center gap-2 text-sm text-muted-foreground print:hidden">
-          {isSaved ? (
-            <>
-              <CheckCircle2 className="h-4 w-4 text-primary" />
-              <span>Analysis saved to your account.</span>
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              <span>Analysis will be saved automatically.</span>
-            </>
-          )}
+          <div className="p-5 rounded-xl bg-card border border-border shadow-card">
+            <h4 className="font-semibold text-foreground mb-3">Reno Budget Sensitivity</h4>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-1 text-muted-foreground font-medium">Scenario</th>
+                  <th className="text-right py-1 text-muted-foreground font-medium">IRR</th>
+                  <th className="text-right py-1 text-muted-foreground font-medium">CoC</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sensitivityTables.renoBudget.map((row, i) => (
+                  <tr key={i} className="border-b last:border-0">
+                    <td className="py-1.5">{row.label}</td>
+                    <td className="text-right py-1.5">{formatPercent(row.irr)}</td>
+                    <td className="text-right py-1.5">{formatPercent(row.coc)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
+
+        {/* Annual Summary */}
+        <section className="p-5 rounded-xl bg-card border border-border shadow-card mb-8 overflow-x-auto">
+          <h3 className="font-semibold text-foreground mb-4">30-Year Annual Summary</h3>
+          <table className="w-full text-sm min-w-[700px]">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2 text-muted-foreground font-medium">Year</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">GPR</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">EGI</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">NOI</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Debt Service</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Cash Flow</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">DSCR</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">CoC</th>
+              </tr>
+            </thead>
+            <tbody>
+              {annualSummary.map((yr) => (
+                <tr key={yr.year} className="border-b last:border-0">
+                  <td className="py-1.5 font-medium">{yr.year}</td>
+                  <td className="text-right py-1.5">{formatCurrency(yr.gpr)}</td>
+                  <td className="text-right py-1.5">{formatCurrency(yr.egi)}</td>
+                  <td className="text-right py-1.5">{formatCurrency(yr.noi)}</td>
+                  <td className="text-right py-1.5">{formatCurrency(yr.debtService)}</td>
+                  <td className="text-right py-1.5 font-medium">{formatCurrency(yr.cashFlow)}</td>
+                  <td className="text-right py-1.5">{yr.dscr.toFixed(2)}</td>
+                  <td className="text-right py-1.5">{formatPercent(yr.coc)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        {/* Monthly Amortization */}
+        <section className="p-5 rounded-xl bg-card border border-border shadow-card overflow-x-auto">
+          <h3 className="font-semibold text-foreground mb-4">Monthly Cash Flow & Amortization</h3>
+          <table className="w-full text-xs min-w-[900px]">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-2 text-muted-foreground font-medium">Mo</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Rent/Unit</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">GPR</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">EGI</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Opex</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">NOI</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Debt</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Prin</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Int</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">CapEx</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">CF</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {monthlyData.map((m) => {
+                const capex = m.renoSpend + m.makeReady + m.leasingCosts;
+                return (
+                  <tr key={m.month} className="border-b last:border-0">
+                    <td className="py-1.5 font-medium">{m.month}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.rent)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.gpr)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.egi)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.totalOpex)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.noi)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.debtService)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.principalPayment)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.interestPayment)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(capex)}</td>
+                    <td className="text-right py-1.5 font-medium">{formatCurrency(m.cashFlowBeforeTax)}</td>
+                    <td className="text-right py-1.5">{formatCurrency(m.loanBalance)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
+
+        {/* Disclaimer */}
+        <p className="text-xs text-muted-foreground text-center">
+          For educational purposes only. Not investment, legal, or tax advice.
+        </p>
       </div>
     </div>
   );
@@ -1259,9 +1007,7 @@ function ResultsContent() {
 export default function Results() {
   return (
     <Layout showFooter={false}>
-      <AuthGuard requireSubscription={false}>
-        <ResultsContent />
-      </AuthGuard>
+      <ResultsContent />
     </Layout>
   );
 }
