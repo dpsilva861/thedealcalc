@@ -7,6 +7,7 @@ import { BRRRRAcquisitionStep, BRRRRRefinanceStep, BRRRRRentalStep, BRRRRReviewS
 import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
 import { Button } from "@/components/ui/button";
 import { validateBRRRRInputs } from "@/lib/calculators/brrrr/validation";
+import { trackEvent } from "@/lib/analytics";
 import { ArrowLeft, ArrowRight, Play } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,6 +45,8 @@ function BRRRRContent() {
     }
     
     validation.warnings.forEach((warn) => toast.warning(warn.message));
+    
+    trackEvent("run_analysis", { calculator: "brrrr" });
     
     runAnalysis();
     navigate("/brrrr/results");
