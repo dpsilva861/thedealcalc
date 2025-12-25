@@ -169,12 +169,20 @@ serve(async (req) => {
 
     console.log("Updating profile with validated plan_tier:", planTier);
 
-    // Update the user's profile with subscription info
+    // Store Stripe IDs in billing_private (service role only access)
+    await supabaseAdmin
+      .from("billing_private")
+      .upsert({
+        user_id: user.id,
+        stripe_customer_id: session.customer as string,
+        stripe_subscription_id: subscription.id,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+
+    // Update the user's profile with subscription info (no Stripe IDs)
     const { error: updateError } = await supabaseAdmin
       .from("profiles")
       .update({
-        stripe_customer_id: session.customer as string,
-        stripe_subscription_id: subscription.id,
         subscription_status: "active",
         subscription_end_date: subscriptionEndDate,
         plan_tier: planTier,
@@ -187,7 +195,7 @@ serve(async (req) => {
       throw updateError;
     }
 
-    // Fetch updated profile (exclude sensitive fields from response)
+    // Fetch updated profile (safe fields only - no Stripe data)
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("id, user_id, plan_tier, selected_calculator, subscription_status, analyses_used, free_analyses_limit")

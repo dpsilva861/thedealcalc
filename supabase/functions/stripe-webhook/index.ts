@@ -61,6 +61,52 @@ function safeLog(message: string, data?: Record<string, unknown>) {
   console.log(message, Object.keys(safeData).length > 0 ? JSON.stringify(safeData) : "");
 }
 
+// Helper to update billing_private table
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function upsertBilling(
+  supabaseAdmin: any,
+  userId: string,
+  customerId: string,
+  subscriptionId: string | null
+) {
+  await supabaseAdmin
+    .from("billing_private")
+    .upsert({
+      user_id: userId,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscriptionId,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+}
+
+// Helper to find user_id by subscription_id in billing_private
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function findUserBySubscriptionId(
+  supabaseAdmin: any,
+  subscriptionId: string
+): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("billing_private")
+    .select("user_id")
+    .eq("stripe_subscription_id", subscriptionId)
+    .maybeSingle();
+  return (data?.user_id as string) || null;
+}
+
+// Helper to find user_id by customer_id in billing_private
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function findUserByCustomerId(
+  supabaseAdmin: any,
+  customerId: string
+): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("billing_private")
+    .select("user_id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle();
+  return (data?.user_id as string) || null;
+}
+
 serve(async (req) => {
   // Rate limiting: basic request size check (10KB max for webhooks)
   const contentLength = parseInt(req.headers.get("content-length") || "0");
@@ -167,11 +213,13 @@ serve(async (req) => {
           }
         }
 
+        // Store Stripe IDs in billing_private
+        await upsertBilling(supabaseAdmin, userId, customerId, subscriptionId);
+
+        // Update profiles with subscription info only (no Stripe IDs)
         const { error } = await supabaseAdmin
           .from("profiles")
           .update({
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
             subscription_status: validateStatus("active"),
             subscription_end_date: subscriptionEndDate,
             plan_tier: planTier,
@@ -206,11 +254,13 @@ serve(async (req) => {
             ? new Date(subscription.current_period_end * 1000).toISOString()
             : null;
 
+          // Store Stripe IDs in billing_private
+          await upsertBilling(supabaseAdmin, userId, customerId, subscription.id);
+
+          // Update profiles with subscription info only
           const { error } = await supabaseAdmin
             .from("profiles")
             .update({
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscription.id,
               subscription_status: validateStatus("active"),
               subscription_end_date: endDate,
               plan_tier: planTier,
@@ -257,34 +307,31 @@ serve(async (req) => {
           ? new Date(subscription.current_period_end * 1000).toISOString()
           : null;
 
-        const { data, error } = await supabaseAdmin
-          .from("profiles")
-          .update({
-            subscription_status: validateStatus(status),
-            subscription_end_date: endDate,
-            plan_tier: planTier,
-          })
-          .eq("stripe_subscription_id", subscription.id)
-          .select();
-
-        if (error) {
-          safeLog("Error updating subscription");
-          throw error;
+        // Find user by subscription_id in billing_private
+        let userId = await findUserBySubscriptionId(supabaseAdmin, subscription.id);
+        
+        if (!userId) {
+          // Try by customer_id
+          const customerId = subscription.customer as string;
+          userId = await findUserByCustomerId(supabaseAdmin, customerId);
         }
 
-        if (!data || data.length === 0) {
-          const customerId = subscription.customer as string;
-          safeLog("No profile by subscription_id, trying customer_id");
-          
-          await supabaseAdmin
+        if (userId) {
+          const { error } = await supabaseAdmin
             .from("profiles")
             .update({
-              stripe_subscription_id: subscription.id,
               subscription_status: validateStatus(status),
               subscription_end_date: endDate,
               plan_tier: planTier,
             })
-            .eq("stripe_customer_id", customerId);
+            .eq("user_id", userId);
+
+          if (error) {
+            safeLog("Error updating subscription");
+            throw error;
+          }
+        } else {
+          safeLog("No user found for subscription update", { subscriptionId: subscription.id });
         }
 
         safeLog("Subscription updated", { status });
@@ -294,20 +341,34 @@ serve(async (req) => {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
 
-        const { error } = await supabaseAdmin
-          .from("profiles")
-          .update({
-            subscription_status: validateStatus("canceled"),
-            stripe_subscription_id: null,
-            plan_tier: "free",
-          })
-          .eq("stripe_subscription_id", subscription.id);
+        // Find user by subscription_id in billing_private
+        const userId = await findUserBySubscriptionId(supabaseAdmin, subscription.id);
 
-        if (error) {
-          safeLog("Error canceling subscription");
-          throw error;
+        if (userId) {
+          // Update profiles
+          const { error } = await supabaseAdmin
+            .from("profiles")
+            .update({
+              subscription_status: validateStatus("canceled"),
+              plan_tier: "free",
+            })
+            .eq("user_id", userId);
+
+          if (error) {
+            safeLog("Error canceling subscription");
+            throw error;
+          }
+
+          // Clear subscription ID in billing_private
+          await supabaseAdmin
+            .from("billing_private")
+            .update({ stripe_subscription_id: null })
+            .eq("user_id", userId);
+
+          safeLog("Subscription canceled, user downgraded to free");
+        } else {
+          safeLog("No user found for subscription deletion");
         }
-        safeLog("Subscription canceled, user downgraded to free");
         break;
       }
 
@@ -316,15 +377,19 @@ serve(async (req) => {
 
         const subscriptionId = invoice.subscription as string;
         if (subscriptionId) {
-          const { error } = await supabaseAdmin
-            .from("profiles")
-            .update({ subscription_status: validateStatus("active") })
-            .eq("stripe_subscription_id", subscriptionId);
+          const userId = await findUserBySubscriptionId(supabaseAdmin, subscriptionId);
+          
+          if (userId) {
+            const { error } = await supabaseAdmin
+              .from("profiles")
+              .update({ subscription_status: validateStatus("active") })
+              .eq("user_id", userId);
 
-          if (error) {
-            safeLog("Error updating after payment success");
-          } else {
-            safeLog("Subscription reactivated after payment");
+            if (error) {
+              safeLog("Error updating after payment success");
+            } else {
+              safeLog("Subscription reactivated after payment");
+            }
           }
         }
         break;
@@ -335,16 +400,20 @@ serve(async (req) => {
 
         const subscriptionId = invoice.subscription as string;
         if (subscriptionId) {
-          const { error } = await supabaseAdmin
-            .from("profiles")
-            .update({ subscription_status: validateStatus("past_due") })
-            .eq("stripe_subscription_id", subscriptionId);
+          const userId = await findUserBySubscriptionId(supabaseAdmin, subscriptionId);
 
-          if (error) {
-            safeLog("Error updating payment status");
-            throw error;
+          if (userId) {
+            const { error } = await supabaseAdmin
+              .from("profiles")
+              .update({ subscription_status: validateStatus("past_due") })
+              .eq("user_id", userId);
+
+            if (error) {
+              safeLog("Error updating payment status");
+              throw error;
+            }
+            safeLog("Profile updated to past_due status");
           }
-          safeLog("Profile updated to past_due status");
         }
         break;
       }

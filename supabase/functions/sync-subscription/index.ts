@@ -104,19 +104,12 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get the user's profile - use authenticated user's ID
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("stripe_customer_id")
+    // Get the user's billing data from private table (service role only)
+    const { data: billing, error: billingError } = await supabaseAdmin
+      .from("billing_private")
+      .select("stripe_customer_id, stripe_subscription_id")
       .eq("user_id", user.id)
-      .single();
-
-    if (profileError || !profile) {
-      return new Response(JSON.stringify({ error: "Profile not found" }), {
-        headers: corsHeaders,
-        status: 404,
-      });
-    }
+      .maybeSingle();
 
     const stripe = new Stripe(STRIPE_SECRET_KEY, {
       apiVersion: "2023-10-16",
@@ -125,7 +118,7 @@ serve(async (req) => {
     let syncedStatus = "inactive";
     let syncedEndDate: string | null = null;
     let syncedSubscriptionId: string | null = null;
-    let syncedCustomerId: string | null = profile.stripe_customer_id;
+    let syncedCustomerId: string | null = billing?.stripe_customer_id || null;
 
     // Try to find customer by email if we don't have a customer ID
     if (!syncedCustomerId && user.email) {
@@ -166,12 +159,22 @@ serve(async (req) => {
       }
     }
 
-    // Update the profile with synced data - only update the authenticated user's profile
+    // Update billing_private with Stripe data (service role has access)
+    if (syncedCustomerId) {
+      await supabaseAdmin
+        .from("billing_private")
+        .upsert({
+          user_id: user.id,
+          stripe_customer_id: syncedCustomerId,
+          stripe_subscription_id: syncedSubscriptionId,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+    }
+
+    // Update the profile with subscription status only (no Stripe IDs)
     const { error: updateError } = await supabaseAdmin
       .from("profiles")
       .update({
-        stripe_customer_id: syncedCustomerId,
-        stripe_subscription_id: syncedSubscriptionId,
         subscription_status: syncedStatus,
         subscription_end_date: syncedEndDate,
         updated_at: new Date().toISOString(),

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      billing_private: {
+        Row: {
+          created_at: string
+          id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           analyses_used: number
@@ -22,8 +49,6 @@ export type Database = {
           id: string
           plan_tier: string
           selected_calculator: string | null
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
           subscription_end_date: string | null
           subscription_status: string | null
           updated_at: string
@@ -36,8 +61,6 @@ export type Database = {
           id?: string
           plan_tier?: string
           selected_calculator?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
           subscription_end_date?: string | null
           subscription_status?: string | null
           updated_at?: string
@@ -50,8 +73,6 @@ export type Database = {
           id?: string
           plan_tier?: string
           selected_calculator?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
           subscription_end_date?: string | null
           subscription_status?: string | null
           updated_at?: string
