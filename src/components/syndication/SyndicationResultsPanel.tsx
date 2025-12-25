@@ -1,12 +1,68 @@
 import { useSyndication } from "@/contexts/SyndicationContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { formatCurrency, formatPercent, formatMultiple } from "@/lib/calculators/types";
-import { TrendingUp, DollarSign, Percent, PiggyBank, AlertTriangle } from "lucide-react";
-
+import { TrendingUp, DollarSign, Percent, PiggyBank, AlertTriangle, Download, FileSpreadsheet, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  exportSyndicationToExcel, 
+  exportSyndicationToCSV, 
+  exportSyndicationToPDF 
+} from "@/lib/calculators/syndication/exports";
 export default function SyndicationResultsPanel() {
-  const { results } = useSyndication();
+  const { results, inputs } = useSyndication();
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   if (!results) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          <p>Run an analysis to see results</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const exportData = { inputs, results };
+
+  const handleExportPDF = async () => {
+    if (generatingPDF) return;
+    setGeneratingPDF(true);
+    try {
+      exportSyndicationToPDF(exportData);
+      toast.success("PDF downloaded");
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      toast.error("Failed to generate PDF");
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    try {
+      exportSyndicationToCSV(exportData);
+      toast.success("CSV exported");
+    } catch (err) {
+      toast.error("Failed to export CSV");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      await exportSyndicationToExcel(exportData);
+      toast.success("Excel exported");
+    } catch (err) {
+      toast.error("Failed to export Excel");
+    }
+  };
     return (
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
@@ -19,6 +75,42 @@ export default function SyndicationResultsPanel() {
   const { metrics, sources_and_uses: su, waterfall_summary: ws, warnings } = results;
 
   return (
+    <div className="space-y-4">
+      {/* Export Button */}
+      <div className="flex justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="hero">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={handleExportPDF} disabled={generatingPDF}>
+              {generatingPDF ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  <span>Generating PDF…</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export PDF
+                </>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportCSV}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Export CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportExcel}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Export Excel
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
     <div className="space-y-4">
       {/* Warnings */}
       {warnings.length > 0 && (
