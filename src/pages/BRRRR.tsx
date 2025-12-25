@@ -67,26 +67,26 @@ function BRRRRContent() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="container mx-auto px-4 py-8 max-w-4xl overflow-hidden">
+      <div className="w-full">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-display text-3xl font-bold text-foreground">
+          <div className="min-w-0">
+            <h1 className="font-display text-3xl font-bold text-foreground truncate">
               BRRRR Calculator
             </h1>
             <p className="text-muted-foreground">
               Buy, Rehab, Rent, Refinance, Repeat
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
             <CalculatorSelector />
             <BRRRRPresetSelector />
           </div>
         </div>
 
         {/* Step Indicator */}
-        <div className="mb-8">
+        <div className="mb-8 overflow-x-auto">
           <BRRRRStepIndicator
             steps={STEPS}
             currentStep={currentStep}
@@ -95,7 +95,7 @@ function BRRRRContent() {
         </div>
 
         {/* Current Step */}
-        <div className="bg-card border border-border rounded-2xl p-6 md:p-8 mb-6">
+        <div className="bg-card border border-border rounded-2xl p-6 md:p-8 mb-6 overflow-hidden">
           <CurrentStepComponent />
         </div>
 

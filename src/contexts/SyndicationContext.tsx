@@ -208,6 +208,7 @@ export function SyndicationProvider({ children }: { children: React.ReactNode })
     setIsCalculating(true);
     setError(null);
     try {
+      devLog.analysisStarted("Syndication");
       const analysisResults = runSyndicationAnalysis(inputs);
       // Save results FIRST before state updates
       saveResultsToStorage(analysisResults);

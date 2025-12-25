@@ -19,7 +19,7 @@ function SyndicationContent() {
   }, []);
 
   return (
-    <div className="container max-w-7xl mx-auto py-6 px-4 space-y-6">
+    <div className="container max-w-7xl mx-auto py-6 px-4 space-y-6 overflow-x-hidden">
       <div>
         <h1 className="text-3xl font-bold">Syndication Analyzer</h1>
         <p className="text-muted-foreground">
