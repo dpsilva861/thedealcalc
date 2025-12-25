@@ -7,24 +7,56 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-4">
           {/* Brand */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-sage">
                 <Calculator className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="font-display text-xl font-semibold text-foreground">
-                DealCalc
+                TheDealCalc
               </span>
             </Link>
-            <p className="text-muted-foreground text-sm max-w-md">
-              Professional residential real estate underwriting made simple. 
-              100% free. We never store your deal data.
+            <p className="text-muted-foreground text-sm">
+              Free real estate investment calculators. 
+              100% free, no signup required.
             </p>
           </div>
 
-          {/* Links */}
+          {/* Calculators */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Product</h4>
+            <h4 className="font-semibold text-foreground mb-4">Calculators</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/rental-property-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Rental Property
+                </Link>
+              </li>
+              <li>
+                <Link to="/brrrr-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  BRRRR Calculator
+                </Link>
+              </li>
+              <li>
+                <Link to="/fix-and-flip-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Fix & Flip
+                </Link>
+              </li>
+              <li>
+                <Link to="/cap-rate-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Cap Rate
+                </Link>
+              </li>
+              <li>
+                <Link to="/cash-on-cash-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Cash-on-Cash
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">Resources</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -32,8 +64,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/underwrite" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Underwriting Tool
+                <Link to="/real-estate-investment-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  All Calculators
                 </Link>
               </li>
             </ul>
@@ -53,16 +85,26 @@ export function Footer() {
                   Terms of Service
                 </Link>
               </li>
+              <li>
+                <Link to="/cookies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Cookie Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/disclaimer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Disclaimer
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} DealCalc. All rights reserved.
+            © {new Date().getFullYear()} TheDealCalc. All rights reserved.
           </p>
           <p className="text-sm text-muted-foreground">
-            Your deal data is never stored. Privacy first.
+            Your data stays in your browser. We never store your deal calculations.
           </p>
         </div>
       </div>
