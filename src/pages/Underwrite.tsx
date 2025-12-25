@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,10 @@ const STEPS = [
 function UnderwriteContent() {
   const navigate = useNavigate();
   const { currentStep, setCurrentStep, runAnalysis, resetInputs, propertyAddress, inputs } = useUnderwriting();
+
+  useEffect(() => {
+    trackEvent("page_view", { page: "/underwrite" });
+  }, []);
 
   const CurrentStepComponent = STEPS[currentStep].component;
 

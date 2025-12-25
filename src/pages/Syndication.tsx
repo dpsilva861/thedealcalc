@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { SyndicationProvider, useSyndication } from "@/contexts/SyndicationContext";
 import SyndicationInputsPanel from "@/components/syndication/SyndicationInputsPanel";
@@ -6,11 +7,16 @@ import SyndicationAuditPanel from "@/components/syndication/SyndicationAuditPane
 import SyndicationSelfTest from "@/components/syndication/SyndicationSelfTest";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { trackEvent } from "@/lib/analytics";
 
 function SyndicationContent() {
   const [searchParams] = useSearchParams();
   const isDevMode = searchParams.get("dev") === "1";
   const { results } = useSyndication();
+
+  useEffect(() => {
+    trackEvent("page_view", { page: "/syndication" });
+  }, []);
 
   return (
     <div className="container max-w-7xl mx-auto py-6 px-4 space-y-6">
