@@ -15,6 +15,13 @@ import NotFound from "./pages/NotFound";
 import BRRRR from "./pages/BRRRR";
 import BRRRRResults from "./pages/BRRRRResults";
 import Syndication from "./pages/Syndication";
+// SEO Landing Pages
+import RentalPropertyCalculator from "./pages/RentalPropertyCalculator";
+import BRRRRCalculatorLanding from "./pages/BRRRRCalculatorLanding";
+import FixAndFlipCalculator from "./pages/FixAndFlipCalculator";
+import CapRateCalculator from "./pages/CapRateCalculator";
+import CashOnCashCalculator from "./pages/CashOnCashCalculator";
+import RealEstateInvestmentCalculator from "./pages/RealEstateInvestmentCalculator";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +43,13 @@ const App = () => (
               <Route path="/brrrr" element={<BRRRR />} />
               <Route path="/brrrr/results" element={<BRRRRResults />} />
               <Route path="/syndication" element={<Syndication />} />
+              {/* SEO Landing Pages */}
+              <Route path="/rental-property-calculator" element={<RentalPropertyCalculator />} />
+              <Route path="/brrrr-calculator" element={<BRRRRCalculatorLanding />} />
+              <Route path="/fix-and-flip-calculator" element={<FixAndFlipCalculator />} />
+              <Route path="/cap-rate-calculator" element={<CapRateCalculator />} />
+              <Route path="/cash-on-cash-calculator" element={<CashOnCashCalculator />} />
+              <Route path="/real-estate-investment-calculator" element={<RealEstateInvestmentCalculator />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BRRRRProvider>

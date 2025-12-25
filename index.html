@@ -3,30 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DealCalc - Professional Real Estate Underwriting</title>
-    <meta name="description" content="Analyze residential investment properties with confidence. Accurate calculations, beautiful reports, and complete privacy for $3/month." />
-    <meta name="author" content="DealCalc" />
-    <link rel="canonical" href="https://dealcalc.app" />
+    <title>Free Real Estate Calculator | Rental, BRRRR, Fix & Flip — TheDealCalc</title>
+    <meta name="description" content="Free real estate investment calculators: rental property, BRRRR, fix & flip, cap rate, cash-on-cash. Instant results, free exports, no signup required." />
+    <meta name="author" content="TheDealCalc" />
+    <meta name="keywords" content="rental property calculator, BRRRR calculator, real estate investment calculator, cash flow calculator, cap rate calculator, cash on cash return, fix and flip calculator, NOI calculator" />
+    <link rel="canonical" href="https://thedealcalc.com" />
 
     <!-- Security headers via meta tags -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     
-    <!-- Content Security Policy - allow Stripe, self, and inline styles for Tailwind -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'none';" />
+    <!-- Content Security Policy - allow AdSense, Stripe, analytics -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://pagead2.googlesyndication.com https://www.googletagservices.com https://www.google-analytics.com https://adservice.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com https://pagead2.googlesyndication.com https://www.google-analytics.com; frame-src https://js.stripe.com https://hooks.stripe.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; frame-ancestors 'none';" />
     
     <!-- Permissions Policy - disable unnecessary features -->
-    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(self https://js.stripe.com)" />
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
 
-    <meta property="og:title" content="DealCalc - Professional Real Estate Underwriting" />
-    <meta property="og:description" content="Unlimited deal analyses for $3/month. Accurate calculations, professional PDF reports, and complete data privacy." />
+    <!-- Open Graph -->
+    <meta property="og:title" content="Free Real Estate Calculator | Rental, BRRRR, Fix & Flip — TheDealCalc" />
+    <meta property="og:description" content="Free real estate investment calculators with instant results. Analyze rental properties, BRRRR deals, fix & flips. Export to PDF, CSV, Excel. No signup required." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://thedealcalc.com" />
+    <meta property="og:image" content="https://thedealcalc.com/og-image.png" />
+    <meta property="og:site_name" content="TheDealCalc" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="DealCalc - Professional Real Estate Underwriting" />
-    <meta name="twitter:description" content="Unlimited deal analyses for $3/month. Accurate calculations, professional PDF reports, and complete data privacy." />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="Free Real Estate Calculator | Rental, BRRRR, Fix & Flip — TheDealCalc" />
+    <meta name="twitter:description" content="Free real estate investment calculators with instant results. Analyze rental properties, BRRRR deals, fix & flips. No signup required." />
+    <meta name="twitter:image" content="https://thedealcalc.com/og-image.png" />
+
+    <!-- Structured Data - WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "TheDealCalc",
+      "url": "https://thedealcalc.com",
+      "description": "Free real estate investment calculators for rental properties, BRRRR, and fix & flip analysis.",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Rental property calculator",
+        "BRRRR calculator",
+        "Fix and flip calculator",
+        "Cap rate calculator",
+        "Cash-on-cash return calculator",
+        "PDF export",
+        "CSV export",
+        "Excel export"
+      ]
+    }
+    </script>
 
     <style>
       @media print {
