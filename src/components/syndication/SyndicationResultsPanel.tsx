@@ -5,6 +5,7 @@ import { formatCurrency, formatPercent, formatMultiple } from "@/lib/calculators
 import { TrendingUp, DollarSign, Percent, PiggyBank, AlertTriangle, Download, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,7 @@ export default function SyndicationResultsPanel() {
     setGeneratingPDF(true);
     try {
       exportSyndicationToPDF(exportData);
+      trackEvent("export_pdf", { calculator: "syndication" });
       toast.success("PDF downloaded");
     } catch (err) {
       console.error("PDF export failed:", err);
@@ -49,6 +51,7 @@ export default function SyndicationResultsPanel() {
   const handleExportCSV = () => {
     try {
       exportSyndicationToCSV(exportData);
+      trackEvent("export_csv", { calculator: "syndication" });
       toast.success("CSV exported");
     } catch (err) {
       toast.error("Failed to export CSV");
@@ -58,6 +61,7 @@ export default function SyndicationResultsPanel() {
   const handleExportExcel = async () => {
     try {
       await exportSyndicationToExcel(exportData);
+      trackEvent("export_excel", { calculator: "syndication" });
       toast.success("Excel exported");
     } catch (err) {
       toast.error("Failed to export Excel");

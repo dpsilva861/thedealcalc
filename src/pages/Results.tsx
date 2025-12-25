@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics";
 import { exportToPDF, exportToCSV, exportToExcel } from "@/lib/exportUtils";
 import {
   DropdownMenu,
@@ -171,6 +172,7 @@ function ResultsContent() {
     setGeneratingPDF(true);
     try {
       exportToPDF(exportData);
+      trackEvent("export_pdf", { calculator: "underwriting" });
       toast.success("PDF downloaded");
     } catch (err) {
       console.error("PDF export failed:", err);
@@ -183,6 +185,7 @@ function ResultsContent() {
   const handleExportCSV = () => {
     try {
       exportToCSV(exportData);
+      trackEvent("export_csv", { calculator: "underwriting" });
       toast.success("CSV exported successfully");
     } catch (err) {
       console.error("CSV export failed:", err);
@@ -193,6 +196,7 @@ function ResultsContent() {
   const handleExportExcel = async () => {
     try {
       await exportToExcel(exportData);
+      trackEvent("export_excel", { calculator: "underwriting" });
       toast.success("Excel file exported successfully");
     } catch (err) {
       console.error("Excel export failed:", err);
