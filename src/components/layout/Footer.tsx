@@ -27,29 +27,29 @@ export function Footer() {
             <h4 className="font-semibold text-foreground mb-4">Calculators</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/rental-property-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Rental Property
+                <Link to="/underwrite" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Residential Underwriting
                 </Link>
               </li>
               <li>
-                <Link to="/brrrr-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/brrrr" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   BRRRR Calculator
                 </Link>
               </li>
               <li>
-                <Link to="/fix-and-flip-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Fix & Flip
+                <Link to="/syndication" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Syndication Analyzer
                 </Link>
               </li>
               <li>
-                <Link to="/cap-rate-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Cap Rate
-                </Link>
+                <span className="text-sm text-muted-foreground/60 cursor-default">
+                  Commercial Underwriting (Coming Soon)
+                </span>
               </li>
               <li>
-                <Link to="/cash-on-cash-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Cash-on-Cash
-                </Link>
+                <span className="text-sm text-muted-foreground/60 cursor-default">
+                  Large Multifamily (Coming Soon)
+                </span>
               </li>
             </ul>
           </div>
@@ -61,11 +61,6 @@ export function Footer() {
               <li>
                 <Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   How It Works
-                </Link>
-              </li>
-              <li>
-                <Link to="/real-estate-investment-calculator" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  All Calculators
                 </Link>
               </li>
             </ul>
