@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 
-type ZipData = Record<string, [string, string]>;
+type ZipEntry = { city: string; state: string };
+type ZipData = Record<string, ZipEntry>;
 
 let zipDataCache: ZipData | null = null;
 let loadingPromise: Promise<ZipData> | null = null;
@@ -10,11 +11,22 @@ async function loadZipData(): Promise<ZipData> {
   
   if (loadingPromise) return loadingPromise;
   
-  // Dynamically import the virtual module (lazy-loaded, tree-shaken)
-  loadingPromise = import("virtual:zip-data")
+  // Dynamically import the npm package (lazy-loaded, ~1.3MB)
+  // IMPORTANT: The package has city/state SWAPPED in the data structure
+  // The "city" field contains the state code, "state" field contains city name
+  loadingPromise = import("zip-code-to-usa-city-state")
     .then((module) => {
-      zipDataCache = module.default;
-      return module.default;
+      const rawData = module.default as ZipData;
+      // Fix the swapped city/state fields
+      const fixedData: ZipData = {};
+      for (const [zip, value] of Object.entries(rawData)) {
+        fixedData[zip] = {
+          city: value.state,  // state field actually contains city
+          state: value.city,  // city field actually contains state code
+        };
+      }
+      zipDataCache = fixedData;
+      return fixedData;
     })
     .catch((err) => {
       console.error("ZIP lookup failed:", err);
@@ -89,7 +101,7 @@ export function useZipLookup(options: UseZipLookupOptions = {}): ZipLookupResult
         const result = data[zip5];
         
         if (result) {
-          const [city, state] = result;
+          const { city, state } = result;
           lastAutoFilledZip.current = zip5;
           userEditedFields.current.clear(); // Reset user edits for new ZIP
           
