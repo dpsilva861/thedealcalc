@@ -29,11 +29,9 @@ export function BRRRRPresetSelector() {
         </SelectTrigger>
         <SelectContent>
           {BRRRR_PRESETS.map((preset) => (
-            <SelectItem key={preset.id} value={preset.id}>
-              <div>
-                <div className="font-medium">{preset.name}</div>
-                <div className="text-xs text-muted-foreground">{preset.description}</div>
-              </div>
+            <SelectItem key={preset.id} value={preset.id} className="flex-col items-start">
+              <span className="font-medium">{preset.name}</span>
+              <span className="text-xs text-muted-foreground">{preset.description}</span>
             </SelectItem>
           ))}
         </SelectContent>
