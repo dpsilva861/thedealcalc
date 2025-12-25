@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin } from "lucide-react";
 import { useZipLookup } from "@/hooks/useZipLookup";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 
 const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -17,7 +17,7 @@ export function AddressStep() {
   const { propertyAddress, updatePropertyAddress } = useUnderwriting();
   const lastZipRef = useRef(propertyAddress.zipCode);
   
-  const { lookupZip, markFieldAsUserEdited } = useZipLookup({
+  const { lookupZip, markFieldAsUserEdited, notFound, clearNotFound } = useZipLookup({
     onAutoFill: useCallback((city: string, state: string) => {
       updatePropertyAddress({ city, state });
     }, [updatePropertyAddress]),
@@ -33,17 +33,13 @@ export function AddressStep() {
       if (cleanedZip.length === 5 && cleanedZip !== lastZipRef.current) {
         lastZipRef.current = cleanedZip;
         await lookupZip(cleanedZip);
+      } else if (cleanedZip.length < 5) {
+        // Clear not found if ZIP becomes invalid
+        clearNotFound();
       }
     },
-    [lookupZip, updatePropertyAddress]
+    [lookupZip, updatePropertyAddress, clearNotFound]
   );
-
-  // Initial lookup if ZIP is already populated
-  useEffect(() => {
-    if (propertyAddress.zipCode.length === 5 && !propertyAddress.city && !propertyAddress.state) {
-      lookupZip(propertyAddress.zipCode);
-    }
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -123,6 +119,11 @@ export function AddressStep() {
               value={propertyAddress.zipCode}
               onChange={(e) => handleZipChange(e.target.value)}
             />
+            {notFound && (
+              <p className="text-xs text-muted-foreground">
+                ZIP not recognized—enter City/State manually.
+              </p>
+            )}
           </div>
         </div>
       </div>
