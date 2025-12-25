@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
@@ -39,51 +39,259 @@ interface ExportData {
 }
 
 // =============================================================================
-// EXCEL EXPORT (Real .xlsx using SheetJS)
+// EXCEL EXPORT (Professional .xlsx using ExcelJS)
 // =============================================================================
-export function exportToExcel(data: ExportData): void {
-  const { inputs, results, monthlyData, annualSummary, propertyAddress } = data;
+
+// Style constants
+const COLORS = {
+  primary: "6B7F6E",      // Sage green
+  secondary: "F5F1E9",    // Cream
+  accent: "C97D60",       // Terracotta  
+  text: "4A4A4A",         // Warm gray
+  background: "FAFAF8",   // Off-white
+  headerBg: "6B7F6E",
+  headerText: "FFFFFF",
+  borderLight: "E0E0E0",
+  warningBg: "FFF3CD",
+  warningText: "856404",
+};
+
+const FONTS = {
+  title: { name: "Calibri", size: 22, bold: true, color: { argb: COLORS.text } },
+  header: { name: "Calibri", size: 14, bold: true, color: { argb: COLORS.headerText } },
+  sectionHeader: { name: "Calibri", size: 12, bold: true, color: { argb: COLORS.primary } },
+  body: { name: "Calibri", size: 11, color: { argb: COLORS.text } },
+  small: { name: "Calibri", size: 10, color: { argb: COLORS.text } },
+};
+
+function applyHeaderStyle(row: ExcelJS.Row) {
+  row.eachCell((cell) => {
+    cell.font = { name: "Calibri", size: 11, bold: true, color: { argb: COLORS.headerText } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.headerBg } };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+    cell.border = {
+      top: { style: "thin", color: { argb: COLORS.borderLight } },
+      bottom: { style: "thin", color: { argb: COLORS.borderLight } },
+      left: { style: "thin", color: { argb: COLORS.borderLight } },
+      right: { style: "thin", color: { argb: COLORS.borderLight } },
+    };
+  });
+  row.height = 22;
+}
+
+function applyDataRowStyle(row: ExcelJS.Row, isAlternate: boolean, isWarning = false) {
+  row.eachCell((cell) => {
+    cell.font = FONTS.body;
+    cell.alignment = { vertical: "middle" };
+    cell.border = {
+      top: { style: "thin", color: { argb: COLORS.borderLight } },
+      bottom: { style: "thin", color: { argb: COLORS.borderLight } },
+      left: { style: "thin", color: { argb: COLORS.borderLight } },
+      right: { style: "thin", color: { argb: COLORS.borderLight } },
+    };
+    if (isWarning) {
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.warningBg } };
+      cell.font = { ...FONTS.body, color: { argb: COLORS.warningText } };
+    } else if (isAlternate) {
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.secondary } };
+    }
+  });
+  row.height = 18;
+}
+
+function setupPrintArea(sheet: ExcelJS.Worksheet, options: { 
+  landscape?: boolean; 
+  fitToPage?: boolean;
+  repeatRows?: number;
+}) {
+  sheet.pageSetup = {
+    paperSize: 1 as ExcelJS.PaperSize, // Letter
+    orientation: options.landscape ? "landscape" : "portrait",
+    fitToPage: options.fitToPage ?? true,
+    fitToWidth: 1,
+    fitToHeight: options.fitToPage ? 1 : 0,
+    margins: {
+      left: 0.5, right: 0.5,
+      top: 0.75, bottom: 0.75,
+      header: 0.3, footer: 0.3,
+    },
+    printTitlesRow: options.repeatRows ? `1:${options.repeatRows}` : undefined,
+  };
+  
+  sheet.headerFooter = {
+    oddHeader: "&C&\"Calibri,Bold\"&12DealCalc – Underwriting Report",
+    oddFooter: "&L&D &C&P of &N &R&\"Calibri\"DealCalc.com",
+  };
+}
+
+export async function exportToExcel(data: ExportData): Promise<void> {
+  const { inputs, results, monthlyData, annualSummary, propertyAddress, redFlags } = data;
   const { metrics, sourcesAndUses, saleAnalysis, sensitivityTables } = results;
 
   const addressLine = propertyAddress
-    ? `${propertyAddress.address || ""}, ${propertyAddress.city || ""}, ${propertyAddress.state || ""} ${propertyAddress.zipCode || ""}`.trim()
-    : "N/A";
-  const reportDate = new Date().toLocaleDateString();
+    ? `${propertyAddress.address || ""}, ${propertyAddress.city || ""}, ${propertyAddress.state || ""} ${propertyAddress.zipCode || ""}`.trim().replace(/^,\s*/, "")
+    : "Property Analysis";
+  const reportDate = new Date().toLocaleString();
 
-  // Create workbook
-  const wb = XLSX.utils.book_new();
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "DealCalc";
+  workbook.created = new Date();
 
-  // Sheet 1: Summary
-  const summaryData = [
-    ["UNDERWRITING REPORT"],
-    [],
-    ["Property Address", addressLine],
-    ["Report Date", reportDate],
-    ["Units", inputs.income.unitCount],
-    ["Purchase Price", inputs.acquisition.purchasePrice],
-    ["Hold Period (months)", inputs.acquisition.holdPeriodMonths],
-    [],
-    ["KEY METRICS"],
-    ["IRR", metrics.irr],
-    ["Cash-on-Cash (Year 1)", metrics.cocYear1],
-    ["Equity Multiple", metrics.equityMultiple],
-    ["DSCR", metrics.dscr],
-    ["Breakeven Occupancy", metrics.breakevenOccupancy],
-    ["NOI (Stabilized Annual)", metrics.stabilizedNoiAnnual],
-    [],
-    ["SOURCES OF FUNDS"],
+  // =========================================================================
+  // SHEET 1: SUMMARY (Print-ready, 1-page)
+  // =========================================================================
+  const summarySheet = workbook.addWorksheet("Summary");
+  setupPrintArea(summarySheet, { landscape: false, fitToPage: true });
+
+  // Column widths
+  summarySheet.columns = [
+    { width: 28 },
+    { width: 22 },
+    { width: 4 },
+    { width: 28 },
+    { width: 22 },
+  ];
+
+  // Title header
+  let row = 1;
+  const titleCell = summarySheet.getCell(`A${row}`);
+  titleCell.value = "DealCalc Underwriting Report";
+  titleCell.font = FONTS.title;
+  summarySheet.mergeCells(`A${row}:E${row}`);
+  summarySheet.getRow(row).height = 32;
+  row++;
+
+  // Property address
+  const addressCell = summarySheet.getCell(`A${row}`);
+  addressCell.value = addressLine;
+  addressCell.font = { name: "Calibri", size: 14, color: { argb: COLORS.text } };
+  summarySheet.mergeCells(`A${row}:E${row}`);
+  row++;
+
+  // Export date
+  const dateCell = summarySheet.getCell(`A${row}`);
+  dateCell.value = `Exported: ${reportDate}`;
+  dateCell.font = FONTS.small;
+  summarySheet.mergeCells(`A${row}:E${row}`);
+  row += 2;
+
+  // Section: Key Metrics (large, prominent)
+  const metricsHeaderCell = summarySheet.getCell(`A${row}`);
+  metricsHeaderCell.value = "KEY METRICS";
+  metricsHeaderCell.font = FONTS.sectionHeader;
+  summarySheet.mergeCells(`A${row}:E${row}`);
+  row++;
+
+  // Metrics in 2-column layout
+  const metricsData = [
+    ["Purchase Price", inputs.acquisition.purchasePrice, "IRR", metrics.irr],
+    ["Renovation Budget", sourcesAndUses.uses.renoBudget, "Cash-on-Cash (Yr 1)", metrics.cocYear1],
+    ["ARV / Sale Price", saleAnalysis.salePrice, "Equity Multiple", metrics.equityMultiple],
+    ["Loan Amount", sourcesAndUses.sources.loanAmount, "DSCR", metrics.dscr],
+    ["Equity Required", sourcesAndUses.sources.equity, "Breakeven Occupancy", metrics.breakevenOccupancy],
+    ["Monthly Rent", inputs.income.marketMonthlyRentPerUnit * inputs.income.unitCount, "Stabilized NOI", metrics.stabilizedNoiAnnual],
+  ];
+
+  metricsData.forEach((rowData, idx) => {
+    const r = summarySheet.getRow(row);
+    r.getCell(1).value = rowData[0];
+    r.getCell(1).font = FONTS.body;
+    r.getCell(2).value = rowData[1] as number;
+    r.getCell(2).numFmt = typeof rowData[1] === "number" && rowData[1] < 10 ? "#,##0.00" : '"$"#,##0';
+    r.getCell(2).font = { name: "Calibri", size: 12, bold: true, color: { argb: COLORS.primary } };
+    r.getCell(2).alignment = { horizontal: "right" };
+    
+    r.getCell(4).value = rowData[2];
+    r.getCell(4).font = FONTS.body;
+    r.getCell(5).value = rowData[3] as number;
+    // Format percentage vs decimal
+    if (typeof rowData[3] === "number") {
+      if (rowData[2] === "DSCR" || rowData[2] === "Equity Multiple") {
+        r.getCell(5).numFmt = "#,##0.00";
+      } else {
+        r.getCell(5).numFmt = "0.00%";
+      }
+    }
+    r.getCell(5).font = { name: "Calibri", size: 12, bold: true, color: { argb: COLORS.primary } };
+    r.getCell(5).alignment = { horizontal: "right" };
+    
+    // Alternate row shading
+    if (idx % 2 === 1) {
+      [1, 2, 4, 5].forEach(c => {
+        r.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.secondary } };
+      });
+    }
+    row++;
+  });
+  row += 2;
+
+  // Section: Sources & Uses side by side
+  const sourcesHeaderCell = summarySheet.getCell(`A${row}`);
+  sourcesHeaderCell.value = "SOURCES OF FUNDS";
+  sourcesHeaderCell.font = FONTS.sectionHeader;
+  
+  const usesHeaderCell = summarySheet.getCell(`D${row}`);
+  usesHeaderCell.value = "USES OF FUNDS";
+  usesHeaderCell.font = FONTS.sectionHeader;
+  row++;
+
+  const sourcesData = [
     ["Loan Amount", sourcesAndUses.sources.loanAmount],
     ["Equity Required", sourcesAndUses.sources.equity],
     ["Total Sources", sourcesAndUses.sources.total],
-    [],
-    ["USES OF FUNDS"],
+  ];
+
+  const usesData = [
     ["Purchase Price", sourcesAndUses.uses.purchasePrice],
     ["Closing Costs", sourcesAndUses.uses.closingCosts],
     ["Loan Origination", sourcesAndUses.uses.originationFee],
     ["Renovation Budget", sourcesAndUses.uses.renoBudget],
     ["Total Uses", sourcesAndUses.uses.total],
-    [],
-    ["EXIT ANALYSIS"],
+  ];
+
+  const maxRows = Math.max(sourcesData.length, usesData.length);
+  for (let i = 0; i < maxRows; i++) {
+    const r = summarySheet.getRow(row);
+    
+    if (sourcesData[i]) {
+      r.getCell(1).value = sourcesData[i][0];
+      r.getCell(1).font = sourcesData[i][0] === "Total Sources" ? { ...FONTS.body, bold: true } : FONTS.body;
+      r.getCell(2).value = sourcesData[i][1] as number;
+      r.getCell(2).numFmt = '"$"#,##0';
+      r.getCell(2).font = sourcesData[i][0] === "Total Sources" 
+        ? { name: "Calibri", size: 11, bold: true, color: { argb: COLORS.primary } }
+        : FONTS.body;
+      r.getCell(2).alignment = { horizontal: "right" };
+    }
+    
+    if (usesData[i]) {
+      r.getCell(4).value = usesData[i][0];
+      r.getCell(4).font = usesData[i][0] === "Total Uses" ? { ...FONTS.body, bold: true } : FONTS.body;
+      r.getCell(5).value = usesData[i][1] as number;
+      r.getCell(5).numFmt = '"$"#,##0';
+      r.getCell(5).font = usesData[i][0] === "Total Uses"
+        ? { name: "Calibri", size: 11, bold: true, color: { argb: COLORS.primary } }
+        : FONTS.body;
+      r.getCell(5).alignment = { horizontal: "right" };
+    }
+    
+    if (i % 2 === 1) {
+      [1, 2, 4, 5].forEach(c => {
+        r.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.secondary } };
+      });
+    }
+    row++;
+  }
+  row += 2;
+
+  // Section: Exit Analysis
+  const exitHeaderCell = summarySheet.getCell(`A${row}`);
+  exitHeaderCell.value = "EXIT ANALYSIS";
+  exitHeaderCell.font = FONTS.sectionHeader;
+  summarySheet.mergeCells(`A${row}:E${row}`);
+  row++;
+
+  const exitData = [
     ["Stabilized NOI", saleAnalysis.stabilizedNoi],
     ["Sale Price", saleAnalysis.salePrice],
     ["Sale Costs", saleAnalysis.saleCosts],
@@ -91,108 +299,340 @@ export function exportToExcel(data: ExportData): void {
     ["Net Proceeds", saleAnalysis.netSaleProceeds],
   ];
 
-  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-  
-  // Format currency columns
-  const currencyRows = [5, 17, 18, 19, 22, 23, 24, 25, 26, 29, 30, 31, 32, 33];
-  currencyRows.forEach(row => {
-    const cell = wsSummary[`B${row}`];
-    if (cell && typeof cell.v === "number") {
-      cell.z = '"$"#,##0.00';
+  exitData.forEach((data, idx) => {
+    const r = summarySheet.getRow(row);
+    r.getCell(1).value = data[0];
+    r.getCell(1).font = data[0] === "Net Proceeds" ? { ...FONTS.body, bold: true } : FONTS.body;
+    r.getCell(2).value = data[1] as number;
+    r.getCell(2).numFmt = '"$"#,##0';
+    r.getCell(2).font = data[0] === "Net Proceeds"
+      ? { name: "Calibri", size: 11, bold: true, color: { argb: COLORS.primary } }
+      : FONTS.body;
+    r.getCell(2).alignment = { horizontal: "right" };
+    
+    if (idx % 2 === 1) {
+      [1, 2].forEach(c => {
+        r.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.secondary } };
+      });
+    }
+    row++;
+  });
+
+  // Freeze panes
+  summarySheet.views = [{ state: "frozen", xSplit: 0, ySplit: 4 }];
+
+  // =========================================================================
+  // SHEET 2: INPUTS
+  // =========================================================================
+  const inputsSheet = workbook.addWorksheet("Inputs");
+  setupPrintArea(inputsSheet, { landscape: false, fitToPage: true });
+
+  inputsSheet.columns = [{ width: 32 }, { width: 20 }];
+
+  row = 1;
+  inputsSheet.getCell(`A${row}`).value = "Underwriting Inputs";
+  inputsSheet.getCell(`A${row}`).font = FONTS.title;
+  inputsSheet.mergeCells(`A${row}:B${row}`);
+  row += 2;
+
+  const inputSections = [
+    { title: "ACQUISITION", data: [
+      ["Purchase Price", inputs.acquisition.purchasePrice, "$"],
+      ["Closing Costs", inputs.acquisition.closingCosts, "$"],
+      ["Hold Period", inputs.acquisition.holdPeriodMonths, "months"],
+      ["Exit Cap Rate", inputs.acquisition.exitCapRate, "%"],
+    ]},
+    { title: "INCOME", data: [
+      ["Unit Count", inputs.income.unitCount, "units"],
+      ["In-Place Rent/Unit", inputs.income.inPlaceMonthlyRentPerUnit, "$"],
+      ["Market Rent/Unit", inputs.income.marketMonthlyRentPerUnit, "$"],
+      ["Vacancy Rate", inputs.income.economicVacancyPct, "%"],
+      ["Annual Rent Growth", inputs.income.rentGrowthAnnualPct, "%"],
+    ]},
+    { title: "FINANCING", data: [
+      ["Loan Amount", inputs.financing.loanAmount, "$"],
+      ["Interest Rate", inputs.financing.interestRateAnnual, "%"],
+      ["Amortization", inputs.financing.amortizationYears * 12, "months"],
+      ["Loan Term", inputs.financing.loanTermMonths, "months"],
+      ["Origination Fee", inputs.financing.loanOriginationFeePct, "%"],
+    ]},
+    { title: "EXPENSES", data: [
+      ["Property Tax", inputs.expenses.propertyTaxesAnnual, "$"],
+      ["Insurance", inputs.expenses.insuranceAnnual, "$"],
+      ["Utilities", inputs.expenses.utilitiesAnnual, "$"],
+      ["Repairs & Maintenance", inputs.expenses.repairsMaintenanceAnnual, "$"],
+      ["Property Management", inputs.expenses.propertyMgmtPctOfEgi, "%"],
+      ["Replacement Reserves", inputs.expenses.replacementReservesAnnual, "$"],
+    ]},
+    { title: "RENOVATION", data: [
+      ["Renovation Budget", inputs.renovation.renoBudgetTotal, "$"],
+      ["Renovation Duration", inputs.renovation.renoDurationMonths, "months"],
+      ["Make-Ready per Unit", inputs.renovation.makeReadyPerUnit, "$"],
+      ["Leasing Commission", inputs.renovation.leasingCommissionPctOfNewLease, "%"],
+    ]},
+  ];
+
+  inputSections.forEach(section => {
+    inputsSheet.getCell(`A${row}`).value = section.title;
+    inputsSheet.getCell(`A${row}`).font = FONTS.sectionHeader;
+    row++;
+
+    section.data.forEach((item, idx) => {
+      const r = inputsSheet.getRow(row);
+      r.getCell(1).value = item[0];
+      r.getCell(1).font = FONTS.body;
+      
+      const val = item[1] as number;
+      const unit = item[2];
+      
+      r.getCell(2).value = val;
+      if (unit === "$") {
+        r.getCell(2).numFmt = '"$"#,##0';
+      } else if (unit === "%") {
+        r.getCell(2).numFmt = "0.00%";
+      } else {
+        r.getCell(2).numFmt = "#,##0";
+      }
+      r.getCell(2).alignment = { horizontal: "right" };
+      r.getCell(2).font = FONTS.body;
+      
+      if (idx % 2 === 0) {
+        [1, 2].forEach(c => {
+          r.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.secondary } };
+        });
+      }
+      row++;
+    });
+    row++;
+  });
+
+  inputsSheet.views = [{ state: "frozen", xSplit: 0, ySplit: 1 }];
+
+  // =========================================================================
+  // SHEET 3: CASH FLOW / PRO FORMA (Annual)
+  // =========================================================================
+  const annualSheet = workbook.addWorksheet("Annual Pro Forma");
+  setupPrintArea(annualSheet, { landscape: true, fitToPage: false, repeatRows: 1 });
+
+  const annualHeaders = ["Year", "GPR", "Vacancy", "EGI", "OpEx", "NOI", "Debt Service", "Cash Flow", "DSCR", "CoC"];
+  annualSheet.columns = [
+    { width: 8 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 14 },
+    { width: 10 },
+    { width: 10 },
+  ];
+
+  const headerRow = annualSheet.addRow(annualHeaders);
+  applyHeaderStyle(headerRow);
+
+  annualSummary.forEach((yr, idx) => {
+    const vacancy = yr.gpr - yr.egi;
+    const opex = yr.egi - yr.noi;
+    const r = annualSheet.addRow([
+      yr.year,
+      yr.gpr,
+      vacancy,
+      yr.egi,
+      opex,
+      yr.noi,
+      yr.debtService,
+      yr.cashFlow,
+      yr.dscr,
+      yr.coc,
+    ]);
+    
+    // Apply number formats
+    r.getCell(2).numFmt = '"$"#,##0';
+    r.getCell(3).numFmt = '"$"#,##0';
+    r.getCell(4).numFmt = '"$"#,##0';
+    r.getCell(5).numFmt = '"$"#,##0';
+    r.getCell(6).numFmt = '"$"#,##0';
+    r.getCell(7).numFmt = '"$"#,##0';
+    r.getCell(8).numFmt = '"$"#,##0';
+    r.getCell(9).numFmt = "0.00";
+    r.getCell(10).numFmt = "0.00%";
+    
+    // Warning for low DSCR
+    const isWarning = yr.dscr > 0 && yr.dscr < 1.2;
+    applyDataRowStyle(r, idx % 2 === 1, isWarning);
+    
+    // Right-align numbers
+    for (let c = 2; c <= 10; c++) {
+      r.getCell(c).alignment = { horizontal: "right" };
     }
   });
-  
-  // Format percentage rows
-  const percentRows = [10, 11, 14];
-  percentRows.forEach(row => {
-    const cell = wsSummary[`B${row}`];
-    if (cell && typeof cell.v === "number") {
-      cell.z = "0.00%";
+
+  annualSheet.views = [{ state: "frozen", xSplit: 1, ySplit: 1 }];
+
+  // =========================================================================
+  // SHEET 4: MONTHLY CASH FLOW
+  // =========================================================================
+  const monthlySheet = workbook.addWorksheet("Monthly Cash Flow");
+  setupPrintArea(monthlySheet, { landscape: true, fitToPage: false, repeatRows: 1 });
+
+  const monthlyHeaders = ["Month", "Rent/Unit", "GPR", "EGI", "OpEx", "NOI", "Debt Svc", "Principal", "Interest", "CapEx", "Cash Flow", "Loan Bal"];
+  monthlySheet.columns = [
+    { width: 8 },
+    { width: 11 },
+    { width: 12 },
+    { width: 12 },
+    { width: 11 },
+    { width: 12 },
+    { width: 11 },
+    { width: 11 },
+    { width: 11 },
+    { width: 11 },
+    { width: 12 },
+    { width: 14 },
+  ];
+
+  const monthlyHeaderRow = monthlySheet.addRow(monthlyHeaders);
+  applyHeaderStyle(monthlyHeaderRow);
+
+  monthlyData.forEach((m, idx) => {
+    const capex = m.renoSpend + m.makeReady + m.leasingCosts;
+    const r = monthlySheet.addRow([
+      m.month,
+      m.rent,
+      m.gpr,
+      m.egi,
+      m.totalOpex,
+      m.noi,
+      m.debtService,
+      m.principalPayment,
+      m.interestPayment,
+      capex,
+      m.cashFlowBeforeTax,
+      m.loanBalance,
+    ]);
+    
+    // Number formats
+    for (let c = 2; c <= 12; c++) {
+      r.getCell(c).numFmt = '"$"#,##0';
+      r.getCell(c).alignment = { horizontal: "right" };
     }
+    
+    applyDataRowStyle(r, idx % 2 === 1);
   });
 
-  XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+  monthlySheet.views = [{ state: "frozen", xSplit: 1, ySplit: 1 }];
 
-  // Sheet 2: Annual Summary
-  const annualHeaders = ["Year", "GPR", "EGI", "NOI", "Debt Service", "Cash Flow", "DSCR", "CoC"];
-  const annualRows = annualSummary.map(yr => [
-    yr.year,
-    yr.gpr,
-    yr.egi,
-    yr.noi,
-    yr.debtService,
-    yr.cashFlow,
-    yr.dscr,
-    yr.coc,
-  ]);
-  
-  const wsAnnual = XLSX.utils.aoa_to_sheet([annualHeaders, ...annualRows]);
-  
-  // Apply formatting to annual sheet
-  for (let i = 2; i <= annualRows.length + 1; i++) {
-    ["B", "C", "D", "E", "F"].forEach(col => {
-      const cell = wsAnnual[`${col}${i}`];
-      if (cell) cell.z = '"$"#,##0.00';
-    });
-    const cocCell = wsAnnual[`H${i}`];
-    if (cocCell) cocCell.z = "0.00%";
-  }
-  
-  XLSX.utils.book_append_sheet(wb, wsAnnual, "Annual Summary");
+  // =========================================================================
+  // SHEET 5: RED FLAGS (if any)
+  // =========================================================================
+  if (redFlags.length > 0) {
+    const flagsSheet = workbook.addWorksheet("Red Flags");
+    setupPrintArea(flagsSheet, { landscape: false, fitToPage: true });
 
-  // Sheet 3: Monthly Cash Flow
-  const monthlyHeaders = [
-    "Month", "Rent/Unit", "GPR", "EGI", "OpEx", "NOI", 
-    "Debt Service", "Principal", "Interest", "CapEx", "Cash Flow", "Loan Balance"
-  ];
-  const monthlyRows = monthlyData.map(m => [
-    m.month,
-    m.rent,
-    m.gpr,
-    m.egi,
-    m.totalOpex,
-    m.noi,
-    m.debtService,
-    m.principalPayment,
-    m.interestPayment,
-    m.renoSpend + m.makeReady + m.leasingCosts,
-    m.cashFlowBeforeTax,
-    m.loanBalance,
-  ]);
+    flagsSheet.columns = [{ width: 6 }, { width: 80 }];
 
-  const wsMonthly = XLSX.utils.aoa_to_sheet([monthlyHeaders, ...monthlyRows]);
-  
-  // Apply currency formatting to monthly sheet
-  for (let i = 2; i <= monthlyRows.length + 1; i++) {
-    ["B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"].forEach(col => {
-      const cell = wsMonthly[`${col}${i}`];
-      if (cell) cell.z = '"$"#,##0.00';
+    flagsSheet.getCell("A1").value = "Potential Concerns";
+    flagsSheet.getCell("A1").font = FONTS.title;
+    flagsSheet.mergeCells("A1:B1");
+
+    redFlags.forEach((flag, idx) => {
+      const r = flagsSheet.addRow([idx + 1, flag]);
+      r.getCell(1).font = { ...FONTS.body, bold: true };
+      r.getCell(1).alignment = { horizontal: "center" };
+      r.getCell(2).font = FONTS.body;
+      r.getCell(2).alignment = { wrapText: true };
+      r.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.warningBg } };
+      r.height = 24;
     });
   }
-  
-  XLSX.utils.book_append_sheet(wb, wsMonthly, "Monthly Cash Flow");
 
-  // Sheet 4: Sensitivity Analysis
-  const sensitivityData = [
-    ["RENT SENSITIVITY"],
-    ["Scenario", "IRR", "CoC"],
-    ...sensitivityTables.rent.map(r => [r.label, r.irr, r.coc]),
-    [],
-    ["EXIT CAP SENSITIVITY"],
-    ["Scenario", "IRR", "CoC"],
-    ...sensitivityTables.exitCap.map(r => [r.label, r.irr, r.coc]),
-    [],
-    ["RENO BUDGET SENSITIVITY"],
-    ["Scenario", "IRR", "CoC"],
-    ...sensitivityTables.renoBudget.map(r => [r.label, r.irr, r.coc]),
-  ];
-  
-  const wsSensitivity = XLSX.utils.aoa_to_sheet(sensitivityData);
-  XLSX.utils.book_append_sheet(wb, wsSensitivity, "Sensitivity");
+  // =========================================================================
+  // SHEET 6: SENSITIVITY ANALYSIS
+  // =========================================================================
+  const sensitivitySheet = workbook.addWorksheet("Sensitivity");
+  setupPrintArea(sensitivitySheet, { landscape: false, fitToPage: true });
 
-  // Write and download
-  const fileBase = getFileBase(propertyAddress?.address);
-  XLSX.writeFile(wb, `underwriting-report-${fileBase}.xlsx`);
+  sensitivitySheet.columns = [{ width: 18 }, { width: 12 }, { width: 12 }];
+
+  row = 1;
+  sensitivitySheet.getCell(`A${row}`).value = "Sensitivity Analysis";
+  sensitivitySheet.getCell(`A${row}`).font = FONTS.title;
+  sensitivitySheet.mergeCells(`A${row}:C${row}`);
+  row += 2;
+
+  // Rent Sensitivity
+  sensitivitySheet.getCell(`A${row}`).value = "RENT SENSITIVITY";
+  sensitivitySheet.getCell(`A${row}`).font = FONTS.sectionHeader;
+  row++;
+  
+  const rentHeaderRow = sensitivitySheet.addRow(["Scenario", "IRR", "CoC"]);
+  applyHeaderStyle(rentHeaderRow);
+  row++;
+  
+  sensitivityTables.rent.forEach((r, idx) => {
+    const dataRow = sensitivitySheet.addRow([r.label, r.irr, r.coc]);
+    dataRow.getCell(2).numFmt = "0.00%";
+    dataRow.getCell(3).numFmt = "0.00%";
+    dataRow.getCell(2).alignment = { horizontal: "right" };
+    dataRow.getCell(3).alignment = { horizontal: "right" };
+    applyDataRowStyle(dataRow, idx % 2 === 1);
+    row++;
+  });
+  row++;
+
+  // Exit Cap Sensitivity
+  sensitivitySheet.getCell(`A${row}`).value = "EXIT CAP SENSITIVITY";
+  sensitivitySheet.getCell(`A${row}`).font = FONTS.sectionHeader;
+  row++;
+  
+  const capHeaderRow = sensitivitySheet.addRow(["Scenario", "IRR", "CoC"]);
+  applyHeaderStyle(capHeaderRow);
+  row++;
+  
+  sensitivityTables.exitCap.forEach((r, idx) => {
+    const dataRow = sensitivitySheet.addRow([r.label, r.irr, r.coc]);
+    dataRow.getCell(2).numFmt = "0.00%";
+    dataRow.getCell(3).numFmt = "0.00%";
+    dataRow.getCell(2).alignment = { horizontal: "right" };
+    dataRow.getCell(3).alignment = { horizontal: "right" };
+    applyDataRowStyle(dataRow, idx % 2 === 1);
+    row++;
+  });
+  row++;
+
+  // Reno Budget Sensitivity
+  sensitivitySheet.getCell(`A${row}`).value = "RENO BUDGET SENSITIVITY";
+  sensitivitySheet.getCell(`A${row}`).font = FONTS.sectionHeader;
+  row++;
+  
+  const renoHeaderRow = sensitivitySheet.addRow(["Scenario", "IRR", "CoC"]);
+  applyHeaderStyle(renoHeaderRow);
+  row++;
+  
+  sensitivityTables.renoBudget.forEach((r, idx) => {
+    const dataRow = sensitivitySheet.addRow([r.label, r.irr, r.coc]);
+    dataRow.getCell(2).numFmt = "0.00%";
+    dataRow.getCell(3).numFmt = "0.00%";
+    dataRow.getCell(2).alignment = { horizontal: "right" };
+    dataRow.getCell(3).alignment = { horizontal: "right" };
+    applyDataRowStyle(dataRow, idx % 2 === 1);
+  });
+
+  // =========================================================================
+  // DOWNLOAD
+  // =========================================================================
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { 
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+  });
+  
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `underwriting-report-${getFileBase(propertyAddress?.address)}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // =============================================================================

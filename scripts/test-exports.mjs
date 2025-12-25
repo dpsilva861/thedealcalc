@@ -102,6 +102,6 @@ console.log('PDF  (.pdf):  %PDF- header');
 console.log('CSV  (.csv):  UTF-8 with BOM, CRLF line endings, starts with "UNDERWRITING REPORT"');
 
 console.log('\n✅ Export utilities are using:');
-console.log('   - SheetJS (xlsx) for real .xlsx files');
+console.log('   - ExcelJS for professional .xlsx files with styling');
 console.log('   - jsPDF for PDF generation');
 console.log('   - UTF-8 BOM + CRLF for CSV compatibility\n');
