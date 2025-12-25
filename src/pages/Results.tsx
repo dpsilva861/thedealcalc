@@ -36,7 +36,7 @@ import {
 
 function ResultsContent() {
   const navigate = useNavigate();
-  const { inputs, propertyAddress } = useUnderwriting();
+  const { inputs: contextInputs, propertyAddress: contextAddress, results: contextResults } = useUnderwriting();
 
   const [baseResults, setBaseResults] = useState<UnderwritingResults | null>(null);
   const [outlookResults, setOutlookResults] = useState<UnderwritingResults | null>(null);
@@ -45,8 +45,31 @@ function ResultsContent() {
   const [displayAddress, setDisplayAddress] = useState<PropertyAddress | null>(null);
   const [displayInputs, setDisplayInputs] = useState<UnderwritingInputs | null>(null);
 
-  // Compute results from context inputs
+  // Load from localStorage as fallback for refresh scenarios
   useEffect(() => {
+    let inputs = contextInputs;
+    let propertyAddress = contextAddress;
+    
+    // Try to load from localStorage if context seems empty (default values)
+    const isDefaultInputs = contextInputs.acquisition.purchasePrice === 250000 && 
+                            contextInputs.income.inPlaceMonthlyRentPerUnit === 2000;
+    
+    if (isDefaultInputs) {
+      try {
+        const storedState = localStorage.getItem("dealcalc:underwrite:state");
+        if (storedState) {
+          const parsed = JSON.parse(storedState);
+          if (parsed && parsed.inputs) {
+            inputs = parsed.inputs;
+            propertyAddress = parsed.address || contextAddress;
+            console.log("[Results] Loaded inputs from localStorage");
+          }
+        }
+      } catch (err) {
+        console.error("[Results] Failed to load from localStorage:", err);
+      }
+    }
+
     setError(null);
     setDisplayAddress(propertyAddress);
     setDisplayInputs(inputs);
@@ -69,9 +92,9 @@ function ResultsContent() {
       console.error("Underwriting report generation failed:", e);
       setError(message);
     }
-  }, [inputs, propertyAddress]);
+  }, [contextInputs, contextAddress]);
 
-  const currentInputs = displayInputs || inputs;
+  const currentInputs = displayInputs || contextInputs;
 
   // Show loading state while results are being computed
   if (!baseResults || !outlookResults) {
@@ -223,7 +246,7 @@ function ResultsContent() {
                   Underwriting Report
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  {inputs.income.unitCount} units • {inputs.acquisition.holdPeriodMonths} month hold
+                  {currentInputs.income.unitCount} units • {currentInputs.acquisition.holdPeriodMonths} month hold
                 </p>
               </div>
             </div>
