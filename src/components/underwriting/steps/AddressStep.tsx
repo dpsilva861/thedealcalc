@@ -2,6 +2,8 @@ import { useUnderwriting } from "@/contexts/UnderwritingContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin } from "lucide-react";
+import { useZipLookup } from "@/hooks/useZipLookup";
+import { useCallback, useEffect, useRef } from "react";
 
 const US_STATES = [
   "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -13,6 +15,35 @@ const US_STATES = [
 
 export function AddressStep() {
   const { propertyAddress, updatePropertyAddress } = useUnderwriting();
+  const lastZipRef = useRef(propertyAddress.zipCode);
+  
+  const { lookupZip, markFieldAsUserEdited } = useZipLookup({
+    onAutoFill: useCallback((city: string, state: string) => {
+      updatePropertyAddress({ city, state });
+    }, [updatePropertyAddress]),
+  });
+
+  // Handle ZIP code changes
+  const handleZipChange = useCallback(
+    async (value: string) => {
+      const cleanedZip = value.replace(/\D/g, "").slice(0, 5);
+      updatePropertyAddress({ zipCode: cleanedZip });
+      
+      // Only lookup if ZIP changed and has 5 digits
+      if (cleanedZip.length === 5 && cleanedZip !== lastZipRef.current) {
+        lastZipRef.current = cleanedZip;
+        await lookupZip(cleanedZip);
+      }
+    },
+    [lookupZip, updatePropertyAddress]
+  );
+
+  // Initial lookup if ZIP is already populated
+  useEffect(() => {
+    if (propertyAddress.zipCode.length === 5 && !propertyAddress.city && !propertyAddress.state) {
+      lookupZip(propertyAddress.zipCode);
+    }
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -35,6 +66,8 @@ export function AddressStep() {
           <Label htmlFor="address">Street Address *</Label>
           <Input
             id="address"
+            name="address-line1"
+            autoComplete="address-line1"
             placeholder="123 Main Street"
             value={propertyAddress.address}
             onChange={(e) => updatePropertyAddress({ address: e.target.value })}
@@ -46,9 +79,14 @@ export function AddressStep() {
             <Label htmlFor="city">City *</Label>
             <Input
               id="city"
+              name="address-level2"
+              autoComplete="address-level2"
               placeholder="Austin"
               value={propertyAddress.city}
-              onChange={(e) => updatePropertyAddress({ city: e.target.value })}
+              onChange={(e) => {
+                markFieldAsUserEdited("city");
+                updatePropertyAddress({ city: e.target.value });
+              }}
             />
           </div>
 
@@ -56,9 +94,14 @@ export function AddressStep() {
             <Label htmlFor="state">State *</Label>
             <select
               id="state"
+              name="address-level1"
+              autoComplete="address-level1"
               className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
               value={propertyAddress.state}
-              onChange={(e) => updatePropertyAddress({ state: e.target.value })}
+              onChange={(e) => {
+                markFieldAsUserEdited("state");
+                updatePropertyAddress({ state: e.target.value });
+              }}
             >
               <option value="">Select</option>
               {US_STATES.map((state) => (
@@ -73,13 +116,12 @@ export function AddressStep() {
             <Label htmlFor="zipCode">ZIP Code *</Label>
             <Input
               id="zipCode"
+              name="postal-code"
+              autoComplete="postal-code"
               placeholder="78701"
               maxLength={5}
               value={propertyAddress.zipCode}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "").slice(0, 5);
-                updatePropertyAddress({ zipCode: value });
-              }}
+              onChange={(e) => handleZipChange(e.target.value)}
             />
           </div>
         </div>
