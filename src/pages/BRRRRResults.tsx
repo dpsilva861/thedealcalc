@@ -4,10 +4,27 @@ import { BRRRRSelfTest } from "@/components/brrrr/BRRRRSelfTest";
 import { formatCurrency, formatPercent } from "@/lib/calculators/types";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowLeft, AlertTriangle, CheckCircle2, TrendingUp, DollarSign, Percent, Home } from "lucide-react";
+import { 
+  ArrowLeft, AlertTriangle, CheckCircle2, TrendingUp, DollarSign, 
+  Percent, Home, Download, FileSpreadsheet, RefreshCw 
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  exportBRRRRToExcel, 
+  exportBRRRRToCSV, 
+  exportBRRRRToPDF 
+} from "@/lib/calculators/brrrr/exports";
 
 function BRRRRResultsContent() {
   const { results, inputs } = useBRRRR();
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   if (!results) {
     return (
@@ -22,18 +39,91 @@ function BRRRRResultsContent() {
 
   const { holdingPhase, refinance, rental, metrics, riskFlags, sensitivity } = results;
 
+  const exportData = {
+    inputs,
+    results,
+    propertyAddress: undefined, // BRRRR doesn't have address input currently
+  };
+
+  const handleExportPDF = async () => {
+    if (generatingPDF) return;
+    setGeneratingPDF(true);
+    try {
+      exportBRRRRToPDF(exportData);
+      toast.success("PDF downloaded");
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      toast.error("Failed to generate PDF");
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    try {
+      exportBRRRRToCSV(exportData);
+      toast.success("CSV exported successfully");
+    } catch (err) {
+      console.error("CSV export failed:", err);
+      toast.error("Failed to export CSV");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      await exportBRRRRToExcel(exportData);
+      toast.success("Excel file exported successfully");
+    } catch (err) {
+      console.error("Excel export failed:", err);
+      toast.error("Failed to export Excel file");
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold text-foreground">BRRRR Analysis Results</h1>
             <p className="text-muted-foreground">Deal snapshot and key metrics</p>
           </div>
-          <Button variant="outline" asChild>
-            <Link to="/brrrr"><ArrowLeft className="h-4 w-4 mr-2" />Edit Inputs</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/brrrr"><ArrowLeft className="h-4 w-4 mr-2" />Edit Inputs</Link>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="hero">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={handleExportPDF} disabled={generatingPDF}>
+                  {generatingPDF ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      <span className="text-muted-foreground">Generating PDF…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export PDF
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportCSV}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportExcel}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export Excel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Self-Test (Dev Mode Only) */}
