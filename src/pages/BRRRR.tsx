@@ -46,7 +46,16 @@ function BRRRRContent() {
     
     validation.warnings.forEach((warn) => toast.warning(warn.message));
     
-    trackEvent("run_analysis", { calculator: "brrrr" });
+    const cashIn = inputs.acquisition.purchasePrice + 
+      (inputs.acquisition.closingCostsIsPercent ? inputs.acquisition.purchasePrice * inputs.acquisition.closingCosts : inputs.acquisition.closingCosts) + 
+      inputs.acquisition.rehabBudget + 
+      (inputs.acquisition.monthlyHoldingCosts * inputs.acquisition.holdingPeriodMonths);
+    
+    trackEvent("calculate_brrrr", {
+      ltv: inputs.refinance.refiLtvPct,
+      arv: inputs.afterRepairValue.arv,
+      cash_in: cashIn
+    });
     
     runAnalysis();
     navigate("/brrrr/results");
