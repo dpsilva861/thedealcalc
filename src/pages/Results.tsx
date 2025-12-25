@@ -190,9 +190,9 @@ function ResultsContent() {
     }
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     try {
-      exportToExcel(exportData);
+      await exportToExcel(exportData);
       toast.success("Excel file exported successfully");
     } catch (err) {
       console.error("Excel export failed:", err);
