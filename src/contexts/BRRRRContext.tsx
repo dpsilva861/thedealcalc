@@ -43,29 +43,75 @@ const getDefaultPropertyAddress = (): BRRRRPropertyAddress => ({
   zipCode: "",
 });
 
-const STORAGE_KEY = "brrrr_state";
-const RESULTS_KEY = "brrrr_results";
+// Standardized storage keys matching other calculators
+const STORAGE_KEY = "dealcalc:brrrr:state";
+const RESULTS_KEY = "dealcalc:brrrr:results";
+
+// Legacy keys for migration
+const LEGACY_STORAGE_KEY = "brrrr_state";
+const LEGACY_RESULTS_KEY = "brrrr_results";
 
 const loadFromStorage = (): { inputs: BRRRRInputs; address: BRRRRPropertyAddress } | null => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch { /* ignore */ }
+    // Try new key first, then legacy
+    let stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      stored = localStorage.getItem(LEGACY_STORAGE_KEY);
+      // Migrate to new key if found
+      if (stored) {
+        localStorage.setItem(STORAGE_KEY, stored);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+      }
+    }
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error("[BRRRR] Failed to load state from storage:", err);
+    // Clear corrupted data
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  }
   return null;
 };
 
 const loadResultsFromStorage = (): BRRRRResults | null => {
   try {
-    const stored = localStorage.getItem(RESULTS_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch { /* ignore */ }
+    // Try new key first, then legacy
+    let stored = localStorage.getItem(RESULTS_KEY);
+    if (!stored) {
+      stored = localStorage.getItem(LEGACY_RESULTS_KEY);
+      // Migrate to new key if found
+      if (stored) {
+        localStorage.setItem(RESULTS_KEY, stored);
+        localStorage.removeItem(LEGACY_RESULTS_KEY);
+      }
+    }
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Validate that we have the expected structure
+      if (parsed && parsed.metrics && typeof parsed.metrics === 'object') {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error("[BRRRR] Failed to load results from storage:", err);
+    // Clear corrupted data
+    localStorage.removeItem(RESULTS_KEY);
+    localStorage.removeItem(LEGACY_RESULTS_KEY);
+  }
   return null;
 };
 
 const saveToStorage = (inputs: BRRRRInputs, address: BRRRRPropertyAddress) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ inputs, address }));
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.error("[BRRRR] Failed to save state:", err);
+  }
 };
 
 const saveResultsToStorage = (results: BRRRRResults | null) => {
@@ -75,7 +121,9 @@ const saveResultsToStorage = (results: BRRRRResults | null) => {
     } else {
       localStorage.removeItem(RESULTS_KEY);
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.error("[BRRRR] Failed to save results:", err);
+  }
 };
 
 export function BRRRRProvider({ children }: { children: React.ReactNode }) {
@@ -168,11 +216,15 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
     try {
       const analysisResults = runBRRRRAnalysis(inputs);
       if (analysisResults && analysisResults.metrics) {
-        setResults(analysisResults);
+        // Save results FIRST before any state updates
         saveResultsToStorage(analysisResults);
-        // Also save inputs and timestamp for debugging
-        localStorage.setItem("dealcalc:brrrr:lastInputs", JSON.stringify(inputs));
+        saveToStorage(inputs, propertyAddress);
+        
+        // Also save timestamp for debugging
         localStorage.setItem("dealcalc:brrrr:lastUpdatedAt", new Date().toISOString());
+        
+        // Then update state
+        setResults(analysisResults);
         console.log("[BRRRR] Analysis complete, results saved to localStorage");
       } else {
         console.error("[BRRRR] Analysis returned invalid results");
@@ -183,7 +235,7 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
       setResults(null);
       saveResultsToStorage(null);
     }
-  }, [inputs]);
+  }, [inputs, propertyAddress]);
 
   const resetInputs = useCallback(() => {
     const defaultInputs = getDefaultBRRRRInputs();
@@ -193,8 +245,12 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
     setCurrentStep(0);
     setPropertyAddress(defaultAddress);
     setSelectedPreset(null);
+    // Clear all storage keys (new and legacy)
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(RESULTS_KEY);
+    localStorage.removeItem("brrrr_state");
+    localStorage.removeItem("brrrr_results");
+    localStorage.removeItem("dealcalc:brrrr:lastUpdatedAt");
   }, []);
 
   return (

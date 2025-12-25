@@ -33,27 +33,44 @@ function BRRRRResultsContent() {
   // On mount, check localStorage as fallback for refresh scenarios
   useEffect(() => {
     if (!contextResults) {
-      try {
-        const storedResults = localStorage.getItem("brrrr_results");
-        if (storedResults) {
-          const parsed = JSON.parse(storedResults);
-          if (parsed && parsed.metrics) {
-            setLocalResults(parsed);
-            console.log("[BRRRR Results] Loaded results from localStorage");
+      // Try new standardized keys first, then legacy keys
+      const resultsKeys = ["dealcalc:brrrr:results", "brrrr_results"];
+      const stateKeys = ["dealcalc:brrrr:state", "brrrr_state"];
+      
+      // Load results
+      for (const key of resultsKeys) {
+        try {
+          const storedResults = localStorage.getItem(key);
+          if (storedResults) {
+            const parsed = JSON.parse(storedResults);
+            if (parsed && parsed.metrics && typeof parsed.metrics === 'object') {
+              setLocalResults(parsed);
+              console.log(`[BRRRR Results] Loaded results from ${key}`);
+              break;
+            }
           }
+        } catch (err) {
+          console.error(`[BRRRR Results] Corrupted data in ${key}, clearing:`, err);
+          localStorage.removeItem(key);
         }
-        
-        // Also load inputs for export
-        const storedState = localStorage.getItem("brrrr_state");
-        if (storedState) {
-          const parsedState = JSON.parse(storedState);
-          if (parsedState && parsedState.inputs) {
-            setLocalInputs(parsedState.inputs);
-            console.log("[BRRRR Results] Loaded inputs from localStorage");
+      }
+      
+      // Load inputs for export
+      for (const key of stateKeys) {
+        try {
+          const storedState = localStorage.getItem(key);
+          if (storedState) {
+            const parsedState = JSON.parse(storedState);
+            if (parsedState && parsedState.inputs) {
+              setLocalInputs(parsedState.inputs);
+              console.log(`[BRRRR Results] Loaded inputs from ${key}`);
+              break;
+            }
           }
+        } catch (err) {
+          console.error(`[BRRRR Results] Corrupted state in ${key}, clearing:`, err);
+          localStorage.removeItem(key);
         }
-      } catch (err) {
-        console.error("[BRRRR Results] Failed to load from localStorage:", err);
       }
     }
   }, [contextResults]);
