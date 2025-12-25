@@ -7,6 +7,7 @@ import {
 } from "@/lib/calculators/syndication/types";
 import { runSyndicationAnalysis } from "@/lib/calculators/syndication";
 import { validateSyndicationInputs, ValidationResult } from "@/lib/calculators/syndication/validation";
+import { devLog } from "@/lib/devLogger";
 
 // Preset configurations
 export const SYNDICATION_PRESETS = {
@@ -213,9 +214,11 @@ export function SyndicationProvider({ children }: { children: React.ReactNode })
       saveInputsToStorage(inputs);
       localStorage.setItem("dealcalc:syndication:lastUpdatedAt", new Date().toISOString());
       
+      // Dev logging
+      devLog.resultsSaved("Syndication", RESULTS_KEY);
+      
       // Then update state
       setResults(analysisResults);
-      console.log("[Syndication] Analysis complete, results saved to localStorage");
     } catch (e: any) {
       setError(e?.message || "Calculation failed");
       setResults(null);

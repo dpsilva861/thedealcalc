@@ -5,6 +5,7 @@ import {
   getDefaultInputs, 
   runUnderwriting 
 } from "@/lib/underwriting";
+import { devLog } from "@/lib/devLogger";
 
 export interface PropertyAddress {
   address: string;
@@ -197,9 +198,11 @@ export function UnderwritingProvider({ children }: { children: React.ReactNode }
         saveToStorage(inputs, propertyAddress);
         localStorage.setItem("dealcalc:underwrite:lastUpdatedAt", new Date().toISOString());
         
+        // Dev logging
+        devLog.resultsSaved("Underwriting", RESULTS_KEY);
+        
         // Then update state
         setResults(analysisResults);
-        console.log("[Underwriting] Analysis complete, results saved to localStorage");
       } else {
         console.error("[Underwriting] Analysis returned invalid results");
         setResults(null);

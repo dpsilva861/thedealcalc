@@ -6,6 +6,7 @@ import { TrendingUp, DollarSign, Percent, PiggyBank, AlertTriangle, Download, Fi
 import { useState } from "react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
+import { devLog } from "@/lib/devLogger";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,7 @@ export default function SyndicationResultsPanel() {
   const handleExportPDF = async () => {
     if (generatingPDF) return;
     setGeneratingPDF(true);
+    devLog.exportClicked("Syndication", "pdf");
     try {
       exportSyndicationToPDF(exportData);
       trackEvent("export_pdf", { calculator: "syndication" });
@@ -49,6 +51,7 @@ export default function SyndicationResultsPanel() {
   };
 
   const handleExportCSV = () => {
+    devLog.exportClicked("Syndication", "csv");
     try {
       exportSyndicationToCSV(exportData);
       trackEvent("export_csv", { calculator: "syndication" });
@@ -59,6 +62,7 @@ export default function SyndicationResultsPanel() {
   };
 
   const handleExportExcel = async () => {
+    devLog.exportClicked("Syndication", "excel");
     try {
       await exportSyndicationToExcel(exportData);
       trackEvent("export_excel", { calculator: "syndication" });
