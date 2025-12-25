@@ -63,14 +63,6 @@ export default function SyndicationResultsPanel() {
       toast.error("Failed to export Excel");
     }
   };
-    return (
-      <Card>
-        <CardContent className="py-12 text-center text-muted-foreground">
-          <p>Run an analysis to see results</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   const { metrics, sources_and_uses: su, waterfall_summary: ws, warnings } = results;
 
@@ -110,8 +102,6 @@ export default function SyndicationResultsPanel() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-    <div className="space-y-4">
       {/* Warnings */}
       {warnings.length > 0 && (
         <Card className="border-amber-500/50 bg-amber-500/5">
