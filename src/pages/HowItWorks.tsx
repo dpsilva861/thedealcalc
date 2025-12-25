@@ -18,6 +18,12 @@ import {
 export default function HowItWorks() {
   const inputSteps = [
     {
+      icon: Calculator,
+      title: "Choose Your Calculator",
+      description: "Select from our suite of free tools: Quick Underwrite, BRRRR, or Syndication analysis.",
+      fields: ["Quick Underwrite", "BRRRR Method", "Syndication"]
+    },
+    {
       icon: Building2,
       title: "Property Details",
       description: "Enter purchase price, closing costs, hold period, and exit assumptions.",
@@ -25,33 +31,27 @@ export default function HowItWorks() {
     },
     {
       icon: Coins,
-      title: "Income & Rent Roll",
-      description: "Define units, current and market rents, vacancy, and growth projections.",
-      fields: ["Unit Count", "In-Place Rent", "Market Rent", "Vacancy Rate"]
-    },
-    {
-      icon: Wrench,
-      title: "Operating Expenses",
-      description: "Input property taxes, insurance, maintenance, management, and reserves.",
-      fields: ["Property Taxes", "Insurance", "Management Fee", "Reserves"]
-    },
-    {
-      icon: Building2,
-      title: "Renovation & Lease-Up",
-      description: "Plan renovation budgets, timelines, and lease-up assumptions.",
-      fields: ["Reno Budget", "Duration", "Rent Loss", "Lease-Up Period"]
+      title: "Income & Expenses",
+      description: "Define rents, vacancy rates, operating expenses, and growth projections.",
+      fields: ["Monthly Rent", "Vacancy Rate", "Operating Costs", "Growth Rate"]
     },
     {
       icon: CreditCard,
       title: "Financing Terms",
-      description: "Model your debt with LTV, interest rate, amortization, and IO period.",
-      fields: ["Loan-to-Value", "Interest Rate", "Amortization", "I/O Period"]
+      description: "Model your debt with LTV, interest rate, amortization, and loan terms.",
+      fields: ["Loan-to-Value", "Interest Rate", "Amortization", "Loan Term"]
+    },
+    {
+      icon: Wrench,
+      title: "Renovation (Optional)",
+      description: "Add renovation budgets and timelines for value-add strategies.",
+      fields: ["Reno Budget", "Timeline", "ARV", "Refinance Terms"]
     },
     {
       icon: FileBarChart,
-      title: "Review & Run",
-      description: "Confirm all inputs and generate your complete underwriting analysis.",
-      fields: ["Verify Inputs", "Run Analysis", "View Results", "Export PDF"]
+      title: "Get Results",
+      description: "Instantly view your analysis and export to PDF, CSV, or Excel—all free.",
+      fields: ["View Results", "Export PDF", "Download CSV", "Save Excel"]
     },
   ];
 
@@ -59,22 +59,22 @@ export default function HowItWorks() {
     {
       icon: TrendingUp,
       title: "Key Metrics",
-      items: ["IRR (Annualized)", "Cash-on-Cash (Year 1 & Stabilized)", "Equity Multiple", "DSCR"]
+      items: ["IRR (Annualized)", "Cash-on-Cash Return", "Equity Multiple", "DSCR & Cap Rates"]
     },
     {
       icon: PieChart,
       title: "Cash Flow Analysis",
-      items: ["Monthly Cash Flow Table", "Annual Summary", "NOI Progression", "Debt Service Schedule"]
+      items: ["Monthly Projections", "Annual Summary", "NOI Breakdown", "Debt Service Schedule"]
     },
     {
       icon: Calculator,
-      title: "Sensitivity Tables",
-      items: ["Rent Variations (±10%)", "Exit Cap Variations", "Reno Budget Scenarios", "Breakeven Analysis"]
+      title: "Deal Comparison",
+      items: ["Side-by-Side Analysis", "Sensitivity Tables", "Scenario Modeling", "Breakeven Points"]
     },
     {
       icon: Download,
-      title: "Export Options",
-      items: ["Professional PDF Report", "One-Page Summary", "Detailed Assumptions", "Metric Explanations"]
+      title: "Free Exports",
+      items: ["Professional PDF Report", "CSV Spreadsheet", "Excel Download", "No Account Required"]
     },
   ];
 
