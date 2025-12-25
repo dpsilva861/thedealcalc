@@ -1,24 +1,14 @@
-# TheDealCalc.com Robots.txt
-# Real Estate Investment Calculator
-
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 2
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+# TheDealCalc.com — Real Estate Investment Calculator
 
 User-agent: *
 Allow: /
-Disallow: /api/
-Disallow: /*.json$
 
-# Sitemap location
+# Allow essential assets
+Allow: /*.js$
+Allow: /*.css$
+
+# Block internal API routes
+Disallow: /api/
+
+# Sitemap
 Sitemap: https://thedealcalc.com/sitemap.xml
