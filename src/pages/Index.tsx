@@ -209,11 +209,11 @@ export default function Index() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
               {COMING_SOON_CALCULATORS.map((calc, index) => (
                 <div
                   key={calc.id}
-                  className="p-4 rounded-xl bg-card border border-border text-center animate-fade-in"
+                  className="p-4 rounded-xl bg-card border border-border text-center animate-fade-in w-44"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <Building2 className="h-6 w-6 text-primary/60 mx-auto mb-2" />
