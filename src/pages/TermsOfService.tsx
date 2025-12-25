@@ -40,57 +40,12 @@ export default function TermsOfService() {
 
           <section>
             <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              3. User Accounts
-            </h2>
-            <div className="space-y-4 text-muted-foreground">
-              <p className="leading-relaxed">
-                To access certain features, you must create an account. You are responsible for:
-              </p>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Maintaining the confidentiality of your account credentials</li>
-                <li>All activities that occur under your account</li>
-                <li>Providing accurate and complete information</li>
-                <li>Notifying us immediately of any unauthorized access</li>
-              </ul>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              4. Subscription and Payment
-            </h2>
-            <div className="space-y-4 text-muted-foreground">
-              <p className="leading-relaxed">
-                DealCalc offers a subscription service at $3 per month for unlimited analyses. By 
-                subscribing, you agree to the following:
-              </p>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Subscriptions are billed monthly on a recurring basis</li>
-                <li>You authorize us to charge your payment method automatically</li>
-                <li>Prices may change with 30 days notice</li>
-                <li>Refunds are provided at our sole discretion</li>
-              </ul>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              5. Free Trial
+              3. Free Service
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              New users receive one free analysis upon signup. This free trial is limited to one analysis 
-              per user and is intended to allow evaluation of the Service before subscribing.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              6. Cancellation
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              You may cancel your subscription at any time through your account settings or by contacting 
-              us. Upon cancellation, you will retain access to the Service until the end of your current 
-              billing period. No partial refunds are provided for unused portions of a billing period.
+              DealCalc is provided as a free service. All calculators and export features are available 
+              to all users without charge. We reserve the right to modify the availability of features 
+              at any time.
             </p>
           </section>
 

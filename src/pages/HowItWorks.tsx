@@ -186,13 +186,12 @@ export default function HowItWorks() {
               Privacy by Design
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
-              All calculations run entirely in your browser. You choose when to save 
-              analyses—and saved data is encrypted and private to your account. 
-              Delete your saved analyses anytime from your dashboard.
+              All calculations run entirely in your browser. We never store your deal data. 
+              Export your results to PDF, CSV, or Excel and take them with you.
             </p>
             <Button variant="hero" size="lg" asChild>
-              <Link to="/signup">
-                Get Started Now
+              <Link to="/underwrite">
+                Start Analyzing
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
