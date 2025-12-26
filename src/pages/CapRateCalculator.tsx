@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { InlineAd } from "@/components/ads";
+import { InlineAd, AdSlot } from "@/components/ads";
 import {
   PieChart,
   Calculator,
@@ -179,6 +179,13 @@ export default function CapRateCalculator() {
           </div>
         </div>
       </section>
+
+      {/* Mid-page Ad */}
+      <AdSlot
+        slotId="calculator-mid"
+        minHeight={280}
+        className="my-12"
+      />
 
       {/* FAQ Section */}
       <section className="py-16 bg-cream-dark">
