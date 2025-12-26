@@ -17,6 +17,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RotateCcw, Sparkles, Play, ChevronDown } from "lucide-react";
 
+// Simple display labels for presets
+const PRESET_LABELS: Record<string, string> = {
+  typical: "Moderate Rehab",
+  conservative: "Conservative Rehab",
+  aggressive: "Aggressive Rehab",
+};
+
 export function BRRRRPresetSelector() {
   const navigate = useNavigate();
   const { selectedPreset, loadPreset, loadPresetAndRun, resetInputs } = useBRRRR();
@@ -39,17 +46,14 @@ export function BRRRRPresetSelector() {
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72 max-w-[90vw]">
+        <DropdownMenuContent align="end">
           {BRRRR_PRESETS.map((preset) => (
             <DropdownMenuItem
               key={preset.id}
               onClick={() => handleQuickRun(preset.id)}
-              className="p-3 cursor-pointer"
+              className="cursor-pointer"
             >
-              <div className="flex flex-col items-start w-full">
-                <span className="font-medium">{preset.name}</span>
-                <span className="text-xs text-muted-foreground">{preset.description}</span>
-              </div>
+              {PRESET_LABELS[preset.id] || preset.name}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -62,19 +66,18 @@ export function BRRRRPresetSelector() {
           if (value) loadPreset(value);
         }}
       >
-        <SelectTrigger className="w-[240px] sm:w-[300px]">
+        <SelectTrigger className="w-[160px]">
           <span className="flex items-center gap-2 min-w-0 truncate">
             <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
-            <SelectValue placeholder="Load Preset" />
+            <SelectValue placeholder="Load Preset">
+              {selectedPreset ? PRESET_LABELS[selectedPreset] || selectedPreset : null}
+            </SelectValue>
           </span>
         </SelectTrigger>
         <SelectContent>
           {BRRRR_PRESETS.map((preset) => (
-            <SelectItem key={preset.id} value={preset.id} textValue={preset.name}>
-              <div className="flex flex-col items-start">
-                <span className="font-medium">{preset.name}</span>
-                <span className="text-xs text-muted-foreground">{preset.description}</span>
-              </div>
+            <SelectItem key={preset.id} value={preset.id} textValue={PRESET_LABELS[preset.id] || preset.name}>
+              {PRESET_LABELS[preset.id] || preset.name}
             </SelectItem>
           ))}
         </SelectContent>
