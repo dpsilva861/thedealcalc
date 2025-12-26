@@ -67,7 +67,7 @@ function BRRRRContent() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl overflow-hidden">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="w-full">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -95,7 +95,7 @@ function BRRRRContent() {
         </div>
 
         {/* Current Step */}
-        <div className="bg-card border border-border rounded-2xl p-6 md:p-8 mb-6 overflow-hidden">
+        <div className="bg-card border border-border rounded-2xl p-6 md:p-8 mb-6">
           <CurrentStepComponent />
         </div>
 
