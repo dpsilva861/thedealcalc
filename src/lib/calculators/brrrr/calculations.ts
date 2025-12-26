@@ -331,18 +331,113 @@ function calculateSensitivityTable(inputs: BRRRRInputs): {
 }
 
 /**
- * Quick calculation for sensitivity analysis (no risk flags/warnings)
+ * Quick calculation for sensitivity analysis (standalone - does NOT call runBRRRRAnalysis)
+ * This prevents infinite recursion: runBRRRRAnalysis -> calculateSensitivityTable -> runBRRRRQuick
  */
 function runBRRRRQuick(inputs: BRRRRInputs): {
   monthlyCashFlow: number;
   cashOnCash: number;
   remainingCashIn: number;
 } {
-  const result = runBRRRRAnalysis(inputs);
+  const { acquisition, bridgeFinancing, afterRepairValue, refinance, rentalOperations } = inputs;
+
+  // === Calculate closing costs ===
+  const closingCostsAmount = acquisition.closingCostsIsPercent
+    ? acquisition.purchasePrice * (acquisition.closingCosts / 100)
+    : acquisition.closingCosts;
+
+  // === Bridge loan calculations ===
+  const downPaymentAmount = acquisition.purchasePrice * bridgeFinancing.downPaymentPct;
+  const bridgeLoanAmount = acquisition.purchasePrice - downPaymentAmount;
+  const pointsAmount = bridgeLoanAmount * bridgeFinancing.pointsPct;
+
+  let monthlyBridgePayment = 0;
+  if (bridgeLoanAmount > 0) {
+    if (bridgeFinancing.isInterestOnly) {
+      monthlyBridgePayment = (bridgeLoanAmount * bridgeFinancing.interestRate) / 12;
+    } else {
+      monthlyBridgePayment = calculatePMT(
+        bridgeLoanAmount,
+        bridgeFinancing.interestRate,
+        bridgeFinancing.loanTermMonths
+      );
+    }
+  }
+
+  const totalBridgePayments = monthlyBridgePayment * acquisition.holdingPeriodMonths;
+  const totalHoldingCosts = acquisition.monthlyHoldingCosts * acquisition.holdingPeriodMonths;
+
+  // Total cash in before refinance
+  const totalCashIn =
+    downPaymentAmount +
+    closingCostsAmount +
+    acquisition.rehabBudget +
+    totalHoldingCosts +
+    totalBridgePayments +
+    pointsAmount;
+
+  // === Refinance calculations ===
+  const arv = afterRepairValue.arv;
+  const maxRefiLoan = arv * refinance.refiLtvPct;
+
+  const refiClosingCostsAmount = refinance.refiClosingCostsIsPercent
+    ? maxRefiLoan * (refinance.refiClosingCosts / 100)
+    : refinance.refiClosingCosts;
+
+  // For quick calc, assume interest-only bridge (full principal remains)
+  const outstandingBridgeBalance = bridgeFinancing.isInterestOnly
+    ? bridgeLoanAmount
+    : bridgeLoanAmount; // Simplified for quick calc
+
+  let netRefiProceeds = maxRefiLoan - outstandingBridgeBalance;
+  let remainingCashIn: number;
+
+  if (refinance.rollClosingCostsIntoLoan) {
+    netRefiProceeds = netRefiProceeds - refiClosingCostsAmount;
+    remainingCashIn = totalCashIn - Math.max(0, netRefiProceeds);
+  } else {
+    remainingCashIn = totalCashIn + refiClosingCostsAmount - Math.max(0, netRefiProceeds);
+  }
+
+  const newMonthlyPayment = calculatePMT(
+    maxRefiLoan,
+    refinance.refiInterestRate,
+    refinance.refiTermYears * 12
+  );
+
+  // === Rental calculations ===
+  const grossMonthlyRent = rentalOperations.monthlyRent;
+  const effectiveGrossIncome = grossMonthlyRent * (1 - rentalOperations.vacancyPct);
+
+  const expenseBase = rentalOperations.expenseBase === "egi"
+    ? effectiveGrossIncome
+    : grossMonthlyRent;
+
+  const monthlyExpenses =
+    expenseBase * rentalOperations.propertyManagementPct +
+    expenseBase * rentalOperations.maintenancePct +
+    rentalOperations.insuranceMonthly +
+    rentalOperations.propertyTaxesMonthly +
+    rentalOperations.utilitiesMonthly +
+    rentalOperations.hoaMonthly +
+    rentalOperations.otherMonthly;
+
+  const monthlyNOI = effectiveGrossIncome - monthlyExpenses;
+  const monthlyCashFlow = monthlyNOI - newMonthlyPayment;
+  const annualCashFlow = monthlyCashFlow * 12;
+
+  // === Calculate cash-on-cash ===
+  let cashOnCash = 0;
+  if (remainingCashIn > 0) {
+    cashOnCash = annualCashFlow / remainingCashIn;
+  } else if (annualCashFlow > 0) {
+    cashOnCash = Infinity;
+  }
+
   return {
-    monthlyCashFlow: result.rental.monthlyCashFlow,
-    cashOnCash: result.metrics.cashOnCashReturn,
-    remainingCashIn: result.refinance.remainingCashInDeal,
+    monthlyCashFlow: safeNumber(monthlyCashFlow),
+    cashOnCash: safeNumber(cashOnCash),
+    remainingCashIn: safeNumber(remainingCashIn),
   };
 }
 
