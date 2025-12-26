@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import BRRRR from "./pages/BRRRR";
 import BRRRRResults from "./pages/BRRRRResults";
 import Syndication from "./pages/Syndication";
+import SyndicationResults from "./pages/SyndicationResults";
 // SEO Landing Pages
 import RentalPropertyCalculator from "./pages/RentalPropertyCalculator";
 import BRRRRCalculatorLanding from "./pages/BRRRRCalculatorLanding";
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/brrrr" element={<BRRRR />} />
               <Route path="/brrrr/results" element={<BRRRRResults />} />
               <Route path="/syndication" element={<Syndication />} />
+              <Route path="/syndication/results" element={<SyndicationResults />} />
               {/* SEO Landing Pages */}
               <Route path="/rental-property-calculator" element={<RentalPropertyCalculator />} />
               <Route path="/brrrr-calculator" element={<BRRRRCalculatorLanding />} />
