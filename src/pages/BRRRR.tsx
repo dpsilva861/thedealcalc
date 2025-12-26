@@ -71,14 +71,9 @@ function BRRRRContent() {
       <div className="w-full">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div className="min-w-0">
-            <h1 className="font-display text-3xl font-bold text-foreground truncate">
-              BRRRR Calculator
-            </h1>
-            <p className="text-muted-foreground">
-              Buy, Rehab, Rent, Refinance, Repeat
-            </p>
-          </div>
+          <h1 className="font-display text-3xl font-bold text-foreground whitespace-nowrap">
+            BRRRR Calculator
+          </h1>
           <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
             <CalculatorSelector />
             <BRRRRPresetSelector />
