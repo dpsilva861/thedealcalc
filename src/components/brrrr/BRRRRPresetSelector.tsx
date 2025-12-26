@@ -39,15 +39,15 @@ export function BRRRRPresetSelector() {
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" className="w-72">
           {BRRRR_PRESETS.map((preset) => (
             <DropdownMenuItem
               key={preset.id}
               onClick={() => handleQuickRun(preset.id)}
-              className="flex flex-col items-start py-2"
+              className="flex flex-col items-start py-2 whitespace-normal"
             >
               <span className="font-medium">{preset.name}</span>
-              <span className="text-xs text-muted-foreground">{preset.description}</span>
+              <span className="text-xs text-muted-foreground line-clamp-2">{preset.description}</span>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
