@@ -34,6 +34,8 @@ export interface AdConfig {
     rightRailSecondary: string;
     /** Mobile in-content ad */
     mobileInContent: string;
+    /** Mid-page ad on calculator landing pages */
+    calculatorMid: string;
   };
 }
 
@@ -42,6 +44,7 @@ const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID || "";
 const slotTop = import.meta.env.VITE_ADSENSE_SLOT_TOP || "";
 const slotInContent = import.meta.env.VITE_ADSENSE_SLOT_INCONTENT || "";
 const slotFooter = import.meta.env.VITE_ADSENSE_SLOT_FOOTER || "";
+const slotCalculatorMid = import.meta.env.VITE_ADSENSE_SLOT_CALCULATOR_MID || "";
 
 // Ads are only enabled if we have a valid client ID
 const hasValidConfig = clientId.startsWith("ca-pub-") && clientId.length > 10;
@@ -62,6 +65,7 @@ export const adConfig: AdConfig = {
     rightRail: slotFooter || slotInContent,
     rightRailSecondary: slotFooter,
     mobileInContent: slotInContent,
+    calculatorMid: slotCalculatorMid || slotInContent,
   },
 };
 

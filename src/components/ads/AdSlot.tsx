@@ -114,17 +114,28 @@ export function AdSlot({
   // Unique key for this ad instance
   const slotKey = `${slotId}-${format}`;
 
-  // Validation
+  // Validation - dev-only warnings
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      if (!slotId) {
+        console.warn("[AdSlot] slotId is missing or empty. Check adConfig.slots or env vars.");
+      }
+      if (provider === "adsense" && !clientId) {
+        console.warn("[AdSlot] clientId is missing for AdSense provider. Check VITE_ADSENSE_CLIENT_ID.");
+      }
+      if (provider === "adsense" && typeof window !== "undefined" && !window.adsbygoogle && isVisible) {
+        console.warn("[AdSlot] window.adsbygoogle not found. AdSense script may not be loaded.");
+      }
+    }
+    
+    // Production error handling
     if (!slotId) {
-      console.error("AdSlot: slotId is required");
       setError("Configuration error");
     }
     if (provider === "adsense" && !clientId) {
-      console.error("AdSlot: clientId is required for AdSense provider");
       setError("Configuration error");
     }
-  }, [slotId, clientId, provider]);
+  }, [slotId, clientId, provider, isVisible]);
 
   // Intersection Observer for lazy loading
   useEffect(() => {
