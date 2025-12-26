@@ -140,7 +140,7 @@ function BRRRRResultsContent() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl overflow-hidden">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">

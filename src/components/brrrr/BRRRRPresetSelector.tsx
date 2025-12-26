@@ -33,7 +33,7 @@ export function BRRRRPresetSelector() {
       {/* Quick Run Scenarios Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="default" size="sm" className="gap-2">
+          <Button variant="default" size="sm" className="gap-2 whitespace-nowrap">
             <Play className="h-4 w-4" />
             Quick Scenarios
             <ChevronDown className="h-3 w-3" />
@@ -62,17 +62,19 @@ export function BRRRRPresetSelector() {
           if (value) loadPreset(value);
         }}
       >
-        <SelectTrigger className="w-[180px]">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
+        <SelectTrigger className="w-[240px] sm:w-[300px]">
+          <span className="flex items-center gap-2 min-w-0 truncate">
+            <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
             <SelectValue placeholder="Load Preset" />
-          </div>
+          </span>
         </SelectTrigger>
         <SelectContent>
           {BRRRR_PRESETS.map((preset) => (
-            <SelectItem key={preset.id} value={preset.id} className="flex-col items-start">
-              <span className="font-medium">{preset.name}</span>
-              <span className="text-xs text-muted-foreground">{preset.description}</span>
+            <SelectItem key={preset.id} value={preset.id} textValue={preset.name}>
+              <div className="flex flex-col items-start">
+                <span className="font-medium">{preset.name}</span>
+                <span className="text-xs text-muted-foreground">{preset.description}</span>
+              </div>
             </SelectItem>
           ))}
         </SelectContent>

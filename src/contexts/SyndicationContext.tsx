@@ -142,10 +142,16 @@ function loadResultsFromStorage(): SyndicationResults | null {
     }
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Validate structure - check for metrics (correct key, not kpis)
-      if (parsed && parsed.metrics && typeof parsed.metrics === 'object') {
+      // Validate structure - require metrics AND sources_and_uses objects
+      const hasMetrics = parsed && parsed.metrics && typeof parsed.metrics === 'object';
+      const hasSourcesAndUses = parsed && parsed.sources_and_uses && typeof parsed.sources_and_uses === 'object';
+      const hasCashFlows = !parsed.cash_flows || Array.isArray(parsed.cash_flows); // Optional but must be array if present
+      
+      if (hasMetrics && hasSourcesAndUses && hasCashFlows) {
         return parsed;
       }
+      console.warn("[Syndication] Invalid results structure in storage, clearing");
+      localStorage.removeItem(RESULTS_KEY);
     }
   } catch (e) {
     console.error("[Syndication] Failed to load results:", e);

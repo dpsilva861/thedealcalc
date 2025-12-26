@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSyndication, SYNDICATION_PRESETS } from "@/contexts/SyndicationContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { HelpCircle, Play, RotateCcw, AlertTriangle, XCircle } from "lucide-reac
 
 export default function SyndicationInputsPanel() {
   const { inputs, setInputs, runAnalysis, resetInputs, loadPreset, validation, error, isCalculating } = useSyndication();
+  const [hasAttemptedRun, setHasAttemptedRun] = useState(false);
 
   const updateAcquisition = (field: string, value: any) => {
     setInputs((prev) => ({
@@ -77,14 +79,14 @@ export default function SyndicationInputsPanel() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={resetInputs}>
+            <Button variant="outline" size="sm" onClick={() => { resetInputs(); setHasAttemptedRun(false); }}>
               <RotateCcw className="h-4 w-4 mr-1" />
               Reset
             </Button>
             <Button 
               size="sm" 
-              onClick={runAnalysis} 
-              disabled={isCalculating || !validation.isValid}
+              onClick={() => { setHasAttemptedRun(true); runAnalysis(); }} 
+              disabled={isCalculating}
             >
               <Play className="h-4 w-4 mr-1" />
               {isCalculating ? "Calculating..." : "Run Analysis"}
@@ -93,8 +95,8 @@ export default function SyndicationInputsPanel() {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Validation Errors */}
-        {validation.errors.length > 0 && (
+        {/* Validation Errors - only show after attempted run */}
+        {hasAttemptedRun && validation.errors.length > 0 && (
           <Alert variant="destructive" className="mb-4">
             <XCircle className="h-4 w-4" />
             <AlertDescription>
@@ -107,8 +109,8 @@ export default function SyndicationInputsPanel() {
           </Alert>
         )}
 
-        {/* Validation Warnings */}
-        {validation.warnings.length > 0 && (
+        {/* Validation Warnings - only show after attempted run */}
+        {hasAttemptedRun && validation.warnings.length > 0 && (
           <Alert className="mb-4 border-amber-500/50 bg-amber-500/5">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
             <AlertDescription className="text-amber-700">
