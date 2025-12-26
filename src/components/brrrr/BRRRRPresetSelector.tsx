@@ -44,10 +44,12 @@ export function BRRRRPresetSelector() {
             <DropdownMenuItem
               key={preset.id}
               onClick={() => handleQuickRun(preset.id)}
-              className="!flex !flex-col !items-start py-2 cursor-pointer"
+              className="p-3 cursor-pointer"
             >
-              <span className="font-medium break-words w-full">{preset.name}</span>
-              <span className="text-xs text-muted-foreground break-words w-full">{preset.description}</span>
+              <div className="flex flex-col items-start w-full">
+                <span className="font-medium">{preset.name}</span>
+                <span className="text-xs text-muted-foreground">{preset.description}</span>
+              </div>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
