@@ -295,7 +295,7 @@ export function AdSlot({
             data-ad-slot={slotId}
             data-ad-format={format === "auto" ? "auto" : undefined}
             data-full-width-responsive={format === "auto" ? "true" : undefined}
-            data-adtest={process.env.NODE_ENV === "development" ? "on" : undefined}
+            data-adtest={import.meta.env.DEV ? "on" : undefined}
           />
         ) : (
           // Loading skeleton
