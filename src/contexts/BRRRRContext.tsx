@@ -8,6 +8,7 @@ import {
   BRRRRPreset,
 } from "@/lib/calculators/brrrr";
 import { devLog } from "@/lib/devLogger";
+import { toast } from "sonner";
 
 export interface BRRRRPropertyAddress {
   address: string;
@@ -266,6 +267,7 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
     try {
       devLog.analysisStarted("BRRRR");
       const analysisResults = runBRRRRAnalysis(inputs);
+      
       if (analysisResults && analysisResults.metrics) {
         // Save results FIRST before any state updates
         saveResultsToStorage(analysisResults);
@@ -279,12 +281,17 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
         
         // Then update state
         setResults(analysisResults);
+        
+        // Success feedback
+        toast.success("Analysis complete!");
       } else {
         console.error("[BRRRR] Analysis returned invalid results");
+        toast.error("Analysis failed - invalid results returned");
         setResults(null);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("[BRRRR] Analysis failed:", err);
+      toast.error(err?.message || "Analysis failed. Please check your inputs.");
       setResults(null);
       saveResultsToStorage(null);
     }
