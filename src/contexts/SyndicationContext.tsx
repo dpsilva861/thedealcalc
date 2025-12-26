@@ -142,8 +142,8 @@ function loadResultsFromStorage(): SyndicationResults | null {
     }
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Validate structure
-      if (parsed && parsed.kpis && typeof parsed.kpis === 'object') {
+      // Validate structure - check for metrics (correct key, not kpis)
+      if (parsed && parsed.metrics && typeof parsed.metrics === 'object') {
         return parsed;
       }
     }
@@ -199,17 +199,25 @@ export function SyndicationProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const runAnalysis = useCallback(() => {
-    // Block if validation errors exist
+    // Block if validation errors exist - provide detailed feedback
     if (!validation.isValid) {
-      setError("Please fix validation errors before running analysis");
+      const errorMessages = validation.errors.map(e => e.message).join("; ");
+      setError(`Please fix validation errors: ${errorMessages}`);
       return;
     }
 
     setIsCalculating(true);
     setError(null);
+    
     try {
       devLog.analysisStarted("Syndication");
       const analysisResults = runSyndicationAnalysis(inputs);
+      
+      // Validate results structure before saving
+      if (!analysisResults || !analysisResults.metrics || !analysisResults.sources_and_uses) {
+        throw new Error("Analysis returned incomplete results");
+      }
+      
       // Save results FIRST before state updates
       saveResultsToStorage(analysisResults);
       saveInputsToStorage(inputs);
@@ -221,7 +229,8 @@ export function SyndicationProvider({ children }: { children: React.ReactNode })
       // Then update state
       setResults(analysisResults);
     } catch (e: any) {
-      setError(e?.message || "Calculation failed");
+      console.error("[Syndication] Analysis error:", e);
+      setError(e?.message || "Calculation failed. Please check your inputs and try again.");
       setResults(null);
       saveResultsToStorage(null);
     } finally {

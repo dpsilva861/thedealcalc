@@ -7,6 +7,15 @@ import { CalculatorWarning } from "../types";
 export const BRRRR_CALCULATION_VERSION = "1.0.0";
 
 /**
+ * Safely ensure a number is valid (not NaN, not Infinity for display purposes)
+ * Returns the value if finite, otherwise returns the fallback
+ */
+function safeNumber(value: number, fallback: number = 0): number {
+  if (!isFinite(value) || isNaN(value)) return fallback;
+  return value;
+}
+
+/**
  * Calculate standard mortgage payment (PMT)
  */
 function calculatePMT(principal: number, annualRate: number, termMonths: number): number {
@@ -216,40 +225,40 @@ export function runBRRRRAnalysis(inputs: BRRRRInputs): BRRRRResults {
 
   return {
     holdingPhase: {
-      bridgeLoanAmount,
-      monthlyBridgePayment,
-      totalBridgePayments,
-      totalHoldingCosts,
-      totalRehabCost,
-      closingCostsAmount,
-      pointsAmount,
-      totalCashIn,
+      bridgeLoanAmount: safeNumber(bridgeLoanAmount),
+      monthlyBridgePayment: safeNumber(monthlyBridgePayment),
+      totalBridgePayments: safeNumber(totalBridgePayments),
+      totalHoldingCosts: safeNumber(totalHoldingCosts),
+      totalRehabCost: safeNumber(totalRehabCost),
+      closingCostsAmount: safeNumber(closingCostsAmount),
+      pointsAmount: safeNumber(pointsAmount),
+      totalCashIn: safeNumber(totalCashIn),
     },
     refinance: {
-      maxRefiLoan,
-      refiClosingCostsAmount,
-      netRefiProceeds,
-      cashOut,
-      remainingCashInDeal,
-      newMonthlyPayment,
+      maxRefiLoan: safeNumber(maxRefiLoan),
+      refiClosingCostsAmount: safeNumber(refiClosingCostsAmount),
+      netRefiProceeds: safeNumber(netRefiProceeds),
+      cashOut: safeNumber(cashOut),
+      remainingCashInDeal: safeNumber(remainingCashInDeal),
+      newMonthlyPayment: safeNumber(newMonthlyPayment),
     },
     rental: {
-      grossMonthlyRent,
-      effectiveGrossIncome,
-      monthlyExpenses,
-      monthlyNOI,
-      annualNOI,
-      monthlyDebtService,
-      monthlyCashFlow,
-      annualCashFlow,
+      grossMonthlyRent: safeNumber(grossMonthlyRent),
+      effectiveGrossIncome: safeNumber(effectiveGrossIncome),
+      monthlyExpenses: safeNumber(monthlyExpenses),
+      monthlyNOI: safeNumber(monthlyNOI),
+      annualNOI: safeNumber(annualNOI),
+      monthlyDebtService: safeNumber(monthlyDebtService),
+      monthlyCashFlow: safeNumber(monthlyCashFlow),
+      annualCashFlow: safeNumber(annualCashFlow),
     },
     metrics: {
-      cashOnCashReturn,
-      dscr,
-      capRate,
-      totalROI,
-      equityCreated,
-      equityMultiple,
+      cashOnCashReturn: safeNumber(cashOnCashReturn),
+      dscr: safeNumber(dscr),
+      capRate: safeNumber(capRate),
+      totalROI: safeNumber(totalROI),
+      equityCreated: safeNumber(equityCreated),
+      equityMultiple: safeNumber(equityMultiple),
     },
     riskFlags,
     sensitivity,

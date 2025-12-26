@@ -127,16 +127,21 @@ export function validateBRRRRInputs(inputs: BRRRRInputs): BRRRRValidationResult 
   const errors: BRRRRValidationError[] = [];
   const warnings: BRRRRValidationWarning[] = [];
 
-  // Acquisition validations
   const { acquisition, bridgeFinancing, afterRepairValue, refinance, rentalOperations } = inputs;
 
-  // Purchase Price
-  if (acquisition.purchasePrice < 1000 || acquisition.purchasePrice > 100000000) {
-    errors.push({ field: "purchasePrice", message: BRRRR_VALIDATION_RULES.purchasePrice.errorMessage });
+  // Purchase Price - allow 0 (empty state) but show error if between 1-999
+  if (acquisition.purchasePrice > 0 && acquisition.purchasePrice < 1000) {
+    errors.push({ field: "purchasePrice", message: "Purchase price must be at least $1,000" });
+  } else if (acquisition.purchasePrice > 100000000) {
+    errors.push({ field: "purchasePrice", message: "Purchase price cannot exceed $100,000,000" });
+  } else if (acquisition.purchasePrice === 0) {
+    errors.push({ field: "purchasePrice", message: "Please enter a purchase price" });
   }
 
   // Rehab Budget
-  if (acquisition.rehabBudget < 0 || acquisition.rehabBudget > 10000000) {
+  if (acquisition.rehabBudget < 0) {
+    errors.push({ field: "rehabBudget", message: "Rehab budget cannot be negative" });
+  } else if (acquisition.rehabBudget > 10000000) {
     errors.push({ field: "rehabBudget", message: BRRRR_VALIDATION_RULES.rehabBudget.errorMessage });
   }
 
@@ -151,19 +156,25 @@ export function validateBRRRRInputs(inputs: BRRRRInputs): BRRRRValidationResult 
     });
   }
 
-  // ARV
-  if (afterRepairValue.arv < 1000) {
-    errors.push({ field: "arv", message: BRRRR_VALIDATION_RULES.arv.errorMessage });
+  // ARV - allow 0 (empty state) but require a value for analysis
+  if (afterRepairValue.arv > 0 && afterRepairValue.arv < 1000) {
+    errors.push({ field: "arv", message: "ARV must be at least $1,000" });
+  } else if (afterRepairValue.arv > 100000000) {
+    errors.push({ field: "arv", message: "ARV cannot exceed $100,000,000" });
+  } else if (afterRepairValue.arv === 0) {
+    errors.push({ field: "arv", message: "Please enter the After Repair Value (ARV)" });
   }
 
-  // ARV vs Purchase + Rehab check
-  const allInCost = acquisition.purchasePrice + acquisition.rehabBudget;
-  if (afterRepairValue.arv > 0 && allInCost > afterRepairValue.arv) {
-    warnings.push({
-      field: "arv",
-      message: `All-in cost ($${allInCost.toLocaleString()}) exceeds ARV ($${afterRepairValue.arv.toLocaleString()})`,
-      severity: "high",
-    });
+  // ARV vs Purchase + Rehab check (only if values are entered)
+  if (afterRepairValue.arv > 0 && acquisition.purchasePrice > 0) {
+    const allInCost = acquisition.purchasePrice + acquisition.rehabBudget;
+    if (allInCost > afterRepairValue.arv) {
+      warnings.push({
+        field: "arv",
+        message: `All-in cost ($${allInCost.toLocaleString()}) exceeds ARV ($${afterRepairValue.arv.toLocaleString()})`,
+        severity: "high",
+      });
+    }
   }
 
   // Refi LTV
