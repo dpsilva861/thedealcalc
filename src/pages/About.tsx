@@ -16,6 +16,25 @@ import {
 } from "lucide-react";
 
 export default function About() {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "About",
+        "item": "https://thedealcalc.com/about"
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
@@ -27,6 +46,9 @@ export default function About() {
         <meta property="og:description" content="Learn about TheDealCalc - the free real estate investment calculator built by investors for investors." />
         <meta property="og:url" content="https://thedealcalc.com/about" />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-16 max-w-4xl">

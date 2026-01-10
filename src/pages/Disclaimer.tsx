@@ -3,12 +3,39 @@ import { Layout } from "@/components/layout/Layout";
 import { AlertTriangle } from "lucide-react";
 
 export default function Disclaimer() {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Disclaimer",
+        "item": "https://thedealcalc.com/disclaimer"
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
         <title>Disclaimer | TheDealCalc</title>
         <meta name="description" content="Important disclaimers regarding the use of TheDealCalc real estate investment calculators." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/disclaimer" />
+        <meta property="og:title" content="Disclaimer | TheDealCalc" />
+        <meta property="og:description" content="Important disclaimers for using TheDealCalc calculators." />
+        <meta property="og:url" content="https://thedealcalc.com/disclaimer" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-16 max-w-4xl">

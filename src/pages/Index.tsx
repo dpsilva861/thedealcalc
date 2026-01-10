@@ -61,9 +61,22 @@ export default function Index() {
     },
   ];
 
+  const breadcrumbSchema = {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      }
+    ]
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
+      breadcrumbSchema,
       {
         "@type": "WebSite",
         "@id": "https://thedealcalc.com/#website",

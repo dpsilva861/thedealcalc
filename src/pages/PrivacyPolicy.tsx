@@ -4,6 +4,25 @@ import { Layout } from "@/components/layout/Layout";
 import { Shield } from "lucide-react";
 
 export default function PrivacyPolicy() {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Privacy Policy",
+        "item": "https://thedealcalc.com/privacy"
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
@@ -15,6 +34,9 @@ export default function PrivacyPolicy() {
         <meta property="og:description" content="Learn how TheDealCalc protects your privacy. All calculations run locally—we never see your deal data." />
         <meta property="og:url" content="https://thedealcalc.com/privacy" />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-16 max-w-4xl">

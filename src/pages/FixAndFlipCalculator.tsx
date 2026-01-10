@@ -56,28 +56,40 @@ const faqs = [
 ];
 
 export default function FixAndFlipCalculator() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Fix and Flip Calculator", "item": "https://thedealcalc.com/fix-and-flip-calculator" }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(faq => ({
+          "@type": "Question",
+          "name": faq.question,
+          "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
+        }))
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
         <title>Fix and Flip Calculator (Free) | Rehab Costs, Profit, ROI — TheDealCalc</title>
         <meta name="description" content="Free fix and flip calculator: analyze rehab costs, holding costs, selling costs, profit, and ROI. Perfect for house flippers. No signup required." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/fix-and-flip-calculator" />
         <meta property="og:title" content="Fix and Flip Calculator (Free) | Rehab Costs, Profit, ROI — TheDealCalc" />
         <meta property="og:description" content="Free fix and flip calculator with rehab costs, holding costs, profit, and ROI analysis. Export to PDF, CSV, Excel." />
         <meta property="og:url" content="https://thedealcalc.com/fix-and-flip-calculator" />
+        <meta property="og:type" content="website" />
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": faqs.map(faq => ({
-              "@type": "Question",
-              "name": faq.question,
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": faq.answer
-              }
-            }))
-          })}
+          {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
 

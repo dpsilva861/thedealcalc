@@ -24,6 +24,25 @@ import {
 } from "lucide-react";
 
 export default function HowItWorks() {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "How It Works",
+        "item": "https://thedealcalc.com/how-it-works"
+      }
+    ]
+  };
+
   const inputSteps = [
     {
       icon: Calculator,
@@ -147,6 +166,9 @@ export default function HowItWorks() {
         <meta property="og:description" content="Learn how TheDealCalc analyzes real estate investments with deterministic modeling and professional accuracy. Free forever." />
         <meta property="og:url" content="https://thedealcalc.com/how-it-works" />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
       {/* Hero */}
