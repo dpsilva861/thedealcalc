@@ -66,12 +66,14 @@ export function BRRRRPresetSelector() {
           if (value) loadPreset(value);
         }}
       >
-        <SelectTrigger className="w-[160px]">
-          <span className="flex items-center gap-2 min-w-0 truncate">
+        <SelectTrigger className="w-[180px] sm:w-[200px]">
+          <span className="flex items-center gap-2 min-w-0">
             <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
-            <SelectValue placeholder="Load Preset">
-              {selectedPreset ? PRESET_LABELS[selectedPreset] || selectedPreset : null}
-            </SelectValue>
+            <span className="truncate">
+              <SelectValue placeholder="Load Preset">
+                {selectedPreset ? PRESET_LABELS[selectedPreset] || selectedPreset : null}
+              </SelectValue>
+            </span>
           </span>
         </SelectTrigger>
         <SelectContent>

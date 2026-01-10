@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { adConfig, AdFormat, AdProvider } from "@/config/ads";
+import { isAdAllowedRoute } from "@/config/adRoutes";
 import { cn } from "@/lib/utils";
 
 interface AdSlotProps {
@@ -102,6 +104,11 @@ export function AdSlot({
   "aria-label": ariaLabel = "Advertisement",
   lazyLoadMargin = "200px",
 }: AdSlotProps) {
+  const location = useLocation();
+  
+  // Check if ads are allowed on this route (AdSense compliance)
+  const isContentPage = isAdAllowedRoute(location.pathname);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const adRef = useRef<HTMLModElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -227,8 +234,11 @@ export function AdSlot({
     };
   }, []);
 
-  // Don't render if ads are disabled
-  if (!adConfig.enabled) {
+  // Don't render if ads are disabled or route is blocked (calculator flows)
+  if (!adConfig.enabled || !isContentPage) {
+    if (import.meta.env.DEV && !isContentPage) {
+      console.info(`[AdSlot] Ads blocked on route: ${location.pathname} (not a content page)`);
+    }
     return null;
   }
 

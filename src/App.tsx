@@ -25,6 +25,8 @@ import CashOnCashCalculator from "./pages/CashOnCashCalculator";
 import RealEstateInvestmentCalculator from "./pages/RealEstateInvestmentCalculator";
 import Disclaimer from "./pages/Disclaimer";
 import CookiePolicy from "./pages/CookiePolicy";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +58,8 @@ const App = () => (
               <Route path="/real-estate-investment-calculator" element={<RealEstateInvestmentCalculator />} />
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="/cookies" element={<CookiePolicy />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BRRRRProvider>
