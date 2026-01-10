@@ -25,73 +25,11 @@ interface AdSlotProps {
   lazyLoadMargin?: string;
 }
 
-// Track if AdSense script has been loaded globally
-let adSenseScriptLoaded = false;
-let adSenseScriptLoading = false;
-const scriptLoadPromise: Promise<void> | null = null;
-
 // Track initialized slots to prevent duplicate initialization
 const initializedSlots = new Set<string>();
 
 // Track failed slots to prevent retry loops
 const failedSlots = new Set<string>();
-
-/**
- * Load AdSense script once globally with proper promise caching
- */
-const loadAdSenseScript = (clientId: string): Promise<void> => {
-  // Return cached promise if already loading
-  if (scriptLoadPromise) {
-    return scriptLoadPromise;
-  }
-
-  if (adSenseScriptLoaded) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve, reject) => {
-    // Check if script already exists in DOM
-    const existingScript = document.querySelector(`script[src*="adsbygoogle.js"][src*="${clientId}"]`);
-
-    if (existingScript) {
-      adSenseScriptLoaded = true;
-      resolve();
-      return;
-    }
-
-    adSenseScriptLoading = true;
-
-    const script = document.createElement("script");
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
-    script.async = true;
-    script.crossOrigin = "anonymous";
-    script.setAttribute("data-ad-client", clientId);
-
-    const cleanup = () => {
-      script.removeEventListener("load", onLoad);
-      script.removeEventListener("error", onError);
-    };
-
-    const onLoad = () => {
-      adSenseScriptLoaded = true;
-      adSenseScriptLoading = false;
-      cleanup();
-      resolve();
-    };
-
-    const onError = (error: ErrorEvent) => {
-      adSenseScriptLoading = false;
-      cleanup();
-      console.error("Failed to load AdSense script:", error);
-      reject(new Error("Failed to load AdSense script"));
-    };
-
-    script.addEventListener("load", onLoad);
-    script.addEventListener("error", onError);
-
-    document.head.appendChild(script);
-  });
-};
 
 export function AdSlot({
   provider = adConfig.provider,
@@ -172,7 +110,7 @@ export function AdSlot({
   }, [isVisible, lazyLoadMargin]);
 
   // Initialize ad when visible
-  const initializeAd = useCallback(async () => {
+  const initializeAd = useCallback(() => {
     // Guard clauses
     if (!isVisible || isInitialized || provider !== "adsense") return;
     if (initializedSlots.has(slotKey)) return;
@@ -182,9 +120,7 @@ export function AdSlot({
     setIsLoading(true);
 
     try {
-      await loadAdSenseScript(clientId);
-
-      // Verify window.adsbygoogle is available
+      // Verify window.adsbygoogle is available (script loaded from index.html)
       if (!window.adsbygoogle) {
         throw new Error("AdSense global object not available");
       }
@@ -198,14 +134,9 @@ export function AdSlot({
       initializedSlots.add(slotKey);
 
       // Push ad to AdSense queue
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        setIsInitialized(true);
-        setError(null);
-      } catch (pushError) {
-        console.error("AdSense push error:", pushError);
-        throw pushError;
-      }
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      setIsInitialized(true);
+      setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Ad failed to load";
       setError(errorMessage);
