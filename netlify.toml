@@ -1,0 +1,6 @@
+[[plugins]]
+package = "@netlify/plugin-prerender"
+
+[plugins.inputs]
+# Routes to prerender
+routes = ["/", "/how-it-works", "/brrrr-calculator", "/syndication-calculator", "/about", "/contact"]
