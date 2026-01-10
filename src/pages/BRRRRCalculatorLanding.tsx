@@ -67,6 +67,58 @@ const faqs = [
 ];
 
 export default function BRRRRCalculatorLanding() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://thedealcalc.com/brrrr-calculator#app",
+        "name": "BRRRR Calculator",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Free BRRRR calculator for analyzing Buy-Rehab-Rent-Refinance-Repeat real estate deals with rehab costs, holding period, refinance cash-out, and rental returns.",
+        "featureList": [
+          "Cash left in deal calculation",
+          "Cash-on-cash return analysis",
+          "DSCR calculation",
+          "Refinance cash-out modeling",
+          "Holding cost calculation",
+          "Risk flag identification",
+          "PDF/Excel export"
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://thedealcalc.com/brrrr-calculator#webpage",
+        "url": "https://thedealcalc.com/brrrr-calculator",
+        "name": "BRRRR Calculator (Free) | Buy, Rehab, Rent, Refinance Analysis — TheDealCalc",
+        "description": "Free BRRRR calculator: analyze rehab costs, holding period, refinance cash-out, and rental returns. Complete Buy-Rehab-Rent-Refinance-Repeat analysis.",
+        "isPartOf": {
+          "@id": "https://thedealcalc.com/#website"
+        },
+        "about": {
+          "@id": "https://thedealcalc.com/brrrr-calculator#app"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(faq => ({
+          "@type": "Question",
+          "name": faq.question,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": faq.answer
+          }
+        }))
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
@@ -79,18 +131,7 @@ export default function BRRRRCalculatorLanding() {
         <meta property="og:url" content="https://thedealcalc.com/brrrr-calculator" />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": faqs.map(faq => ({
-              "@type": "Question",
-              "name": faq.question,
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": faq.answer
-              }
-            }))
-          })}
+          {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
 

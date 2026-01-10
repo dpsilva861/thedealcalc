@@ -69,6 +69,58 @@ const faqs = [
 ];
 
 export default function SyndicationCalculatorLanding() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://thedealcalc.com/syndication-calculator#app",
+        "name": "Real Estate Syndication Calculator",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Free real estate syndication calculator for modeling GP/LP structures, waterfall distributions, IRR, equity multiple, and preferred returns.",
+        "featureList": [
+          "GP/LP waterfall modeling",
+          "IRR calculation",
+          "Equity multiple analysis",
+          "Preferred return modeling",
+          "Cash-on-cash projections",
+          "Multi-year proforma",
+          "PDF/Excel export"
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://thedealcalc.com/syndication-calculator#webpage",
+        "url": "https://thedealcalc.com/syndication-calculator",
+        "name": "Syndication Calculator (Free) | Real Estate GP/LP Waterfall & IRR Analysis — TheDealCalc",
+        "description": "Free real estate syndication calculator: model GP/LP splits, waterfall distributions, IRR, equity multiple, and preferred returns. Complete syndication analysis.",
+        "isPartOf": {
+          "@id": "https://thedealcalc.com/#website"
+        },
+        "about": {
+          "@id": "https://thedealcalc.com/syndication-calculator#app"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(faq => ({
+          "@type": "Question",
+          "name": faq.question,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": faq.answer
+          }
+        }))
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
@@ -81,18 +133,7 @@ export default function SyndicationCalculatorLanding() {
         <meta property="og:url" content="https://thedealcalc.com/syndication-calculator" />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": faqs.map(faq => ({
-              "@type": "Question",
-              "name": faq.question,
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": faq.answer
-              }
-            }))
-          })}
+          {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
 
