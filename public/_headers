@@ -1,0 +1,59 @@
+# Global security headers for all routes
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+
+# HTML pages - no cache to ensure fresh content
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Index fallback for SPA
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Static assets with content hash - immutable cache
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# JavaScript files with hash
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# CSS files with hash
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fonts - long cache
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+/*.ttf
+  Cache-Control: public, max-age=31536000, immutable
+
+# Images - long cache
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+/*.jpeg
+  Cache-Control: public, max-age=31536000, immutable
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+/*.svg
+  Cache-Control: public, max-age=2592000
+/*.ico
+  Cache-Control: public, max-age=2592000
+
+# Robots and sitemap - moderate cache
+/robots.txt
+  Cache-Control: public, max-age=86400
+/sitemap.xml
+  Cache-Control: public, max-age=86400
+
+# Ads.txt - moderate cache for ad verification
+/ads.txt
+  Cache-Control: public, max-age=86400
