@@ -605,7 +605,7 @@ export default function SyndicationCalculatorLanding() {
                 </Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
-                <Link to="/brrrr-calculator">
+                <Link to="/brrrr">
                   Try BRRRR Calculator
                 </Link>
               </Button>
