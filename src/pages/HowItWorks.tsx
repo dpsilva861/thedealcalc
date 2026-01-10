@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { InlineAd } from "@/components/ads";
 import { 
   Building2, 
   Coins, 
@@ -12,7 +14,13 @@ import {
   Calculator,
   TrendingUp,
   PieChart,
-  Download
+  Download,
+  Users,
+  Target,
+  Zap,
+  Shield,
+  XCircle,
+  Lightbulb
 } from "lucide-react";
 
 export default function HowItWorks() {
@@ -78,20 +86,202 @@ export default function HowItWorks() {
     },
   ];
 
+  const audiences = [
+    {
+      icon: Building2,
+      title: "Real Estate Investors",
+      desc: "Analyze rental properties, BRRRR deals, and value-add opportunities before making offers."
+    },
+    {
+      icon: Users,
+      title: "Syndicators & GPs",
+      desc: "Model complex GP/LP structures, waterfall distributions, and investor returns for capital raises."
+    },
+    {
+      icon: Target,
+      title: "Real Estate Agents",
+      desc: "Provide investment analysis to clients and add value beyond traditional brokerage services."
+    },
+    {
+      icon: Coins,
+      title: "Lenders & Brokers",
+      desc: "Quickly underwrite deals and validate borrower projections with standardized metrics."
+    },
+  ];
+
+  const comparisons = [
+    {
+      problem: "Excel spreadsheets are error-prone",
+      solution: "Pre-built formulas eliminate formula errors and circular references"
+    },
+    {
+      problem: "Expensive software ($50-500/month)",
+      solution: "100% free with no subscription, no hidden fees, no upsells"
+    },
+    {
+      problem: "Steep learning curves",
+      solution: "Guided wizard with tooltips—analyze deals in under 5 minutes"
+    },
+    {
+      problem: "No mobile access",
+      solution: "Fully responsive—works on phone, tablet, and desktop"
+    },
+    {
+      problem: "Data privacy concerns",
+      solution: "All calculations run in your browser—we never see your data"
+    },
+    {
+      problem: "Limited export options",
+      solution: "Export to PDF, CSV, or Excel with one click"
+    },
+  ];
+
   return (
     <Layout>
+      <Helmet>
+        <title>How It Works | Free Real Estate Investment Calculator — TheDealCalc</title>
+        <meta name="description" content="Learn how TheDealCalc analyzes real estate investments with month-by-month modeling, IRR calculations, and professional-grade accuracy. 100% free, no signup." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://thedealcalc.com/how-it-works" />
+        <meta property="og:title" content="How It Works | Free Real Estate Investment Calculator — TheDealCalc" />
+        <meta property="og:description" content="Learn how TheDealCalc analyzes real estate investments with deterministic modeling and professional accuracy. Free forever." />
+        <meta property="og:url" content="https://thedealcalc.com/how-it-works" />
+        <meta property="og:type" content="website" />
+      </Helmet>
+
       {/* Hero */}
       <section className="py-16 md:py-24 bg-cream-dark">
         <div className="container mx-auto px-4 text-center">
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-6">
-            How DealCalc Works
+            How TheDealCalc Works
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             A straightforward, step-by-step process to analyze any residential investment deal 
-            with professional-grade accuracy.
+            with professional-grade accuracy—completely free.
           </p>
         </div>
       </section>
+
+      {/* What is TheDealCalc */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <article className="prose prose-slate max-w-none">
+              <h2 className="font-display text-3xl font-bold text-foreground mb-6">
+                What is TheDealCalc?
+              </h2>
+              
+              <p className="text-muted-foreground leading-relaxed text-lg mb-6">
+                TheDealCalc is a free, professional-grade real estate investment calculator designed 
+                to help investors, agents, and syndicators analyze deals quickly and accurately. 
+                Unlike basic online calculators that give you a single cap rate or cash-on-cash number, 
+                TheDealCalc provides comprehensive month-by-month cash flow projections, multi-year 
+                proformas, and institutional-quality return metrics including IRR, equity multiple, 
+                and DSCR.
+              </p>
+              
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                We built TheDealCalc because we were frustrated with the existing options: expensive 
+                subscription software that costs $50-500 per month, clunky Excel spreadsheets riddled 
+                with formula errors, or oversimplified calculators that don't capture the nuances of 
+                real deals. TheDealCalc brings institutional-quality underwriting to everyone—whether 
+                you're analyzing your first rental property or modeling a $50 million syndication.
+              </p>
+
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                Our calculators handle the complexity so you can focus on finding great deals. From 
+                BRRRR analysis with bridge loan refinancing to syndication waterfalls with preferred 
+                returns and promote structures, TheDealCalc models the full investment lifecycle 
+                with deterministic, auditable calculations that match what institutional investors use.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* Who It's For */}
+      <section className="py-16 bg-cream-dark">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-3xl font-bold text-foreground mb-4">
+              Who TheDealCalc Is For
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Whether you're buying your first rental or raising capital for a fund, 
+              TheDealCalc provides the analysis tools you need.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {audiences.map((audience) => (
+              <div 
+                key={audience.title}
+                className="p-6 rounded-2xl bg-card border border-border"
+              >
+                <audience.icon className="h-10 w-10 text-primary mb-4" />
+                <h3 className="font-semibold text-foreground text-lg mb-2">{audience.title}</h3>
+                <p className="text-sm text-muted-foreground">{audience.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How Calculations Work */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <article className="prose prose-slate max-w-none">
+              <h2 className="font-display text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <Zap className="h-8 w-8 text-primary" />
+                How Our Calculations Work
+              </h2>
+              
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                TheDealCalc uses <strong>deterministic, month-by-month modeling</strong>—the same 
+                methodology used by institutional investors, private equity firms, and commercial 
+                lenders. Unlike simple calculators that use annual averages, we model every month 
+                of your hold period to capture the true timing of cash flows.
+              </p>
+
+              <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+                Month-by-Month Cash Flow Modeling
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                Each month is calculated individually: rent income, vacancy, operating expenses, 
+                debt service, and net cash flow. This granular approach matters because timing 
+                affects returns. Receiving cash in month 6 vs month 36 has a significant impact 
+                on IRR, even if the total dollars are the same.
+              </p>
+
+              <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+                Accurate IRR Calculation
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                Internal Rate of Return (IRR) is calculated using the Newton-Raphson method on 
+                actual monthly cash flows—not simplified annual approximations. Our IRR matches 
+                what you'd get in Excel using the XIRR function with actual dates. This precision 
+                matters for comparing deals with different hold periods and cash flow patterns.
+              </p>
+
+              <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+                Growth and Escalation Modeling
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                Rent growth, expense escalation, and other assumptions compound properly over time. 
+                If you project 3% annual rent growth, each year's rent is calculated based on the 
+                previous year's actual rent—not a simple multiplication of year-one rent. This 
+                prevents the compounding errors common in basic spreadsheets.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <InlineAd />
 
       {/* Input Steps */}
       <section className="py-20">
@@ -140,6 +330,78 @@ export default function HowItWorks() {
         </div>
       </section>
 
+      {/* Problems We Solve */}
+      <section className="py-16 bg-cream-dark">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="font-display text-3xl font-bold text-foreground text-center mb-4">
+              Problems TheDealCalc Solves
+            </h2>
+            <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
+              We built TheDealCalc to solve the frustrations investors face with existing tools.
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              {comparisons.map((item) => (
+                <div key={item.problem} className="p-5 rounded-xl bg-card border border-border">
+                  <div className="flex items-start gap-3 mb-3">
+                    <XCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-muted-foreground">{item.problem}</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-foreground font-medium">{item.solution}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Accuracy & Methodology */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <article className="prose prose-slate max-w-none">
+              <h2 className="font-display text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <Shield className="h-8 w-8 text-primary" />
+                Accuracy & Methodology
+              </h2>
+              
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                TheDealCalc's calculations are built on the same methodologies used by institutional 
+                real estate investors, commercial lenders, and private equity firms. Every formula 
+                is deterministic—given the same inputs, you'll always get the same outputs. There's 
+                no randomness, no AI guessing, and no black-box algorithms.
+              </p>
+
+              <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+                Transparent Calculations
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                We believe in transparency. Our results panels show exactly how each metric is 
+                calculated, breaking down the inputs and intermediate values. You can trace any 
+                number back to its source. Many users export our results and verify them against 
+                their own Excel models—the numbers match.
+              </p>
+
+              <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+                Industry-Standard Metrics
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                We calculate metrics the way professionals do: IRR using actual monthly cash flows, 
+                DSCR using net operating income divided by annual debt service, cap rate using NOI 
+                divided by purchase price. Our equity multiple, cash-on-cash return, and waterfall 
+                distributions follow standard conventions used across the industry.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       {/* What You Get */}
       <section className="py-20 bg-cream-dark">
         <div className="container mx-auto px-4">
@@ -175,8 +437,44 @@ export default function HowItWorks() {
         </div>
       </section>
 
+      {/* Why It's Free */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <article className="prose prose-slate max-w-none">
+              <h2 className="font-display text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <Lightbulb className="h-8 w-8 text-primary" />
+                Why TheDealCalc Is Free
+              </h2>
+              
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                We believe every investor deserves access to professional-grade analysis tools, 
+                regardless of portfolio size or budget. Too many new investors make expensive 
+                mistakes because they can't afford proper underwriting software or don't know how 
+                to build accurate spreadsheets. TheDealCalc levels the playing field.
+              </p>
+              
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                Our model is simple: we keep TheDealCalc free through minimal, non-intrusive 
+                advertising on content pages. We never show ads during your actual analysis workflow, 
+                and we never sell your data. In fact, we don't even store your data—all calculations 
+                run entirely in your browser. Your deal information never touches our servers.
+              </p>
+
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                We're committed to keeping TheDealCalc free forever. No freemium upsells, no 
+                feature gating, no "premium" tier. Every calculator, every export option, every 
+                feature—all free, all the time.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <InlineAd />
+
       {/* Privacy Note */}
-      <section className="py-20">
+      <section className="py-20 bg-cream-dark">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sage-light text-primary text-sm font-medium mb-6">
@@ -187,14 +485,22 @@ export default function HowItWorks() {
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
               All calculations run entirely in your browser. We never store your deal data. 
-              Export your results to PDF, CSV, or Excel and take them with you.
+              Export your results to PDF, CSV, or Excel and take them with you. No account 
+              required, no data collection, no tracking of your investment analysis.
             </p>
-            <Button variant="hero" size="lg" asChild>
-              <Link to="/underwrite">
-                Start Analyzing
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button variant="hero" size="lg" asChild>
+                <Link to="/underwrite">
+                  Start Analyzing
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/brrrr-calculator">
+                  Try BRRRR Calculator
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
