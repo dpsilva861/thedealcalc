@@ -21,7 +21,7 @@ const STEPS = [
 
 function BRRRRContent() {
   const navigate = useNavigate();
-  const { currentStep, setCurrentStep, runAnalysis, inputs } = useBRRRR();
+  const { currentStep, setCurrentStep, runAnalysis, inputs, setHasAttemptedRun } = useBRRRR();
 
   useEffect(() => {
     trackEvent("page_view", { page: "/brrrr" });
@@ -42,6 +42,7 @@ function BRRRRContent() {
   };
 
   const handleRunAnalysis = () => {
+    setHasAttemptedRun(true);
     const validation = validateBRRRRInputs(inputs);
     
     if (!validation.isValid) {

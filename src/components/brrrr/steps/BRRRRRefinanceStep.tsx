@@ -2,10 +2,22 @@ import { useBRRRR } from "@/contexts/BRRRRContext";
 import { InputField } from "@/components/underwriting/InputField";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { validateBRRRRInputs } from "@/lib/calculators/brrrr/validation";
+import { useMemo } from "react";
 
 export function BRRRRRefinanceStep() {
-  const { inputs, updateAfterRepairValue, updateRefinance } = useBRRRR();
+  const { inputs, updateAfterRepairValue, updateRefinance, hasAttemptedRun, touchedFields, touchField } = useBRRRR();
   const { afterRepairValue, refinance } = inputs;
+
+  const validation = useMemo(() => validateBRRRRInputs(inputs), [inputs]);
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    return validation.errors.find(e => e.field === fieldName)?.message;
+  };
+
+  const shouldShowError = (fieldName: string): boolean => {
+    return hasAttemptedRun || touchedFields.has(fieldName);
+  };
 
   return (
     <div className="space-y-8">
@@ -24,8 +36,11 @@ export function BRRRRRefinanceStep() {
             tooltip="Estimated market value after all renovations"
             value={afterRepairValue.arv}
             onChange={(v) => updateAfterRepairValue({ arv: v })}
+            onBlur={() => touchField("arv")}
             prefix="$"
             placeholder="320000"
+            error={getFieldError("arv")}
+            showError={shouldShowError("arv")}
           />
         </div>
 
@@ -63,10 +78,13 @@ export function BRRRRRefinanceStep() {
             tooltip="Loan-to-value ratio for refinance (max loan as % of ARV)"
             value={refinance.refiLtvPct * 100}
             onChange={(v) => updateRefinance({ refiLtvPct: v / 100 })}
+            onBlur={() => touchField("refiLtvPct")}
             suffix="%"
             placeholder="75"
             min={50}
             max={85}
+            error={getFieldError("refiLtvPct")}
+            showError={shouldShowError("refiLtvPct")}
           />
 
           <InputField

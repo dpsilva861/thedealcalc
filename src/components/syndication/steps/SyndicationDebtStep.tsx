@@ -4,8 +4,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function SyndicationDebtStep() {
-  const { inputs, updateDebt } = useSyndication();
+  const { inputs, updateDebt, hasAttemptedRun, touchedFields, touchField, validation } = useSyndication();
   const { debt } = inputs;
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    return validation.errors.find(e => e.field === fieldName)?.message;
+  };
+
+  const shouldShowError = (fieldName: string): boolean => {
+    return hasAttemptedRun || touchedFields.has(fieldName);
+  };
 
   return (
     <div className="space-y-6">
@@ -25,11 +33,11 @@ export function SyndicationDebtStep() {
               </SelectContent>
             </Select>
           </div>
-          <InputField label="Loan-to-Value (LTV)" tooltip="Loan amount as % of purchase price" value={debt.ltv_or_ltc_pct * 100} onChange={(v) => updateDebt({ ltv_or_ltc_pct: v / 100 })} suffix="%" placeholder="70" min={0} max={100} />
-          <InputField label="Interest Rate" tooltip="Annual interest rate" value={debt.interest_rate_annual * 100} onChange={(v) => updateDebt({ interest_rate_annual: v / 100 })} suffix="%" placeholder="6" min={0} max={25} />
-          <InputField label="Amortization" tooltip="Amortization period in years" value={debt.amort_years} onChange={(v) => updateDebt({ amort_years: v })} suffix="years" placeholder="30" min={1} max={40} />
+          <InputField label="Loan-to-Value (LTV)" tooltip="Loan amount as % of purchase price" value={debt.ltv_or_ltc_pct * 100} onChange={(v) => updateDebt({ ltv_or_ltc_pct: v / 100 })} onBlur={() => touchField("debt.ltv_or_ltc_pct")} suffix="%" placeholder="70" min={0} max={100} error={getFieldError("debt.ltv_or_ltc_pct")} showError={shouldShowError("debt.ltv_or_ltc_pct")} />
+          <InputField label="Interest Rate" tooltip="Annual interest rate" value={debt.interest_rate_annual * 100} onChange={(v) => updateDebt({ interest_rate_annual: v / 100 })} onBlur={() => touchField("debt.interest_rate_annual")} suffix="%" placeholder="6" min={0} max={25} error={getFieldError("debt.interest_rate_annual")} showError={shouldShowError("debt.interest_rate_annual")} />
+          <InputField label="Amortization" tooltip="Amortization period in years" value={debt.amort_years} onChange={(v) => updateDebt({ amort_years: v })} onBlur={() => touchField("debt.amort_years")} suffix="years" placeholder="30" min={1} max={40} error={getFieldError("debt.amort_years")} showError={shouldShowError("debt.amort_years")} />
           <InputField label="I/O Period" tooltip="Interest-only period in months" value={debt.interest_only_months} onChange={(v) => updateDebt({ interest_only_months: v })} suffix="months" placeholder="0" min={0} max={120} />
-          <InputField label="Loan Term" tooltip="Total loan term in months" value={debt.loan_term_months} onChange={(v) => updateDebt({ loan_term_months: v })} suffix="months" placeholder="60" min={1} max={360} />
+          <InputField label="Loan Term" tooltip="Total loan term in months" value={debt.loan_term_months} onChange={(v) => updateDebt({ loan_term_months: v })} onBlur={() => touchField("debt.loan_term_months")} suffix="months" placeholder="60" min={1} max={360} error={getFieldError("debt.loan_term_months")} showError={shouldShowError("debt.loan_term_months")} />
           <InputField label="Origination Fee" tooltip="Origination fee as % of loan" value={debt.origination_fee_pct * 100} onChange={(v) => updateDebt({ origination_fee_pct: v / 100 })} suffix="%" placeholder="1" min={0} max={10} />
         </div>
       </div>

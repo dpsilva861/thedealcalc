@@ -14,6 +14,7 @@ interface InputFieldProps {
   tooltip?: string;
   value: number | string;
   onChange: (value: number) => void;
+  onBlur?: () => void;
   prefix?: string;
   suffix?: string;
   placeholder?: string;
@@ -22,6 +23,8 @@ interface InputFieldProps {
   step?: number;
   disabled?: boolean;
   className?: string;
+  error?: string;
+  showError?: boolean;
 }
 
 export function InputField({
@@ -29,6 +32,7 @@ export function InputField({
   tooltip,
   value,
   onChange,
+  onBlur,
   prefix,
   suffix,
   placeholder,
@@ -37,6 +41,8 @@ export function InputField({
   step = 1,
   disabled,
   className,
+  error,
+  showError = false,
 }: InputFieldProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -79,6 +85,7 @@ export function InputField({
           type="number"
           value={typeof value === "number" ? Math.round(value * 1e10) / 1e10 : value}
           onChange={handleChange}
+          onBlur={onBlur}
           placeholder={placeholder}
           min={min}
           max={max}
@@ -86,7 +93,8 @@ export function InputField({
           disabled={disabled}
           className={cn(
             prefix && "pl-8",
-            suffix && "pr-12"
+            suffix && "pr-12",
+            showError && error && "border-destructive focus-visible:ring-destructive"
           )}
         />
         {suffix && (
@@ -95,6 +103,9 @@ export function InputField({
           </span>
         )}
       </div>
+      {showError && error && (
+        <p className="text-sm text-destructive mt-1">{error}</p>
+      )}
     </div>
   );
 }
