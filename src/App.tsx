@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UnderwritingProvider } from "@/contexts/UnderwritingContext";
 import { BRRRRProvider } from "@/contexts/BRRRRContext";
+import { AdSenseLoader } from "@/components/ads/AdSenseLoader";
 import Index from "./pages/Index";
 import HowItWorks from "./pages/HowItWorks";
 import Underwrite from "./pages/Underwrite";
@@ -36,37 +37,39 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <UnderwritingProvider>
-          <BRRRRProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/underwrite" element={<Underwrite />} />
-              <Route path="/results" element={<Results />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/brrrr" element={<BRRRR />} />
-              <Route path="/brrrr/results" element={<BRRRRResults />} />
-              <Route path="/syndication" element={<Syndication />} />
-              <Route path="/syndication/results" element={<SyndicationResults />} />
-              {/* SEO Landing Pages */}
-              <Route path="/rental-property-calculator" element={<RentalPropertyCalculator />} />
-              <Route path="/brrrr-calculator" element={<BRRRRCalculatorLanding />} />
-              <Route path="/syndication-calculator" element={<SyndicationCalculatorLanding />} />
-              <Route path="/fix-and-flip-calculator" element={<FixAndFlipCalculator />} />
-              <Route path="/cap-rate-calculator" element={<CapRateCalculator />} />
-              <Route path="/cash-on-cash-calculator" element={<CashOnCashCalculator />} />
-              <Route path="/real-estate-investment-calculator" element={<RealEstateInvestmentCalculator />} />
-              <Route path="/disclaimer" element={<Disclaimer />} />
-              <Route path="/cookies" element={<CookiePolicy />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BRRRRProvider>
-        </UnderwritingProvider>
-      </BrowserRouter>
+      <AdSenseLoader>
+        <BrowserRouter>
+          <UnderwritingProvider>
+            <BRRRRProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/underwrite" element={<Underwrite />} />
+                <Route path="/results" element={<Results />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/brrrr" element={<BRRRR />} />
+                <Route path="/brrrr/results" element={<BRRRRResults />} />
+                <Route path="/syndication" element={<Syndication />} />
+                <Route path="/syndication/results" element={<SyndicationResults />} />
+                {/* SEO Landing Pages */}
+                <Route path="/rental-property-calculator" element={<RentalPropertyCalculator />} />
+                <Route path="/brrrr-calculator" element={<BRRRRCalculatorLanding />} />
+                <Route path="/syndication-calculator" element={<SyndicationCalculatorLanding />} />
+                <Route path="/fix-and-flip-calculator" element={<FixAndFlipCalculator />} />
+                <Route path="/cap-rate-calculator" element={<CapRateCalculator />} />
+                <Route path="/cash-on-cash-calculator" element={<CashOnCashCalculator />} />
+                <Route path="/real-estate-investment-calculator" element={<RealEstateInvestmentCalculator />} />
+                <Route path="/disclaimer" element={<Disclaimer />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BRRRRProvider>
+          </UnderwritingProvider>
+        </BrowserRouter>
+      </AdSenseLoader>
     </TooltipProvider>
   </QueryClientProvider>
 );

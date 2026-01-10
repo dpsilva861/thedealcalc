@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { adConfig, AdFormat, AdProvider } from "@/config/ads";
 import { isAdAllowedRoute } from "@/config/adRoutes";
+import { useAdSense } from "@/components/ads/AdSenseLoader";
 import { cn } from "@/lib/utils";
 
 interface AdSlotProps {
@@ -43,6 +44,7 @@ export function AdSlot({
   lazyLoadMargin = "200px",
 }: AdSlotProps) {
   const location = useLocation();
+  const { hasConsent, isLoaded: adSenseLoaded, isCheckingConsent } = useAdSense();
   
   // Check if ads are allowed on this route (AdSense compliance)
   const isContentPage = isAdAllowedRoute(location.pathname);
@@ -109,10 +111,11 @@ export function AdSlot({
     };
   }, [isVisible, lazyLoadMargin]);
 
-  // Initialize ad when visible
+  // Initialize ad when visible and consent granted
   const initializeAd = useCallback(() => {
     // Guard clauses
     if (!isVisible || isInitialized || provider !== "adsense") return;
+    if (!adSenseLoaded || !hasConsent) return; // Wait for consent and script
     if (initializedSlots.has(slotKey)) return;
     if (failedSlots.has(slotKey)) return;
     if (!clientId || !slotId) return;
@@ -151,7 +154,7 @@ export function AdSlot({
     } finally {
       setIsLoading(false);
     }
-  }, [isVisible, isInitialized, provider, clientId, slotId, slotKey]);
+  }, [isVisible, isInitialized, provider, clientId, slotId, slotKey, adSenseLoaded, hasConsent]);
 
   useEffect(() => {
     initializeAd();
@@ -165,10 +168,30 @@ export function AdSlot({
     };
   }, []);
 
-  // Don't render if ads are disabled or route is blocked (calculator flows)
+  // Don't render if ads are disabled, route is blocked, or no consent
   if (!adConfig.enabled || !isContentPage) {
     if (import.meta.env.DEV && !isContentPage) {
       console.info(`[AdSlot] Ads blocked on route: ${location.pathname} (not a content page)`);
+    }
+    return null;
+  }
+
+  // Show loading state while checking consent
+  if (isCheckingConsent) {
+    return (
+      <div
+        className={cn("relative flex flex-col items-center p-4", className)}
+        style={{ minHeight: `${minHeight}px` }}
+      >
+        <div className="animate-pulse bg-muted/30 w-full h-full rounded-lg" />
+      </div>
+    );
+  }
+
+  // Don't render if consent was denied (CMP present but no consent)
+  if (!hasConsent && !adSenseLoaded) {
+    if (import.meta.env.DEV) {
+      console.info(`[AdSlot] Ads blocked: consent not granted`);
     }
     return null;
   }

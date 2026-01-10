@@ -2,7 +2,7 @@
  * Advertisement Components
  *
  * Provides a suite of ad placement components with lazy loading,
- * responsive behavior, and configurable providers (AdSense, placeholder).
+ * responsive behavior, consent management, and configurable providers.
  *
  * @module components/ads
  */
@@ -12,6 +12,9 @@ export { AdSlot } from "./AdSlot";
 export { AdRail } from "./AdRail";
 export { InlineAd } from "./InlineAd";
 export { MobileAd } from "./MobileAd";
+
+// Consent-Gated AdSense Loader
+export { AdSenseLoader, useAdSense, useAdSenseReady } from "./AdSenseLoader";
 
 // Configuration and Utilities
 export { adConfig, shouldShowAds } from "@/config/ads";
