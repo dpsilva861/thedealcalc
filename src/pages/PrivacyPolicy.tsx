@@ -8,8 +8,13 @@ export default function PrivacyPolicy() {
     <Layout>
       <Helmet>
         <title>Privacy Policy | TheDealCalc</title>
-        <meta name="description" content="Privacy policy for TheDealCalc explaining how we handle your data, use cookies, and protect your privacy." />
+        <meta name="description" content="Privacy policy for TheDealCalc explaining how we handle your data, use cookies, and protect your privacy. We never store your deal data." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/privacy" />
+        <meta property="og:title" content="Privacy Policy | TheDealCalc" />
+        <meta property="og:description" content="Learn how TheDealCalc protects your privacy. All calculations run locally—we never see your deal data." />
+        <meta property="og:url" content="https://thedealcalc.com/privacy" />
+        <meta property="og:type" content="website" />
       </Helmet>
 
       <div className="container mx-auto px-4 py-16 max-w-4xl">

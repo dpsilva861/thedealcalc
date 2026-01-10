@@ -8,8 +8,13 @@ export default function TermsOfService() {
     <Layout>
       <Helmet>
         <title>Terms of Service | TheDealCalc</title>
-        <meta name="description" content="Terms of service for using TheDealCalc free real estate investment calculators." />
+        <meta name="description" content="Terms of service for using TheDealCalc free real estate investment calculators. Understand your rights and responsibilities." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/terms" />
+        <meta property="og:title" content="Terms of Service | TheDealCalc" />
+        <meta property="og:description" content="Terms of service for TheDealCalc free real estate calculators." />
+        <meta property="og:url" content="https://thedealcalc.com/terms" />
+        <meta property="og:type" content="website" />
       </Helmet>
 
       <div className="container mx-auto px-4 py-16 max-w-4xl">
