@@ -29,6 +29,7 @@ import Disclaimer from "./pages/Disclaimer";
 import CookiePolicy from "./pages/CookiePolicy";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import AdTechProviders from "./pages/AdTechProviders";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/ad-tech-providers" element={<AdTechProviders />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BRRRRProvider>
