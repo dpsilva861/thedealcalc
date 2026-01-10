@@ -19,6 +19,7 @@ import SyndicationResults from "./pages/SyndicationResults";
 // SEO Landing Pages
 import RentalPropertyCalculator from "./pages/RentalPropertyCalculator";
 import BRRRRCalculatorLanding from "./pages/BRRRRCalculatorLanding";
+import SyndicationCalculatorLanding from "./pages/SyndicationCalculatorLanding";
 import FixAndFlipCalculator from "./pages/FixAndFlipCalculator";
 import CapRateCalculator from "./pages/CapRateCalculator";
 import CashOnCashCalculator from "./pages/CashOnCashCalculator";
@@ -52,6 +53,7 @@ const App = () => (
               {/* SEO Landing Pages */}
               <Route path="/rental-property-calculator" element={<RentalPropertyCalculator />} />
               <Route path="/brrrr-calculator" element={<BRRRRCalculatorLanding />} />
+              <Route path="/syndication-calculator" element={<SyndicationCalculatorLanding />} />
               <Route path="/fix-and-flip-calculator" element={<FixAndFlipCalculator />} />
               <Route path="/cap-rate-calculator" element={<CapRateCalculator />} />
               <Route path="/cash-on-cash-calculator" element={<CashOnCashCalculator />} />
