@@ -1,6 +1,53 @@
-[[plugins]]
-package = "@netlify/plugin-prerender"
+# Build settings
+[build]
+  publish = "dist"
+  command = "npm run build"
 
-[plugins.inputs]
-# Routes to prerender
-routes = ["/", "/how-it-works", "/brrrr-calculator", "/syndication-calculator", "/about", "/contact"]
+# SPA fallback - redirect all routes to index.html for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Prerender plugin for SEO - serves static HTML to bots
+[[plugins]]
+  package = "@netlify/plugin-prerender"
+
+  [plugins.inputs]
+  # Routes to prerender for search engine crawlers
+  routes = [
+    "/",
+    "/how-it-works",
+    "/brrrr-calculator",
+    "/syndication-calculator",
+    "/about",
+    "/contact",
+    "/privacy",
+    "/terms",
+    "/cookie-policy",
+    "/disclaimer"
+  ]
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
