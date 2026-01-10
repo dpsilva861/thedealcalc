@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { COMING_SOON_CALCULATORS } from "@/lib/calculators/registry";
@@ -62,6 +63,17 @@ export default function Index() {
 
   return (
     <Layout>
+      <Helmet>
+        <title>Free Real Estate Investment Calculator | TheDealCalc</title>
+        <meta name="description" content="Analyze rental properties, BRRRR deals, and syndications with our free real estate investment calculator. Professional IRR, cash flow, and cap rate analysis—no signup required." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://thedealcalc.com/" />
+        <meta property="og:title" content="Free Real Estate Investment Calculator | TheDealCalc" />
+        <meta property="og:description" content="Professional real estate underwriting tools—completely free. Analyze deals with IRR, cash-on-cash, and DSCR calculations." />
+        <meta property="og:url" content="https://thedealcalc.com/" />
+        <meta property="og:type" content="website" />
+      </Helmet>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 gradient-warm opacity-50" />
