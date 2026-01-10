@@ -61,6 +61,68 @@ export default function Index() {
     },
   ];
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://thedealcalc.com/#website",
+        "url": "https://thedealcalc.com/",
+        "name": "TheDealCalc",
+        "description": "Free real estate investment calculators for analyzing rental properties, BRRRR deals, and syndications.",
+        "publisher": {
+          "@id": "https://thedealcalc.com/#organization"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://thedealcalc.com/#organization",
+        "name": "TheDealCalc",
+        "url": "https://thedealcalc.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://thedealcalc.com/og-image.png"
+        },
+        "sameAs": []
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://thedealcalc.com/#app",
+        "name": "TheDealCalc Real Estate Calculator",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Professional real estate underwriting calculator with IRR, cash-on-cash, DSCR, and cap rate analysis.",
+        "featureList": [
+          "BRRRR Calculator",
+          "Syndication Calculator",
+          "Rental Property Analysis",
+          "IRR Calculation",
+          "Cash-on-Cash Return",
+          "DSCR Analysis",
+          "PDF/Excel Export"
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://thedealcalc.com/#webpage",
+        "url": "https://thedealcalc.com/",
+        "name": "Free Real Estate Investment Calculator | TheDealCalc",
+        "isPartOf": {
+          "@id": "https://thedealcalc.com/#website"
+        },
+        "about": {
+          "@id": "https://thedealcalc.com/#app"
+        },
+        "description": "Analyze rental properties, BRRRR deals, and syndications with our free real estate investment calculator. Professional IRR, cash flow, and cap rate analysis—no signup required."
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
@@ -72,6 +134,9 @@ export default function Index() {
         <meta property="og:description" content="Professional real estate underwriting tools—completely free. Analyze deals with IRR, cash-on-cash, and DSCR calculations." />
         <meta property="og:url" content="https://thedealcalc.com/" />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLd)}
+        </script>
       </Helmet>
 
       {/* Hero Section */}
