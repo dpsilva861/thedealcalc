@@ -13,6 +13,7 @@ export const SYNDICATION_PRESETS: Record<string, { name: string; description: st
 
 interface SyndicationContextType {
   inputs: SyndicationInputs; results: SyndicationResults | null; currentStep: number; selectedPreset: string | null; validation: ValidationResult; error: string | null; isCalculating: boolean;
+  hasAttemptedRun: boolean; touchedFields: Set<string>;
   setInputs: React.Dispatch<React.SetStateAction<SyndicationInputs>>;
   updateAcquisition: (updates: Partial<SyndicationInputs["acquisition"]>) => void;
   updateDebt: (updates: Partial<SyndicationInputs["debt"]>) => void;
@@ -26,6 +27,8 @@ interface SyndicationContextType {
   loadPresetAndRun: (presetId: string) => SyndicationResults | null;
   runAnalysis: () => void;
   resetInputs: () => void;
+  touchField: (field: string) => void;
+  setHasAttemptedRun: (value: boolean) => void;
 }
 
 const SyndicationContext = createContext<SyndicationContextType | null>(null);
@@ -62,8 +65,18 @@ export function SyndicationProvider({ children }: { children: React.ReactNode })
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [hasAttemptedRun, setHasAttemptedRun] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
   const validation = useMemo(() => validateSyndicationInputs(inputs), [inputs]);
+
+  const touchField = useCallback((field: string) => {
+    setTouchedFields(prev => {
+      const next = new Set(prev);
+      next.add(field);
+      return next;
+    });
+  }, []);
 
   const updateAcquisition = useCallback((updates: Partial<SyndicationInputs["acquisition"]>) => { setInputs(prev => { const next = { ...prev, acquisition: { ...prev.acquisition, ...updates } }; saveInputsToStorage(next); return next; }); setSelectedPreset(null); }, []);
   const updateDebt = useCallback((updates: Partial<SyndicationInputs["debt"]>) => { setInputs(prev => { const next = { ...prev, debt: { ...prev.debt, ...updates } }; saveInputsToStorage(next); return next; }); setSelectedPreset(null); }, []);
@@ -91,9 +104,9 @@ export function SyndicationProvider({ children }: { children: React.ReactNode })
     finally { setIsCalculating(false); }
   }, [inputs, validation]);
 
-  const resetInputs = useCallback(() => { setInputs(DEFAULT_SYNDICATION_INPUTS); setResults(null); setCurrentStep(0); setSelectedPreset(null); setError(null); localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(RESULTS_KEY); localStorage.removeItem("syndication_inputs"); localStorage.removeItem("syndication_results"); localStorage.removeItem("dealcalc:syndication:lastUpdatedAt"); toast.success("Inputs reset"); }, []);
+  const resetInputs = useCallback(() => { setInputs(DEFAULT_SYNDICATION_INPUTS); setResults(null); setCurrentStep(0); setSelectedPreset(null); setError(null); setHasAttemptedRun(false); setTouchedFields(new Set()); localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(RESULTS_KEY); localStorage.removeItem("syndication_inputs"); localStorage.removeItem("syndication_results"); localStorage.removeItem("dealcalc:syndication:lastUpdatedAt"); toast.success("Inputs reset"); }, []);
 
-  return (<SyndicationContext.Provider value={{ inputs, results, currentStep, selectedPreset, validation, error, isCalculating, setInputs, updateAcquisition, updateDebt, updateEquity, updateProforma, updateExit, updateWaterfall, updateHoldPeriod, setCurrentStep, loadPreset, loadPresetAndRun, runAnalysis, resetInputs }}>{children}</SyndicationContext.Provider>);
+  return (<SyndicationContext.Provider value={{ inputs, results, currentStep, selectedPreset, validation, error, isCalculating, hasAttemptedRun, touchedFields, setInputs, updateAcquisition, updateDebt, updateEquity, updateProforma, updateExit, updateWaterfall, updateHoldPeriod, setCurrentStep, loadPreset, loadPresetAndRun, runAnalysis, resetInputs, touchField, setHasAttemptedRun }}>{children}</SyndicationContext.Provider>);
 }
 
 export function useSyndication() { const context = useContext(SyndicationContext); if (!context) throw new Error("useSyndication must be used within SyndicationProvider"); return context; }

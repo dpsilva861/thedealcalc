@@ -2,10 +2,22 @@ import { useBRRRR } from "@/contexts/BRRRRContext";
 import { InputField } from "@/components/underwriting/InputField";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { validateBRRRRInputs } from "@/lib/calculators/brrrr/validation";
+import { useMemo } from "react";
 
 export function BRRRRRentalStep() {
-  const { inputs, updateRentalOperations } = useBRRRR();
+  const { inputs, updateRentalOperations, hasAttemptedRun, touchedFields, touchField } = useBRRRR();
   const { rentalOperations } = inputs;
+
+  const validation = useMemo(() => validateBRRRRInputs(inputs), [inputs]);
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    return validation.errors.find(e => e.field === fieldName)?.message;
+  };
+
+  const shouldShowError = (fieldName: string): boolean => {
+    return hasAttemptedRun || touchedFields.has(fieldName);
+  };
 
   return (
     <div className="space-y-8">
@@ -34,10 +46,13 @@ export function BRRRRRentalStep() {
             tooltip="Expected vacancy as percentage of rent"
             value={rentalOperations.vacancyPct * 100}
             onChange={(v) => updateRentalOperations({ vacancyPct: v / 100 })}
+            onBlur={() => touchField("vacancyPct")}
             suffix="%"
             placeholder="5"
             min={0}
             max={50}
+            error={getFieldError("vacancyPct")}
+            showError={shouldShowError("vacancyPct")}
           />
         </div>
       </div>

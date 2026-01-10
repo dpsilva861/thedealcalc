@@ -2,10 +2,18 @@ import { useSyndication } from "@/contexts/SyndicationContext";
 import { InputField } from "@/components/underwriting/InputField";
 
 export function SyndicationEquityStep() {
-  const { inputs, updateEquity } = useSyndication();
+  const { inputs, updateEquity, hasAttemptedRun, touchedFields, touchField, validation } = useSyndication();
   const { equity } = inputs;
   const lpPct = equity.lp_equity_pct * 100;
   const gpPct = equity.gp_equity_pct * 100;
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    return validation.errors.find(e => e.field === fieldName)?.message;
+  };
+
+  const shouldShowError = (fieldName: string): boolean => {
+    return hasAttemptedRun || touchedFields.has(fieldName);
+  };
 
   return (
     <div className="space-y-6">
@@ -13,8 +21,32 @@ export function SyndicationEquityStep() {
         <h3 className="text-lg font-semibold text-foreground mb-1">Capital Stack (LP/GP Split)</h3>
         <p className="text-sm text-muted-foreground mb-6">Split equity between LP and GP. Must equal 100%.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputField label="LP Equity %" tooltip="Limited Partner equity contribution %" value={lpPct} onChange={(v) => { const lp = v / 100; updateEquity({ lp_equity_pct: lp, gp_equity_pct: 1 - lp }); }} suffix="%" placeholder="90" min={0} max={100} />
-          <InputField label="GP Equity %" tooltip="General Partner equity contribution %" value={gpPct} onChange={(v) => { const gp = v / 100; updateEquity({ gp_equity_pct: gp, lp_equity_pct: 1 - gp }); }} suffix="%" placeholder="10" min={0} max={100} />
+          <InputField 
+            label="LP Equity %" 
+            tooltip="Limited Partner equity contribution %" 
+            value={lpPct} 
+            onChange={(v) => { const lp = v / 100; updateEquity({ lp_equity_pct: lp, gp_equity_pct: 1 - lp }); }} 
+            onBlur={() => touchField("equity.lp_equity_pct")}
+            suffix="%" 
+            placeholder="90" 
+            min={0} 
+            max={100}
+            error={getFieldError("equity.lp_equity_pct")}
+            showError={shouldShowError("equity.lp_equity_pct")}
+          />
+          <InputField 
+            label="GP Equity %" 
+            tooltip="General Partner equity contribution %" 
+            value={gpPct} 
+            onChange={(v) => { const gp = v / 100; updateEquity({ gp_equity_pct: gp, lp_equity_pct: 1 - gp }); }} 
+            onBlur={() => touchField("equity.gp_equity_pct")}
+            suffix="%" 
+            placeholder="10" 
+            min={0} 
+            max={100}
+            error={getFieldError("equity.gp_equity_pct")}
+            showError={shouldShowError("equity.gp_equity_pct")}
+          />
         </div>
         <div className="mt-6">
           <p className="text-sm font-medium text-muted-foreground mb-2">Equity Split</p>

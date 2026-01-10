@@ -27,7 +27,7 @@ function SyndicationContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isDevMode = searchParams.get("dev") === "1";
-  const { currentStep, setCurrentStep, runAnalysis, inputs, validation } = useSyndication();
+  const { currentStep, setCurrentStep, runAnalysis, inputs, validation, setHasAttemptedRun } = useSyndication();
 
   useEffect(() => {
     trackEvent("page_view", { page: "/syndication" });
@@ -44,6 +44,7 @@ function SyndicationContent() {
   };
 
   const handleRunAnalysis = () => {
+    setHasAttemptedRun(true);
     const v = validateSyndicationInputs(inputs);
     if (!v.isValid) {
       v.errors.forEach((err) => toast.error(err.message));

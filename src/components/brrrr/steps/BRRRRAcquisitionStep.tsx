@@ -2,10 +2,22 @@ import { useBRRRR } from "@/contexts/BRRRRContext";
 import { InputField } from "@/components/underwriting/InputField";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { validateBRRRRInputs } from "@/lib/calculators/brrrr/validation";
+import { useMemo } from "react";
 
 export function BRRRRAcquisitionStep() {
-  const { inputs, updateAcquisition, updateBridgeFinancing } = useBRRRR();
+  const { inputs, updateAcquisition, updateBridgeFinancing, hasAttemptedRun, touchedFields, touchField } = useBRRRR();
   const { acquisition, bridgeFinancing } = inputs;
+
+  const validation = useMemo(() => validateBRRRRInputs(inputs), [inputs]);
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    return validation.errors.find(e => e.field === fieldName)?.message;
+  };
+
+  const shouldShowError = (fieldName: string): boolean => {
+    return hasAttemptedRun || touchedFields.has(fieldName);
+  };
 
   return (
     <div className="space-y-8">
@@ -24,8 +36,11 @@ export function BRRRRAcquisitionStep() {
             tooltip="Total purchase price of the property"
             value={acquisition.purchasePrice}
             onChange={(v) => updateAcquisition({ purchasePrice: v })}
+            onBlur={() => touchField("purchasePrice")}
             prefix="$"
             placeholder="200000"
+            error={getFieldError("purchasePrice")}
+            showError={shouldShowError("purchasePrice")}
           />
 
           <div className="space-y-2">
@@ -55,8 +70,11 @@ export function BRRRRAcquisitionStep() {
             tooltip="Total renovation/repair budget"
             value={acquisition.rehabBudget}
             onChange={(v) => updateAcquisition({ rehabBudget: v })}
+            onBlur={() => touchField("rehabBudget")}
             prefix="$"
             placeholder="45000"
+            error={getFieldError("rehabBudget")}
+            showError={shouldShowError("rehabBudget")}
           />
 
           <InputField
@@ -74,10 +92,13 @@ export function BRRRRAcquisitionStep() {
             tooltip="Months until refinance"
             value={acquisition.holdingPeriodMonths}
             onChange={(v) => updateAcquisition({ holdingPeriodMonths: v })}
+            onBlur={() => touchField("holdingPeriodMonths")}
             suffix="months"
             placeholder="4"
             min={1}
             max={36}
+            error={getFieldError("holdingPeriodMonths")}
+            showError={shouldShowError("holdingPeriodMonths")}
           />
         </div>
       </div>

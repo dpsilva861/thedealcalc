@@ -22,6 +22,8 @@ interface BRRRRContextType {
   results: BRRRRResults | null;
   propertyAddress: BRRRRPropertyAddress;
   selectedPreset: string | null;
+  hasAttemptedRun: boolean;
+  touchedFields: Set<string>;
   updateInputs: (updates: Partial<BRRRRInputs>) => void;
   updateAcquisition: (updates: Partial<BRRRRInputs["acquisition"]>) => void;
   updateBridgeFinancing: (updates: Partial<BRRRRInputs["bridgeFinancing"]>) => void;
@@ -33,6 +35,8 @@ interface BRRRRContextType {
   loadPresetAndRun: (presetId: string) => BRRRRResults | null;
   runAnalysis: () => void;
   resetInputs: () => void;
+  touchField: (field: string) => void;
+  setHasAttemptedRun: (value: boolean) => void;
   currentStep: number;
   setCurrentStep: (step: number) => void;
 }
@@ -137,6 +141,16 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [propertyAddress, setPropertyAddress] = useState<BRRRRPropertyAddress>(stored?.address || getDefaultPropertyAddress());
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const [hasAttemptedRun, setHasAttemptedRun] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+
+  const touchField = useCallback((field: string) => {
+    setTouchedFields(prev => {
+      const next = new Set(prev);
+      next.add(field);
+      return next;
+    });
+  }, []);
 
   // Helper to save inputs whenever they change
   const saveInputs = useCallback((newInputs: BRRRRInputs, address: BRRRRPropertyAddress) => {
@@ -305,6 +319,8 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
     setCurrentStep(0);
     setPropertyAddress(defaultAddress);
     setSelectedPreset(null);
+    setHasAttemptedRun(false);
+    setTouchedFields(new Set());
     // Clear all storage keys (new and legacy)
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(RESULTS_KEY);
@@ -320,6 +336,8 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
         results,
         propertyAddress,
         selectedPreset,
+        hasAttemptedRun,
+        touchedFields,
         updateInputs,
         updateAcquisition,
         updateBridgeFinancing,
@@ -331,6 +349,8 @@ export function BRRRRProvider({ children }: { children: React.ReactNode }) {
         loadPresetAndRun,
         runAnalysis,
         resetInputs,
+        touchField,
+        setHasAttemptedRun,
         currentStep,
         setCurrentStep,
       }}
