@@ -15,6 +15,7 @@ export { MobileAd } from "./MobileAd";
 
 // Configuration and Utilities
 export { adConfig, shouldShowAds } from "@/config/ads";
+export { isAdAllowedRoute, CONTENT_PAGES, BLOCKED_ROUTES } from "@/config/adRoutes";
 
 // Types
 export type { AdConfig, AdProvider, AdFormat } from "@/config/ads";
