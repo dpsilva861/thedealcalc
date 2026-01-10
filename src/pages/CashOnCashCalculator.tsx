@@ -55,28 +55,40 @@ const faqs = [
 ];
 
 export default function CashOnCashCalculator() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Cash-on-Cash Calculator", "item": "https://thedealcalc.com/cash-on-cash-calculator" }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(faq => ({
+          "@type": "Question",
+          "name": faq.question,
+          "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
+        }))
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
         <title>Cash-on-Cash Return Calculator (Free) | CoC Analysis — TheDealCalc</title>
         <meta name="description" content="Free cash-on-cash return calculator: analyze your actual return on invested capital. Compare leverage scenarios and optimize your real estate investment." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/cash-on-cash-calculator" />
         <meta property="og:title" content="Cash-on-Cash Return Calculator (Free) | CoC Analysis — TheDealCalc" />
         <meta property="og:description" content="Free cash-on-cash return calculator with leverage analysis. Calculate your actual return on invested capital." />
         <meta property="og:url" content="https://thedealcalc.com/cash-on-cash-calculator" />
+        <meta property="og:type" content="website" />
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": faqs.map(faq => ({
-              "@type": "Question",
-              "name": faq.question,
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": faq.answer
-              }
-            }))
-          })}
+          {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
 

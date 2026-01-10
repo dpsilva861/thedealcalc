@@ -55,28 +55,40 @@ const faqs = [
 ];
 
 export default function RentalPropertyCalculator() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Rental Property Calculator", "item": "https://thedealcalc.com/rental-property-calculator" }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(faq => ({
+          "@type": "Question",
+          "name": faq.question,
+          "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
+        }))
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
         <title>Rental Property Calculator (Free) | Cash Flow, Cap Rate, IRR — TheDealCalc</title>
         <meta name="description" content="Free rental property calculator: analyze cash flow, NOI, cap rate, cash-on-cash return, and IRR. Instant results with 30-year projections. No signup required." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/rental-property-calculator" />
         <meta property="og:title" content="Rental Property Calculator (Free) | Cash Flow, Cap Rate, IRR — TheDealCalc" />
         <meta property="og:description" content="Free rental property calculator with cash flow, NOI, cap rate, cash-on-cash return, and IRR analysis. Export to PDF, CSV, Excel." />
         <meta property="og:url" content="https://thedealcalc.com/rental-property-calculator" />
+        <meta property="og:type" content="website" />
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": faqs.map(faq => ({
-              "@type": "Question",
-              "name": faq.question,
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": faq.answer
-              }
-            }))
-          })}
+          {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
 

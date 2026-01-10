@@ -4,6 +4,25 @@ import { Layout } from "@/components/layout/Layout";
 import { FileText } from "lucide-react";
 
 export default function TermsOfService() {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Terms of Service",
+        "item": "https://thedealcalc.com/terms"
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
@@ -15,6 +34,9 @@ export default function TermsOfService() {
         <meta property="og:description" content="Terms of service for TheDealCalc free real estate calculators." />
         <meta property="og:url" content="https://thedealcalc.com/terms" />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-16 max-w-4xl">

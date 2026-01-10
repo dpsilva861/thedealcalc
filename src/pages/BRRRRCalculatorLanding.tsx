@@ -67,9 +67,28 @@ const faqs = [
 ];
 
 export default function BRRRRCalculatorLanding() {
+  const breadcrumbSchema = {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "BRRRR Calculator",
+        "item": "https://thedealcalc.com/brrrr-calculator"
+      }
+    ]
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
+      breadcrumbSchema,
       {
         "@type": "SoftwareApplication",
         "@id": "https://thedealcalc.com/brrrr-calculator#app",

@@ -3,12 +3,39 @@ import { Layout } from "@/components/layout/Layout";
 import { Cookie } from "lucide-react";
 
 export default function CookiePolicy() {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Cookie Policy",
+        "item": "https://thedealcalc.com/cookies"
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
         <title>Cookie Policy | TheDealCalc</title>
         <meta name="description" content="Cookie policy for TheDealCalc explaining how we use cookies, advertising technologies, and analytics." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/cookies" />
+        <meta property="og:title" content="Cookie Policy | TheDealCalc" />
+        <meta property="og:description" content="Learn how TheDealCalc uses cookies and tracking technologies." />
+        <meta property="og:url" content="https://thedealcalc.com/cookies" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-16 max-w-4xl">

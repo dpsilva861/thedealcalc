@@ -71,15 +71,29 @@ const metrics = [
 ];
 
 export default function RealEstateInvestmentCalculator() {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Investment Calculator", "item": "https://thedealcalc.com/real-estate-investment-calculator" }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
         <title>Real Estate Investment Calculator (Free) | All-in-One Deal Analyzer — TheDealCalc</title>
         <meta name="description" content="Free real estate investment calculators: rental property, BRRRR, fix & flip, cap rate, cash-on-cash. Calculate IRR, NOI, DSCR instantly. No signup required." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/real-estate-investment-calculator" />
         <meta property="og:title" content="Real Estate Investment Calculator (Free) | All-in-One Deal Analyzer — TheDealCalc" />
         <meta property="og:description" content="Complete suite of free real estate investment calculators. Analyze any deal with professional accuracy." />
         <meta property="og:url" content="https://thedealcalc.com/real-estate-investment-calculator" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
       {/* Hero Section */}

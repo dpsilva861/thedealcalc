@@ -54,28 +54,40 @@ const faqs = [
 ];
 
 export default function CapRateCalculator() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Cap Rate Calculator", "item": "https://thedealcalc.com/cap-rate-calculator" }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(faq => ({
+          "@type": "Question",
+          "name": faq.question,
+          "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
+        }))
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
         <title>Cap Rate Calculator (Free) | Capitalization Rate, NOI — TheDealCalc</title>
         <meta name="description" content="Free cap rate calculator: calculate capitalization rate, NOI, and property value. Compare investment properties and assess risk. No signup required." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/cap-rate-calculator" />
         <meta property="og:title" content="Cap Rate Calculator (Free) | Capitalization Rate, NOI — TheDealCalc" />
         <meta property="og:description" content="Free cap rate calculator with NOI, property value, and risk analysis. Export to PDF, CSV, Excel." />
         <meta property="og:url" content="https://thedealcalc.com/cap-rate-calculator" />
+        <meta property="og:type" content="website" />
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": faqs.map(faq => ({
-              "@type": "Question",
-              "name": faq.question,
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": faq.answer
-              }
-            }))
-          })}
+          {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
 

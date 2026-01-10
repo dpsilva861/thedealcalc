@@ -15,6 +15,25 @@ import {
 export default function Contact() {
   const contactEmail = "support@thedealcalc.com";
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Contact",
+        "item": "https://thedealcalc.com/contact"
+      }
+    ]
+  };
+
   return (
     <Layout>
       <Helmet>
@@ -26,6 +45,9 @@ export default function Contact() {
         <meta property="og:description" content="Get in touch with the TheDealCalc team for questions or feedback." />
         <meta property="og:url" content="https://thedealcalc.com/contact" />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-16 max-w-4xl">

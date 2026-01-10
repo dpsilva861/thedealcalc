@@ -69,9 +69,28 @@ const faqs = [
 ];
 
 export default function SyndicationCalculatorLanding() {
+  const breadcrumbSchema = {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://thedealcalc.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Syndication Calculator",
+        "item": "https://thedealcalc.com/syndication-calculator"
+      }
+    ]
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
+      breadcrumbSchema,
       {
         "@type": "SoftwareApplication",
         "@id": "https://thedealcalc.com/syndication-calculator#app",
