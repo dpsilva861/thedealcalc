@@ -93,9 +93,22 @@ export default function PrivacyPolicy() {
                 <h3 className="font-semibold text-foreground mb-2">Advertising Data</h3>
                 <p className="text-muted-foreground leading-relaxed">
                   We use Google AdSense to display advertisements that fund our free service. 
-                  Google may collect data to serve personalized ads. See our{" "}
-                  <Link to="/cookies" className="text-primary hover:underline">Cookie Policy</Link>{" "}
-                  for details on how to opt out.
+                  Google and its ad technology partners may collect data to serve personalized ads 
+                  based on your browsing history and interests. This includes cookies and device identifiers.
+                </p>
+                <p className="text-muted-foreground leading-relaxed mt-2">
+                  <strong>Your choices:</strong> You can opt out of personalized advertising at{" "}
+                  <a 
+                    href="https://www.google.com/settings/ads" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Google Ads Settings
+                  </a>. For a complete list of our advertising partners, see our{" "}
+                  <Link to="/ad-tech-providers" className="text-primary hover:underline">
+                    Ad Technology Providers
+                  </Link> page.
                 </p>
               </div>
             </div>
@@ -127,11 +140,32 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="font-display text-2xl font-semibold text-foreground mb-4">
-              5. Third-Party Services
+              5. Third-Party Advertising & Technology Providers
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              We use the following third-party services:
+              We partner with Google AdSense to serve advertisements. Google and its advertising 
+              partners use cookies and similar technologies to collect information for ad 
+              personalization and measurement purposes.
             </p>
+            <div className="bg-card border border-border rounded-lg p-4 mb-4">
+              <h3 className="font-semibold text-foreground mb-2">How Personalized Advertising Works</h3>
+              <p className="text-muted-foreground text-sm">
+                Google's advertising network may use information about your visits to this site 
+                and other websites to provide advertisements about goods and services that may 
+                interest you. This is commonly referred to as "interest-based" or "personalized" 
+                advertising.
+              </p>
+            </div>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              For a complete list of ad technology providers that may serve ads on this site, 
+              please visit our{" "}
+              <Link to="/ad-tech-providers" className="text-primary hover:underline">
+                Ad Technology Providers
+              </Link>{" "}
+              page. Each provider has their own privacy policy governing how they collect and 
+              use your data.
+            </p>
+            <h3 className="font-semibold text-foreground mb-2">Key Third-Party Services</h3>
             <ul className="list-disc list-inside text-muted-foreground space-y-2">
               <li>
                 <strong>Google Analytics:</strong> For website analytics.{" "}
@@ -153,6 +187,17 @@ export default function PrivacyPolicy() {
                   className="text-primary hover:underline"
                 >
                   How Google Uses Information
+                </a>
+              </li>
+              <li>
+                <strong>Google Funding Choices:</strong> For consent management (EU/EEA/UK/CH users).{" "}
+                <a 
+                  href="https://policies.google.com/privacy" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Privacy Policy
                 </a>
               </li>
             </ul>

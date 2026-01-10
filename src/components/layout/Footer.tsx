@@ -100,6 +100,11 @@ export function Footer() {
                   Disclaimer
                 </Link>
               </li>
+              <li>
+                <Link to="/ad-tech-providers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Ad Technology Providers
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
