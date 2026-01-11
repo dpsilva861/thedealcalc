@@ -15,6 +15,7 @@ import { validateInputs } from "@/lib/validation";
 import { trackEvent } from "@/lib/analytics";
 import { ArrowLeft, ArrowRight, Play, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { useStepScrollToTop } from "@/hooks/useStepScrollToTop";
 
 const STEPS = [
   { label: "Address", shortLabel: "Address", component: AddressStep },
@@ -28,19 +29,22 @@ const STEPS = [
 
 function UnderwriteContent() {
   const navigate = useNavigate();
-  const { currentStep, setCurrentStep, runAnalysis, resetInputs, propertyAddress, inputs } = useUnderwriting();
+  const {
+    currentStep,
+    setCurrentStep,
+    runAnalysis,
+    resetInputs,
+    propertyAddress,
+    inputs,
+  } = useUnderwriting();
+
+  const topRef = useStepScrollToTop(currentStep);
 
   useEffect(() => {
     trackEvent("page_view", { page: "/underwrite" });
   }, []);
 
   const CurrentStepComponent = STEPS[currentStep].component;
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-  };
 
   const handleNext = () => {
     // Validate address step before proceeding
@@ -65,14 +69,12 @@ function UnderwriteContent() {
 
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
-      scrollToTop();
     }
   };
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
-      scrollToTop();
     }
   };
 
@@ -132,6 +134,8 @@ function UnderwriteContent() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-cream-dark overflow-x-hidden">
+      <div ref={topRef} className="h-0" aria-hidden="true" />
+
       {/* Header */}
       <div className="border-b border-border bg-background">
         <div className="container mx-auto px-4 py-6">

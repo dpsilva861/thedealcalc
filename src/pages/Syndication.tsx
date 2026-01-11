@@ -4,7 +4,15 @@ import { Layout } from "@/components/layout/Layout";
 import { SyndicationProvider, useSyndication } from "@/contexts/SyndicationContext";
 import { SyndicationStepIndicator } from "@/components/syndication/SyndicationStepIndicator";
 import { SyndicationPresetSelector } from "@/components/syndication/SyndicationPresetSelector";
-import { SyndicationAcquisitionStep, SyndicationDebtStep, SyndicationEquityStep, SyndicationProformaStep, SyndicationExitStep, SyndicationWaterfallStep, SyndicationReviewStep } from "@/components/syndication/steps";
+import {
+  SyndicationAcquisitionStep,
+  SyndicationDebtStep,
+  SyndicationEquityStep,
+  SyndicationProformaStep,
+  SyndicationExitStep,
+  SyndicationWaterfallStep,
+  SyndicationReviewStep,
+} from "@/components/syndication/steps";
 import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
 import { Button } from "@/components/ui/button";
 import { validateSyndicationInputs } from "@/lib/calculators/syndication/validation";
@@ -12,6 +20,7 @@ import { trackEvent } from "@/lib/analytics";
 import { ArrowLeft, ArrowRight, Play } from "lucide-react";
 import { toast } from "sonner";
 import SyndicationSelfTest from "@/components/syndication/SyndicationSelfTest";
+import { useStepScrollToTop } from "@/hooks/useStepScrollToTop";
 
 const STEPS = [
   { label: "Acquisition", component: SyndicationAcquisitionStep },
@@ -27,31 +36,32 @@ function SyndicationContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isDevMode = searchParams.get("dev") === "1";
-  const { currentStep, setCurrentStep, runAnalysis, inputs, validation, setHasAttemptedRun } = useSyndication();
+  const {
+    currentStep,
+    setCurrentStep,
+    runAnalysis,
+    inputs,
+    validation,
+    setHasAttemptedRun,
+  } = useSyndication();
+
+  const topRef = useStepScrollToTop(currentStep);
 
   useEffect(() => {
     trackEvent("page_view", { page: "/syndication" });
   }, []);
 
   const CurrentStepComponent = STEPS[currentStep].component;
-  
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-  };
 
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
-      scrollToTop();
     }
   };
-  
+
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
-      scrollToTop();
     }
   };
 
@@ -74,6 +84,8 @@ function SyndicationContent() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      <div ref={topRef} className="h-0" aria-hidden="true" />
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
           <CalculatorSelector />
@@ -83,13 +95,17 @@ function SyndicationContent() {
         </div>
         <SyndicationPresetSelector />
       </div>
-      
-      <SyndicationStepIndicator steps={STEPS} currentStep={currentStep} onStepClick={setCurrentStep} />
-      
+
+      <SyndicationStepIndicator
+        steps={STEPS}
+        currentStep={currentStep}
+        onStepClick={setCurrentStep}
+      />
+
       <div className="mt-6">
         <CurrentStepComponent />
       </div>
-      
+
       <div className="flex justify-between mt-6">
         <Button variant="outline" onClick={handleBack} disabled={currentStep === 0}>
           <ArrowLeft className="h-4 w-4 mr-2" />Back
@@ -104,7 +120,7 @@ function SyndicationContent() {
           </Button>
         )}
       </div>
-      
+
       {isDevMode && (
         <div className="mt-8">
           <SyndicationSelfTest />
