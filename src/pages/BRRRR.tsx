@@ -4,13 +4,19 @@ import { Layout } from "@/components/layout/Layout";
 import { useBRRRR } from "@/contexts/BRRRRContext";
 import { BRRRRStepIndicator } from "@/components/brrrr/BRRRRStepIndicator";
 import { BRRRRPresetSelector } from "@/components/brrrr/BRRRRPresetSelector";
-import { BRRRRAcquisitionStep, BRRRRRefinanceStep, BRRRRRentalStep, BRRRRReviewStep } from "@/components/brrrr/steps";
+import {
+  BRRRRAcquisitionStep,
+  BRRRRRefinanceStep,
+  BRRRRRentalStep,
+  BRRRRReviewStep,
+} from "@/components/brrrr/steps";
 import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
 import { Button } from "@/components/ui/button";
 import { validateBRRRRInputs } from "@/lib/calculators/brrrr/validation";
 import { trackEvent } from "@/lib/analytics";
 import { ArrowLeft, ArrowRight, Play } from "lucide-react";
 import { toast } from "sonner";
+import { useStepScrollToTop } from "@/hooks/useStepScrollToTop";
 
 const STEPS = [
   { label: "Acquisition", component: BRRRRAcquisitionStep },
@@ -21,7 +27,10 @@ const STEPS = [
 
 function BRRRRContent() {
   const navigate = useNavigate();
-  const { currentStep, setCurrentStep, runAnalysis, inputs, setHasAttemptedRun } = useBRRRR();
+  const { currentStep, setCurrentStep, runAnalysis, inputs, setHasAttemptedRun } =
+    useBRRRR();
+
+  const topRef = useStepScrollToTop(currentStep);
 
   useEffect(() => {
     trackEvent("page_view", { page: "/brrrr" });
@@ -29,23 +38,15 @@ function BRRRRContent() {
 
   const CurrentStepComponent = STEPS[currentStep].component;
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-  };
-
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
-      scrollToTop();
     }
   };
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
-      scrollToTop();
     }
   };
 
@@ -77,6 +78,8 @@ function BRRRRContent() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div ref={topRef} className="h-0" aria-hidden="true" />
+
       <div className="w-full">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
