@@ -2,19 +2,20 @@
  * AdSense Loader Component
  * 
  * Manages consent-gated loading of the AdSense script.
- * Only loads AdSense after TCF Purpose 1 consent is obtained.
+ * Only loads AdSense after marketing consent is obtained from the CMP.
  * 
- * This component should be rendered once at the app root level.
+ * This component should be rendered once at the app root level,
+ * inside the ConsentProvider.
  */
 
 import { useEffect, useState, createContext, useContext, ReactNode } from "react";
-import { useConsent } from "@/hooks/useConsent";
+import { useConsent } from "@/components/cmp";
 import { adConfig } from "@/config/ads";
 
 interface AdSenseContextValue {
   /** Whether AdSense script has been loaded */
   isLoaded: boolean;
-  /** Whether consent has been granted */
+  /** Whether marketing consent has been granted */
   hasConsent: boolean;
   /** Whether consent check is in progress */
   isCheckingConsent: boolean;
@@ -41,7 +42,7 @@ const ADSENSE_SCRIPT_ID = "google-adsense-script";
 const ADSENSE_SCRIPT_URL = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adConfig.clientId}`;
 
 export function AdSenseLoader({ children }: AdSenseLoaderProps) {
-  const { hasConsent, isLoading: isCheckingConsent, cmpPresent } = useConsent();
+  const { hasMarketing, isLoading: isCheckingConsent } = useConsent();
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -49,21 +50,21 @@ export function AdSenseLoader({ children }: AdSenseLoaderProps) {
     // Don't load if:
     // - Ads disabled in config
     // - Still checking consent
-    // - No consent granted (and CMP is present)
+    // - No marketing consent granted
     // - Already loaded
     if (!adConfig.enabled || isCheckingConsent || isLoaded) {
       return;
     }
 
-    // If CMP present and no consent, don't load
-    if (cmpPresent && !hasConsent) {
+    // If no marketing consent, don't load AdSense
+    if (!hasMarketing) {
       if (import.meta.env.DEV) {
-        console.log("[AdSenseLoader] Consent not granted, skipping AdSense load");
+        console.log("[AdSenseLoader] Marketing consent not granted, skipping AdSense load");
       }
       return;
     }
 
-    // Check if script already exists (e.g., from index.html in dev)
+    // Check if script already exists
     const existingScript = document.getElementById(ADSENSE_SCRIPT_ID);
     if (existingScript) {
       setIsLoaded(true);
@@ -87,7 +88,7 @@ export function AdSenseLoader({ children }: AdSenseLoaderProps) {
       setIsLoaded(true);
       setLoadError(null);
       if (import.meta.env.DEV) {
-        console.log("[AdSenseLoader] AdSense script loaded successfully");
+        console.log("[AdSenseLoader] AdSense script loaded successfully after consent");
       }
     };
 
@@ -99,17 +100,17 @@ export function AdSenseLoader({ children }: AdSenseLoaderProps) {
     document.head.appendChild(script);
 
     if (import.meta.env.DEV) {
-      console.log("[AdSenseLoader] Injecting AdSense script after consent");
+      console.log("[AdSenseLoader] Injecting AdSense script after marketing consent");
     }
 
     return () => {
       // Don't remove on unmount - AdSense doesn't like being removed
     };
-  }, [hasConsent, isCheckingConsent, isLoaded, cmpPresent]);
+  }, [hasMarketing, isCheckingConsent, isLoaded]);
 
   const contextValue: AdSenseContextValue = {
     isLoaded,
-    hasConsent,
+    hasConsent: hasMarketing,
     isCheckingConsent,
     adsEnabled: adConfig.enabled,
   };
@@ -118,13 +119,13 @@ export function AdSenseLoader({ children }: AdSenseLoaderProps) {
   useEffect(() => {
     if (import.meta.env.DEV && !isCheckingConsent) {
       console.log("[AdSenseLoader] State:", {
-        hasConsent,
+        hasMarketing,
         isLoaded,
         adsEnabled: adConfig.enabled,
         loadError,
       });
     }
-  }, [hasConsent, isLoaded, isCheckingConsent, loadError]);
+  }, [hasMarketing, isLoaded, isCheckingConsent, loadError]);
 
   return (
     <AdSenseContext.Provider value={contextValue}>
