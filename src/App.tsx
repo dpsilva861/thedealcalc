@@ -31,6 +31,11 @@ import CookiePolicy from "./pages/CookiePolicy";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import AdTechProviders from "./pages/AdTechProviders";
+// Blog pages
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import AdminBlog from "./pages/AdminBlog";
+import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +73,12 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/ad-tech-providers" element={<AdTechProviders />} />
+                  {/* Blog */}
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  {/* Admin */}
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/admin/blog" element={<AdminBlog />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BRRRRProvider>
