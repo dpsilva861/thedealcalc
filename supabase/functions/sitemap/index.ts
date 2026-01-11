@@ -40,6 +40,7 @@ serve(async (req) => {
     const staticPages = [
       { url: '/', priority: '1.0', changefreq: 'weekly' },
       { url: '/blog', priority: '0.9', changefreq: 'daily' },
+      { url: '/blog/tags', priority: '0.7', changefreq: 'weekly' },
       { url: '/how-it-works', priority: '0.7', changefreq: 'monthly' },
       { url: '/brrrr', priority: '0.8', changefreq: 'weekly' },
       { url: '/syndication', priority: '0.8', changefreq: 'weekly' },
