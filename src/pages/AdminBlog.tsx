@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MarkdownContent } from '@/components/blog/MarkdownContent';
 import { estimateReadingTime } from '@/lib/markdown';
 import { toast } from 'sonner';
-import { Plus, Edit, Eye, Trash2, LogOut, Loader2 } from 'lucide-react';
+import { Plus, Edit, Eye, Trash2, LogOut, Loader2, Upload, X, Image } from 'lucide-react';
 
 interface BlogPost {
   id: string;
@@ -27,6 +27,7 @@ interface BlogPost {
   reading_time_minutes: number | null;
   status: string;
   author_name: string | null;
+  featured_image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +42,7 @@ interface PostForm {
   posted_at: string;
   status: 'draft' | 'published';
   author_name: string;
+  featured_image_url: string;
 }
 
 const emptyForm: PostForm = {
@@ -52,6 +54,7 @@ const emptyForm: PostForm = {
   posted_at: new Date().toISOString().split('T')[0],
   status: 'draft',
   author_name: 'TheDealCalc Team',
+  featured_image_url: '',
 };
 
 export default function AdminBlog() {
@@ -65,6 +68,8 @@ export default function AdminBlog() {
   const [form, setForm] = useState<PostForm>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Check admin status
   useEffect(() => {
@@ -139,6 +144,7 @@ export default function AdminBlog() {
       posted_at: post.posted_at ? new Date(post.posted_at).toISOString().split('T')[0] : '',
       status: post.status as 'draft' | 'published',
       author_name: post.author_name || 'TheDealCalc Team',
+      featured_image_url: post.featured_image_url || '',
     });
     setEditing(true);
     setPreviewMode(false);
@@ -161,6 +167,56 @@ export default function AdminBlog() {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+      const filePath = `featured/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('blog-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('blog-images')
+        .getPublicUrl(filePath);
+
+      setForm({ ...form, featured_image_url: publicUrl });
+      toast.success('Image uploaded');
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      toast.error('Failed to upload image');
+    }
+    setUploading(false);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setForm({ ...form, featured_image_url: '' });
+  };
+
   const handleSave = async () => {
     if (!form.title || !form.slug || !form.body_markdown) {
       toast.error('Title, slug, and content are required');
@@ -181,6 +237,7 @@ export default function AdminBlog() {
         status: form.status,
         author_name: form.author_name || 'TheDealCalc Team',
         reading_time_minutes: estimateReadingTime(form.body_markdown),
+        featured_image_url: form.featured_image_url || null,
       };
 
       const { data, error } = await supabase.functions.invoke('admin-blog', {
@@ -316,6 +373,56 @@ export default function AdminBlog() {
                       </div>
                     </div>
 
+                    {/* Featured Image Upload */}
+                    <div>
+                      <Label>Featured Image</Label>
+                      {form.featured_image_url ? (
+                        <div className="relative mt-2 inline-block">
+                          <img 
+                            src={form.featured_image_url} 
+                            alt="Featured" 
+                            className="h-32 w-auto rounded-lg object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-6 w-6"
+                            onClick={handleRemoveImage}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="mt-2">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            id="featured-image"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploading}
+                          >
+                            {uploading ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4 mr-2" />
+                            )}
+                            {uploading ? 'Uploading...' : 'Upload Image'}
+                          </Button>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Max 5MB. JPG, PNG, WebP supported.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
                     <div>
                       <Label htmlFor="excerpt">Excerpt (optional)</Label>
                       <Textarea
@@ -405,6 +512,13 @@ export default function AdminBlog() {
                           ))}
                         </div>
                       )}
+                      {form.featured_image_url && (
+                        <img 
+                          src={form.featured_image_url} 
+                          alt="Featured" 
+                          className="w-full h-auto rounded-lg mb-6 max-h-96 object-cover"
+                        />
+                      )}
                       <MarkdownContent content={form.body_markdown} />
                     </div>
                   </TabsContent>
@@ -446,16 +560,29 @@ export default function AdminBlog() {
                     <Card key={post.id}>
                       <CardContent className="py-4">
                         <div className="flex items-center justify-between">
-                          <div>
-                            <div className="flex items-center gap-3">
-                              <h3 className="font-semibold">{post.title}</h3>
-                              <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
-                                {post.status}
-                              </Badge>
+                          <div className="flex items-center gap-4">
+                            {post.featured_image_url ? (
+                              <img 
+                                src={post.featured_image_url} 
+                                alt="" 
+                                className="h-12 w-12 rounded object-cover"
+                              />
+                            ) : (
+                              <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
+                                <Image className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-3">
+                                <h3 className="font-semibold">{post.title}</h3>
+                                <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
+                                  {post.status}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                /blog/{post.slug} • {post.posted_at ? new Date(post.posted_at).toLocaleDateString() : 'No date'}
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              /blog/{post.slug} • {post.posted_at ? new Date(post.posted_at).toLocaleDateString() : 'No date'}
-                            </p>
                           </div>
                           <div className="flex items-center gap-2">
                             {post.status === 'published' && (

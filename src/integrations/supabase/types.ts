@@ -47,6 +47,7 @@ export type Database = {
           body_markdown: string
           created_at: string
           excerpt: string | null
+          featured_image_url: string | null
           id: string
           posted_at: string | null
           reading_time_minutes: number | null
@@ -61,6 +62,7 @@ export type Database = {
           body_markdown: string
           created_at?: string
           excerpt?: string | null
+          featured_image_url?: string | null
           id?: string
           posted_at?: string | null
           reading_time_minutes?: number | null
@@ -75,6 +77,7 @@ export type Database = {
           body_markdown?: string
           created_at?: string
           excerpt?: string | null
+          featured_image_url?: string | null
           id?: string
           posted_at?: string | null
           reading_time_minutes?: number | null
