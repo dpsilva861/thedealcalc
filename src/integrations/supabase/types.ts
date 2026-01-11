@@ -41,50 +41,266 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_post_redirects: {
+        Row: {
+          created_at: string
+          id: string
+          new_slug: string
+          old_slug: string
+          post_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_slug: string
+          old_slug: string
+          post_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_slug?: string
+          old_slug?: string
+          post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_redirects_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_post_revisions: {
+        Row: {
+          body_markdown: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          post_id: string
+          title: string
+          updated_by: string | null
+        }
+        Insert: {
+          body_markdown: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          post_id: string
+          title: string
+          updated_by?: string | null
+        }
+        Update: {
+          body_markdown?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          post_id?: string
+          title?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_revisions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_post_views: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          view_count: number | null
+          view_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          view_count?: number | null
+          view_date?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          view_count?: number | null
+          view_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           author_name: string | null
           body_markdown: string
+          canonical_url: string | null
+          category_id: string | null
           created_at: string
+          difficulty: string | null
           excerpt: string | null
+          featured: boolean | null
           featured_image_url: string | null
           id: string
+          og_image_url: string | null
           posted_at: string | null
+          property_type: string | null
           reading_time_minutes: number | null
+          scheduled_at: string | null
+          search_vector: unknown
+          seo_description: string | null
+          seo_title: string | null
+          series_id: string | null
+          series_order: number | null
           slug: string
           status: string
           tags: string[] | null
           title: string
           updated_at: string
+          view_count_30d: number | null
+          view_count_total: number | null
         }
         Insert: {
           author_name?: string | null
           body_markdown: string
+          canonical_url?: string | null
+          category_id?: string | null
           created_at?: string
+          difficulty?: string | null
           excerpt?: string | null
+          featured?: boolean | null
           featured_image_url?: string | null
           id?: string
+          og_image_url?: string | null
           posted_at?: string | null
+          property_type?: string | null
           reading_time_minutes?: number | null
+          scheduled_at?: string | null
+          search_vector?: unknown
+          seo_description?: string | null
+          seo_title?: string | null
+          series_id?: string | null
+          series_order?: number | null
           slug: string
           status?: string
           tags?: string[] | null
           title: string
           updated_at?: string
+          view_count_30d?: number | null
+          view_count_total?: number | null
         }
         Update: {
           author_name?: string | null
           body_markdown?: string
+          canonical_url?: string | null
+          category_id?: string | null
           created_at?: string
+          difficulty?: string | null
           excerpt?: string | null
+          featured?: boolean | null
           featured_image_url?: string | null
           id?: string
+          og_image_url?: string | null
           posted_at?: string | null
+          property_type?: string | null
           reading_time_minutes?: number | null
+          scheduled_at?: string | null
+          search_vector?: unknown
+          seo_description?: string | null
+          seo_title?: string | null
+          series_id?: string | null
+          series_order?: number | null
           slug?: string
           status?: string
           tags?: string[] | null
           title?: string
+          updated_at?: string
+          view_count_30d?: number | null
+          view_count_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_posts_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "blog_series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_series: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          order_index: number | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          order_index?: number | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          order_index?: number | null
+          slug?: string
           updated_at?: string
         }
         Relationships: []
@@ -331,6 +547,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       zip_codes: {
         Row: {
           analysis_count: number
@@ -366,10 +603,70 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_related_posts: {
+        Args: { limit_count?: number; post_id: string }
+        Returns: {
+          excerpt: string
+          featured_image_url: string
+          id: string
+          posted_at: string
+          relevance_score: number
+          slug: string
+          title: string
+        }[]
+      }
+      get_series_posts: {
+        Args: { series_id_param: string }
+        Returns: {
+          id: string
+          posted_at: string
+          series_order: number
+          slug: string
+          title: string
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      increment_blog_view: { Args: { post_slug: string }; Returns: undefined }
       increment_zip_count: { Args: { p_zip_code: string }; Returns: undefined }
+      search_blog_posts: {
+        Args: {
+          category_slug?: string
+          difficulty_filter?: string
+          page_num?: number
+          page_size?: number
+          property_type_filter?: string
+          search_query?: string
+          series_slug?: string
+          tag_filter?: string
+        }
+        Returns: {
+          category_name: string
+          difficulty: string
+          excerpt: string
+          featured: boolean
+          featured_image_url: string
+          id: string
+          posted_at: string
+          property_type: string
+          reading_time_minutes: number
+          series_name: string
+          slug: string
+          tags: string[]
+          title: string
+          total_count: number
+          view_count_total: number
+        }[]
+      }
+      update_30d_view_counts: { Args: never; Returns: undefined }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "editor" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -496,6 +793,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "editor", "user"],
+    },
   },
 } as const

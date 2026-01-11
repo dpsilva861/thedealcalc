@@ -34,6 +34,8 @@ import AdTechProviders from "./pages/AdTechProviders";
 // Blog pages
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import BlogCategory from "./pages/BlogCategory";
+import BlogSeries from "./pages/BlogSeries";
 import AdminBlog from "./pages/AdminBlog";
 import AdminLogin from "./pages/AdminLogin";
 
@@ -75,6 +77,8 @@ const App = () => (
                   <Route path="/ad-tech-providers" element={<AdTechProviders />} />
                   {/* Blog */}
                   <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/category/:slug" element={<BlogCategory />} />
+                  <Route path="/blog/series/:slug" element={<BlogSeries />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   {/* Admin */}
                   <Route path="/admin/login" element={<AdminLogin />} />
