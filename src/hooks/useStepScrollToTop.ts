@@ -56,6 +56,7 @@ export function useStepScrollToTop(step: unknown) {
     }
     hasRunRef.current = true;
 
+    // Blur immediately to prevent browser from keeping clicked button in view.
     (document.activeElement as HTMLElement | null)?.blur?.();
 
     const scrollNow = () => {
@@ -68,11 +69,10 @@ export function useStepScrollToTop(step: unknown) {
       // Prefer anchor scrolling (works inside scroll containers).
       if (anchor) {
         anchor.scrollIntoView({ block: "start", behavior: "auto" });
-      } else {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       }
 
-      // Hard fallback for iOS/scroll restoration weirdness.
+      // Hard fallbacks for iOS/scroll restoration weirdness.
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       const se = document.scrollingElement as HTMLElement | null;
       if (se) se.scrollTop = 0;
       document.documentElement.scrollTop = 0;
@@ -82,15 +82,26 @@ export function useStepScrollToTop(step: unknown) {
       if (scrollParent) scrollParent.scrollTop = 0;
     };
 
-    let timeoutId: number | undefined;
+    // Immediate attempt (may be overridden by browser scroll restoration).
+    scrollNow();
+
+    // Multiple delayed ticks to defeat scroll restoration on iOS Safari + Chrome.
+    let t1: number | undefined;
+    let t2: number | undefined;
+    let t3: number | undefined;
+
     const rafId = requestAnimationFrame(() => {
       scrollNow();
-      timeoutId = window.setTimeout(scrollNow, 50);
+      t1 = window.setTimeout(scrollNow, 50);
+      t2 = window.setTimeout(scrollNow, 150);
+      t3 = window.setTimeout(scrollNow, 300);
     });
 
     return () => {
       cancelAnimationFrame(rafId);
-      if (timeoutId) window.clearTimeout(timeoutId);
+      if (t1) window.clearTimeout(t1);
+      if (t2) window.clearTimeout(t2);
+      if (t3) window.clearTimeout(t3);
     };
   }, [step]);
 
