@@ -312,7 +312,7 @@ export default function BlogPost() {
                     <Badge variant="outline" className="capitalize">{post.difficulty}</Badge>
                   )}
                   {post.tags && post.tags.map((tag) => (
-                    <Link key={tag} to={`/blog?tag=${encodeURIComponent(tag)}`}>
+                    <Link key={tag} to={`/blog/tag/${encodeURIComponent(tag)}`}>
                       <Badge variant="secondary">{tag}</Badge>
                     </Link>
                   ))}

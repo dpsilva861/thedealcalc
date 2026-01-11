@@ -1,8 +1,9 @@
+import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, X } from 'lucide-react';
+import { Search, X, Tag } from 'lucide-react';
 
 interface BlogFiltersProps {
   searchQuery: string;
@@ -96,9 +97,9 @@ export function BlogFilters({
         )}
       </div>
 
-      {/* Tag chips */}
+      {/* Tag chips with "Browse all" link */}
       {allTags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           {allTags.slice(0, 10).map((tag) => (
             <Badge
               key={tag}
@@ -109,6 +110,13 @@ export function BlogFilters({
               {tag}
             </Badge>
           ))}
+          <Link 
+            to="/blog/tags" 
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Tag className="h-3 w-3" />
+            Browse all tags
+          </Link>
         </div>
       )}
     </div>
