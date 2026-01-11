@@ -18,6 +18,7 @@ interface BlogPost {
   tags: string[] | null;
   reading_time_minutes: number | null;
   author_name: string | null;
+  featured_image_url: string | null;
 }
 
 export default function BlogPost() {
@@ -106,6 +107,9 @@ export default function BlogPost() {
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.excerpt || ''} />
         <meta property="og:type" content="article" />
+        {post.featured_image_url && (
+          <meta property="og:image" content={post.featured_image_url} />
+        )}
         {post.posted_at && (
           <meta property="article:published_time" content={new Date(post.posted_at).toISOString()} />
         )}
@@ -149,6 +153,14 @@ export default function BlogPost() {
                   </Badge>
                 ))}
               </div>
+            )}
+
+            {post.featured_image_url && (
+              <img 
+                src={post.featured_image_url} 
+                alt={post.title}
+                className="w-full h-auto rounded-lg mb-8 max-h-96 object-cover"
+              />
             )}
 
             <div className="border-t pt-8">

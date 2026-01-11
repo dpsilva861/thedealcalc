@@ -88,6 +88,7 @@ serve(async (req) => {
             status: postData.status,
             author_name: postData.author_name,
             reading_time_minutes: postData.reading_time_minutes,
+            featured_image_url: postData.featured_image_url,
           })
           .select()
           .single();
@@ -115,6 +116,7 @@ serve(async (req) => {
             status: postData.status,
             author_name: postData.author_name,
             reading_time_minutes: postData.reading_time_minutes,
+            featured_image_url: postData.featured_image_url,
             updated_at: new Date().toISOString(),
           })
           .eq('id', id)

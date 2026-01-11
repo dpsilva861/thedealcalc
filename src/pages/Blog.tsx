@@ -15,6 +15,7 @@ interface BlogPost {
   posted_at: string | null;
   tags: string[] | null;
   reading_time_minutes: number | null;
+  featured_image_url: string | null;
 }
 
 export default function Blog() {
@@ -26,7 +27,7 @@ export default function Blog() {
     async function fetchPosts() {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('id, slug, title, excerpt, posted_at, tags, reading_time_minutes')
+        .select('id, slug, title, excerpt, posted_at, tags, reading_time_minutes, featured_image_url')
         .eq('status', 'published')
         .order('posted_at', { ascending: false });
 
@@ -99,6 +100,7 @@ export default function Blog() {
                   postedAt={post.posted_at}
                   tags={post.tags}
                   readingTimeMinutes={post.reading_time_minutes}
+                  featuredImageUrl={post.featured_image_url}
                 />
               ))}
             </div>
