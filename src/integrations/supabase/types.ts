@@ -180,6 +180,7 @@ export type Database = {
           difficulty: string | null
           excerpt: string | null
           featured: boolean | null
+          featured_image_alt: string | null
           featured_image_url: string | null
           id: string
           og_image_url: string | null
@@ -209,6 +210,7 @@ export type Database = {
           difficulty?: string | null
           excerpt?: string | null
           featured?: boolean | null
+          featured_image_alt?: string | null
           featured_image_url?: string | null
           id?: string
           og_image_url?: string | null
@@ -238,6 +240,7 @@ export type Database = {
           difficulty?: string | null
           excerpt?: string | null
           featured?: boolean | null
+          featured_image_alt?: string | null
           featured_image_url?: string | null
           id?: string
           og_image_url?: string | null
@@ -603,6 +606,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_blog_tag_counts: {
+        Args: never
+        Returns: {
+          post_count: number
+          tag: string
+        }[]
+      }
+      get_category_post_counts: {
+        Args: never
+        Returns: {
+          category_id: string
+          post_count: number
+        }[]
+      }
+      get_posts_by_tag: {
+        Args: { page_num?: number; page_size?: number; tag_filter: string }
+        Returns: {
+          excerpt: string
+          featured_image_alt: string
+          featured_image_url: string
+          id: string
+          posted_at: string
+          reading_time_minutes: number
+          slug: string
+          tags: string[]
+          title: string
+          total_count: number
+        }[]
+      }
       get_related_posts: {
         Args: { limit_count?: number; post_id: string }
         Returns: {
@@ -613,6 +645,13 @@ export type Database = {
           relevance_score: number
           slug: string
           title: string
+        }[]
+      }
+      get_series_post_counts: {
+        Args: never
+        Returns: {
+          post_count: number
+          series_id: string
         }[]
       }
       get_series_posts: {
@@ -650,6 +689,7 @@ export type Database = {
           difficulty: string
           excerpt: string
           featured: boolean
+          featured_image_alt: string
           featured_image_url: string
           id: string
           posted_at: string

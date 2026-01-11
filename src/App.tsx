@@ -36,7 +36,10 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import BlogCategory from "./pages/BlogCategory";
 import BlogSeries from "./pages/BlogSeries";
+import BlogTags from "./pages/BlogTags";
+import BlogTag from "./pages/BlogTag";
 import AdminBlog from "./pages/AdminBlog";
+import AdminTaxonomy from "./pages/AdminTaxonomy";
 import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
@@ -79,10 +82,13 @@ const App = () => (
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/blog/category/:slug" element={<BlogCategory />} />
                   <Route path="/blog/series/:slug" element={<BlogSeries />} />
+                  <Route path="/blog/tags" element={<BlogTags />} />
+                  <Route path="/blog/tag/:tag" element={<BlogTag />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   {/* Admin */}
                   <Route path="/admin/login" element={<AdminLogin />} />
                   <Route path="/admin/blog" element={<AdminBlog />} />
+                  <Route path="/admin/blog/taxonomy" element={<AdminTaxonomy />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BRRRRProvider>
