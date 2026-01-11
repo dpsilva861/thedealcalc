@@ -134,7 +134,7 @@ function UnderwriteContent() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-cream-dark overflow-x-hidden">
-      <div ref={topRef} className="h-0" aria-hidden="true" />
+      <div ref={topRef} className="h-0" tabIndex={-1} aria-hidden="true" />
 
       {/* Header */}
       <div className="border-b border-border bg-background">
