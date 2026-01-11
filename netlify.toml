@@ -10,6 +10,13 @@
   status = 301
   force = true
 
+# Dynamic sitemap from edge function
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "https://yneaxuokgfqyoomycjam.supabase.co/functions/v1/sitemap"
+  status = 200
+  force = true
+
 # SPA fallback - redirect all routes to index.html for client-side routing
 [[redirects]]
   from = "/*"

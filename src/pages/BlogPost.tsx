@@ -211,7 +211,7 @@ export default function BlogPost() {
   const pageTitle = post.seo_title || post.title;
   const pageDescription = post.seo_description || post.excerpt || `Read ${post.title} on TheDealCalc Blog`;
   const ogImage = post.og_image_url || post.featured_image_url;
-  const canonicalUrl = post.canonical_url || `${window.location.origin}/blog/${post.slug}`;
+  const canonicalUrl = post.canonical_url || `https://thedealcalc.com/blog/${post.slug}`;
 
   // JSON-LD structured data
   const jsonLd = {

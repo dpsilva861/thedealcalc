@@ -11,7 +11,8 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const siteUrl = Deno.env.get('SITE_URL') || url.origin;
+    // Always use canonical domain - ignore origin from request
+    const siteUrl = 'https://thedealcalc.com';
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -36,28 +37,42 @@ serve(async (req) => {
 
     const now = new Date().toISOString();
 
-    // Static pages
+    // Static pages - NO trailing slashes except homepage
     const staticPages = [
-      { url: '/', priority: '1.0', changefreq: 'weekly' },
+      { url: '', priority: '1.0', changefreq: 'weekly' }, // Homepage gets trailing slash via siteUrl + /
       { url: '/blog', priority: '0.9', changefreq: 'daily' },
       { url: '/blog/tags', priority: '0.7', changefreq: 'weekly' },
       { url: '/how-it-works', priority: '0.7', changefreq: 'monthly' },
       { url: '/brrrr', priority: '0.8', changefreq: 'weekly' },
+      { url: '/brrrr-calculator', priority: '0.8', changefreq: 'weekly' },
       { url: '/syndication', priority: '0.8', changefreq: 'weekly' },
+      { url: '/syndication-calculator', priority: '0.8', changefreq: 'weekly' },
       { url: '/underwrite', priority: '0.8', changefreq: 'weekly' },
+      { url: '/rental-property-calculator', priority: '0.8', changefreq: 'weekly' },
+      { url: '/fix-and-flip-calculator', priority: '0.8', changefreq: 'weekly' },
+      { url: '/cap-rate-calculator', priority: '0.8', changefreq: 'weekly' },
+      { url: '/cash-on-cash-calculator', priority: '0.8', changefreq: 'weekly' },
+      { url: '/real-estate-investment-calculator', priority: '0.8', changefreq: 'weekly' },
       { url: '/about', priority: '0.5', changefreq: 'monthly' },
       { url: '/contact', priority: '0.5', changefreq: 'monthly' },
       { url: '/privacy', priority: '0.3', changefreq: 'yearly' },
       { url: '/terms', priority: '0.3', changefreq: 'yearly' },
+      { url: '/cookies', priority: '0.3', changefreq: 'yearly' },
+      { url: '/disclaimer', priority: '0.3', changefreq: 'yearly' },
+      { url: '/ad-tech-providers', priority: '0.3', changefreq: 'yearly' },
     ];
 
-    let urls = staticPages.map(page => `
+    // Homepage special case: add trailing slash
+    let urls = staticPages.map(page => {
+      const locUrl = page.url === '' ? `${siteUrl}/` : `${siteUrl}${page.url}`;
+      return `
   <url>
-    <loc>${siteUrl}${page.url}</loc>
+    <loc>${locUrl}</loc>
     <lastmod>${now}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
-  </url>`).join('');
+  </url>`;
+    }).join('');
 
     // Blog posts
     (posts || []).forEach(post => {
