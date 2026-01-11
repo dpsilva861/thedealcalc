@@ -40,31 +40,42 @@
       ALTERNATIVE: Use a Google-certified TCF CMP like Cookiebot or Quantcast
       ==========================================================================
     -->
-    <!-- [PASTE GOOGLE FUNDING CHOICES SCRIPT HERE] -->
-    
-    <!-- Google AdSense Sitewide Tag (pub-6329732910496735) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6329732910496735"
-         crossorigin="anonymous"></script>
-    
-    <!-- Google Analytics (respects consent mode if configured) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-B1E86XNQCD"></script>
+    <!--
+      ==========================================================================
+      GOOGLE CONSENT MODE v2 DEFAULTS (MUST BE FIRST)
+      ==========================================================================
+      Set all consent signals to DENIED by default.
+      These will be updated by the CMP when user grants consent.
+    -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      // Enable consent mode for GDPR compliance
+      
+      // Set consent defaults BEFORE loading any Google tags
       gtag('consent', 'default', {
         'ad_storage': 'denied',
-        'ad_user_data': 'denied',
+        'ad_user_data': 'denied', 
         'ad_personalization': 'denied',
-        'analytics_storage': 'granted'
+        'analytics_storage': 'denied',
+        'wait_for_update': 500
       });
-      gtag('config', 'G-B1E86XNQCD');
+    </script>
+    
+    <!-- Google Analytics 4 (respects Consent Mode - loads but doesn't collect until consent) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-B1E86XNQCD"></script>
+    <script>
+      gtag('js', new Date());
+      gtag('config', 'G-B1E86XNQCD', {
+        'anonymize_ip': true
+      });
     </script>
     
     <!--
-      NOTE: AdSense script is now loaded dynamically via AdSenseLoader.tsx
-      AFTER consent is obtained. This ensures TCF Purpose 1 compliance.
+      ==========================================================================
+      ADSENSE SCRIPT - LOADED DYNAMICALLY
+      ==========================================================================
+      AdSense is loaded via AdSenseLoader.tsx ONLY after marketing consent.
+      This ensures TCF Purpose 1 compliance.
       DO NOT add static AdSense script here.
     -->
     

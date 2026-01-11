@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { adConfig, AdFormat, AdProvider } from "@/config/ads";
 import { isAdAllowedRoute } from "@/config/adRoutes";
 import { useAdSense } from "@/components/ads/AdSenseLoader";
+import { useConsentGate } from "@/components/cmp";
 import { cn } from "@/lib/utils";
 
 interface AdSlotProps {

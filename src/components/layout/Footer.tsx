@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
-import { Calculator } from "lucide-react";
+import { Calculator, Settings } from "lucide-react";
+import { useConsent } from "@/components/cmp";
 
 export function Footer() {
+  const { openPreferences } = useConsent();
   return (
     <footer className="border-t border-border bg-cream-dark">
       <div className="container mx-auto px-4 py-12">
@@ -113,9 +115,19 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} TheDealCalc. All rights reserved.
           </p>
-          <p className="text-sm text-muted-foreground">
-            Your data stays in your browser. We never store your deal calculations.
-          </p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={openPreferences}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              aria-label="Change privacy settings"
+            >
+              <Settings className="w-3 h-3" />
+              Privacy Settings
+            </button>
+            <p className="text-sm text-muted-foreground">
+              Your data stays in your browser.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
