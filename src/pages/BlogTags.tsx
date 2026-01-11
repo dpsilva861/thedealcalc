@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
+import { BlogBreadcrumb, BLOG_BREADCRUMBS } from '@/components/blog/BlogBreadcrumb';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Search, Tag } from 'lucide-react';
@@ -46,15 +47,28 @@ export default function BlogTags() {
 
   const totalPosts = tags.reduce((sum, t) => sum + Number(t.post_count), 0);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Blog Tags",
+    "description": "Browse all blog topics and tags on TheDealCalc",
+    "url": "https://thedealcalc.com/blog/tags",
+  };
+
   return (
     <Layout>
       <Helmet>
         <title>Blog Tags | TheDealCalc</title>
         <meta name="description" content="Browse all blog topics and tags on TheDealCalc. Find articles on real estate investing, BRRRR, syndication, analysis, and more." />
         <link rel="canonical" href="https://thedealcalc.com/blog/tags" />
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
       <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <BlogBreadcrumb 
+          items={[BLOG_BREADCRUMBS.home, BLOG_BREADCRUMBS.blog, BLOG_BREADCRUMBS.tags]} 
+          includeJsonLd={false} 
+        />
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
             <Tag className="h-6 w-6 text-primary" />
@@ -106,16 +120,6 @@ export default function BlogTags() {
             ))}
           </div>
         )}
-
-        {/* Back link */}
-        <div className="mt-12 pt-8 border-t">
-          <Link 
-            to="/blog" 
-            className="text-primary hover:underline"
-          >
-            ← Back to Blog
-          </Link>
-        </div>
       </div>
     </Layout>
   );

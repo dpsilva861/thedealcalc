@@ -5,7 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { BlogCard } from '@/components/blog/BlogCard';
 import { BlogPagination } from '@/components/blog/BlogPagination';
-import { Loader2, Tag, ArrowLeft } from 'lucide-react';
+import { BlogBreadcrumb, BLOG_BREADCRUMBS } from '@/components/blog/BlogBreadcrumb';
+import { Loader2, Tag } from 'lucide-react';
 
 interface BlogPost {
   id: string;
@@ -80,6 +81,13 @@ export default function BlogTag() {
     }
   };
 
+  const breadcrumbItems = [
+    BLOG_BREADCRUMBS.home,
+    BLOG_BREADCRUMBS.blog,
+    BLOG_BREADCRUMBS.tags,
+    { label: decodedTag }
+  ];
+
   return (
     <Layout>
       <Helmet>
@@ -93,15 +101,10 @@ export default function BlogTag() {
       </Helmet>
 
       <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <BlogBreadcrumb items={breadcrumbItems} includeJsonLd={false} />
+        
         {/* Header */}
         <div className="mb-8">
-          <Link 
-            to="/blog/tags" 
-            className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary mb-4"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            All Tags
-          </Link>
           <div className="flex items-center gap-3">
             <Tag className="h-8 w-8 text-primary" />
             <div>
@@ -153,16 +156,6 @@ export default function BlogTag() {
             )}
           </>
         )}
-
-        {/* Back links */}
-        <div className="mt-12 pt-8 border-t flex gap-4">
-          <Link to="/blog/tags" className="text-primary hover:underline">
-            ← All Tags
-          </Link>
-          <Link to="/blog" className="text-primary hover:underline">
-            ← Back to Blog
-          </Link>
-        </div>
       </div>
     </Layout>
   );
