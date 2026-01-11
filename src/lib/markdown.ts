@@ -1,5 +1,5 @@
-// Simple markdown to HTML converter for blog posts
-// Handles: headings, bold, italic, links, lists, code blocks, blockquotes, tables
+// Enhanced markdown to HTML converter for blog posts
+// Handles: headings with IDs, bold, italic, links, lists, code blocks, blockquotes, tables
 
 export function markdownToHtml(markdown: string): string {
   if (!markdown) return '';
@@ -47,13 +47,24 @@ export function markdownToHtml(markdown: string): string {
   // Blockquotes
   html = html.replace(/^> (.+)$/gm, '<blockquote class="border-l-4 border-primary pl-4 italic my-4">$1</blockquote>');
   
-  // Headers
-  html = html.replace(/^###### (.+)$/gm, '<h6 class="text-base font-semibold mt-6 mb-2">$1</h6>');
-  html = html.replace(/^##### (.+)$/gm, '<h5 class="text-lg font-semibold mt-6 mb-2">$1</h5>');
-  html = html.replace(/^#### (.+)$/gm, '<h4 class="text-xl font-semibold mt-6 mb-3">$1</h4>');
-  html = html.replace(/^### (.+)$/gm, '<h3 class="text-2xl font-semibold mt-8 mb-3">$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2 class="text-3xl font-bold mt-8 mb-4">$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1 class="text-4xl font-bold mt-8 mb-4">$1</h1>');
+  // Headers with IDs for TOC linking
+  const generateId = (text: string) => text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-');
+  
+  html = html.replace(/^###### (.+)$/gm, (_, text) => 
+    `<h6 id="${generateId(text)}" class="text-base font-semibold mt-6 mb-2 scroll-mt-20">${text}</h6>`);
+  html = html.replace(/^##### (.+)$/gm, (_, text) => 
+    `<h5 id="${generateId(text)}" class="text-lg font-semibold mt-6 mb-2 scroll-mt-20">${text}</h5>`);
+  html = html.replace(/^#### (.+)$/gm, (_, text) => 
+    `<h4 id="${generateId(text)}" class="text-xl font-semibold mt-6 mb-3 scroll-mt-20">${text}</h4>`);
+  html = html.replace(/^### (.+)$/gm, (_, text) => 
+    `<h3 id="${generateId(text)}" class="text-2xl font-semibold mt-8 mb-3 scroll-mt-20">${text}</h3>`);
+  html = html.replace(/^## (.+)$/gm, (_, text) => 
+    `<h2 id="${generateId(text)}" class="text-3xl font-bold mt-8 mb-4 scroll-mt-20">${text}</h2>`);
+  html = html.replace(/^# (.+)$/gm, (_, text) => 
+    `<h1 id="${generateId(text)}" class="text-4xl font-bold mt-8 mb-4 scroll-mt-20">${text}</h1>`);
   
   // Bold and italic
   html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');

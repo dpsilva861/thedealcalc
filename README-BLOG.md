@@ -1,94 +1,79 @@
 # TheDealCalc Blog System
 
-A simple blog system for TheDealCalc.com with admin posting capabilities.
+A comprehensive blog system with search, categories, series, view tracking, and SEO optimization.
 
 ## Features
 
-- **Public Blog**: `/blog` lists posts, `/blog/[slug]` shows individual posts
-- **Admin Panel**: `/admin/blog` for creating, editing, and publishing posts
-- **Markdown Support**: Write posts in Markdown with live preview
-- **RSS Feed**: Available at `/rss.xml`
-- **SEO Ready**: Proper meta tags, Open Graph support
+- **Full-text search** with Postgres tsvector
+- **Categories & Series** for content organization
+- **Featured posts** hero section
+- **Reading progress** bar
+- **Table of contents** with scrollspy
+- **Related posts** via tag/category similarity
+- **View tracking** with rate limiting
+- **JSON-LD** structured data
+- **RSS feed** via edge function
+- **Sitemap** via edge function
 
 ## Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `ADMIN_EMAILS` | Comma-separated list of admin email addresses | Yes |
+| `ADMIN_EMAILS` | Comma-separated admin emails | Yes |
+| `SITE_URL` | Public site URL for RSS/sitemap | Recommended |
 
-### Setting ADMIN_EMAILS
+## Database Tables
 
-In the Lovable Cloud secrets, set `ADMIN_EMAILS` to a comma-separated list:
+- `blog_posts` - Main posts with extended fields
+- `blog_categories` - Post categories
+- `blog_series` - Multi-part series
+- `blog_post_redirects` - Slug redirects
+- `blog_post_revisions` - Content history
+- `blog_post_views` - Daily view counts
+- `user_roles` - Secure role management
 
-```
-admin@example.com,editor@example.com
-```
+## Admin Workflow
 
-## How to Post
+1. Go to `/admin/login` and sign in
+2. Navigate to `/admin/blog`
+3. Create/edit posts with:
+   - Title, slug, excerpt
+   - Markdown content
+   - Featured image upload
+   - Category, series, tags
+   - Difficulty level
+   - SEO fields
+   - Status (draft/published)
 
-1. **Create an Admin User**: 
-   - Go to your Lovable Cloud backend
-   - Create a user with email/password authentication
-   - Ensure the email is in `ADMIN_EMAILS`
+## Public Routes
 
-2. **Access Admin Panel**:
-   - Navigate to `/admin/login`
-   - Sign in with your admin credentials
-   - You'll be redirected to `/admin/blog`
+- `/blog` - Index with search, filters, pagination
+- `/blog/:slug` - Individual post
+- `/blog/category/:slug` - Category archive
+- `/blog/series/:slug` - Series archive
 
-3. **Create a Post**:
-   - Click "New Post"
-   - Fill in title, slug (auto-generates from title)
-   - Write content in Markdown
-   - Add tags (comma-separated)
-   - Set posted date
-   - Choose status: Draft or Published
+## Edge Functions
 
-4. **Preview & Publish**:
-   - Use the Preview tab to see how it renders
-   - Set status to "Published" to make it public
-   - Click "Create Post" or "Update Post"
+- `rss` - RSS feed at `/functions/v1/rss`
+- `sitemap` - Sitemap at `/functions/v1/sitemap`
+- `blog-track-view` - View counting with rate limiting
+- `admin-blog` - Admin CRUD operations
+- `check-admin` - Admin verification
 
-## Markdown Support
+## Test Checklist
 
-The blog supports:
-- Headings (# H1, ## H2, etc.)
-- **Bold** and *italic* text
-- [Links](url)
-- `inline code` and code blocks
-- Bullet and numbered lists
-- Block quotes (> quote)
-- Tables
-- Horizontal rules (---)
+- [ ] Create a draft post → verify not visible on /blog
+- [ ] Publish the post → verify visible on /blog
+- [ ] Search for post title → verify found
+- [ ] Filter by category/tag → verify filtering works
+- [ ] View post page → verify TOC, progress bar
+- [ ] Check RSS feed works
+- [ ] Check sitemap works
+- [ ] Verify view count increments
 
-## Database Structure
+## Known Limitations
 
-The blog uses the `blog_posts` table with:
-- `id` - UUID primary key
-- `title` - Post title
-- `slug` - URL-friendly identifier (unique)
-- `excerpt` - Short summary for cards
-- `body_markdown` - Full post content
-- `tags` - Array of tag strings
-- `posted_at` - Publication date
-- `status` - 'draft' or 'published'
-- `author_name` - Author display name
-- `reading_time_minutes` - Auto-calculated
-- `created_at`, `updated_at` - Timestamps
-
-## Security
-
-- Public can only read published posts
-- Admin CRUD operations require authentication
-- Admin status verified via `ADMIN_EMAILS` env var
-- Edge functions use service role for database operations
-- No secrets exposed to client
-
-## Testing
-
-1. Set `ADMIN_EMAILS` in secrets
-2. Create a test user matching one of those emails
-3. Log in at `/admin/login`
-4. Create a draft post, verify it's not visible at `/blog`
-5. Publish the post, verify it appears at `/blog` and `/blog/[slug]`
-6. Test RSS feed at `/rss.xml`
+- Scheduled publishing requires manual trigger (no cron)
+- Comments system is not implemented
+- Glossary feature is not implemented
+- Revision history is stored but not exposed in UI
