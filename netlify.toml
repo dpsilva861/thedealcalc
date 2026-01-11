@@ -3,25 +3,42 @@
   publish = "dist"
   command = "npm run build"
 
-# Force HTTPS and canonical host (removes redirect chain)
+# =============================================================================
+# REDIRECT RULES (order matters - first match wins)
+# =============================================================================
+
+# 1. Force canonical host: lovable.app → thedealcalc.com (single-hop 301)
 [[redirects]]
   from = "https://thedealcalc.lovable.app/*"
   to = "https://thedealcalc.com/:splat"
   status = 301
   force = true
 
-# Dynamic sitemap from edge function
+# 2. Remove trailing slashes from all paths (except root)
+#    /blog/ → /blog, /syndication-calculator/ → /syndication-calculator
+#    This prevents duplicate URLs and fixes "Page with redirect" issues
+[[redirects]]
+  from = "/*/"
+  to = "/:splat"
+  status = 301
+  force = true
+
+# 3. Dynamic sitemap from edge function (proxy, not redirect)
 [[redirects]]
   from = "/sitemap.xml"
   to = "https://yneaxuokgfqyoomycjam.supabase.co/functions/v1/sitemap"
   status = 200
   force = true
 
-# SPA fallback - redirect all routes to index.html for client-side routing
+# 4. SPA fallback - all other routes to index.html for client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# =============================================================================
+# PLUGINS
+# =============================================================================
 
 # Prerender plugin for SEO - serves static HTML to bots
 [[plugins]]
@@ -32,8 +49,11 @@
   routes = [
     "/",
     "/how-it-works",
+    "/brrrr",
     "/brrrr-calculator",
+    "/syndication",
     "/syndication-calculator",
+    "/underwrite",
     "/rental-property-calculator",
     "/fix-and-flip-calculator",
     "/cap-rate-calculator",
@@ -45,8 +65,14 @@
     "/terms",
     "/cookies",
     "/disclaimer",
-    "/blog"
+    "/ad-tech-providers",
+    "/blog",
+    "/blog/tags"
   ]
+
+# =============================================================================
+# HEADERS
+# =============================================================================
 
 # Critical files - no redirect, direct 200
 [[headers]]
@@ -63,7 +89,7 @@
 [[headers]]
   for = "/sitemap.xml"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=3600"
 
 # Cache static assets with content hash - immutable
 [[headers]]
