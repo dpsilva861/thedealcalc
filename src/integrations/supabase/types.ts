@@ -41,6 +41,197 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          author_name: string | null
+          body_markdown: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          posted_at: string | null
+          reading_time_minutes: number | null
+          slug: string
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          body_markdown: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          posted_at?: string | null
+          reading_time_minutes?: number | null
+          slug: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          body_markdown?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          posted_at?: string | null
+          reading_time_minutes?: number | null
+          slug?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      newsletter_issues: {
+        Row: {
+          blog_post_id: string | null
+          body_markdown: string
+          created_at: string
+          created_by: string | null
+          id: string
+          published_at: string | null
+          scheduled_at: string | null
+          send_count: number | null
+          sent_at: string | null
+          slug: string
+          status: string
+          tags: string[] | null
+          title: string
+          tldr_bullets: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          blog_post_id?: string | null
+          body_markdown: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          send_count?: number | null
+          sent_at?: string | null
+          slug: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          tldr_bullets?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          blog_post_id?: string | null
+          body_markdown?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          send_count?: number | null
+          sent_at?: string | null
+          slug?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          tldr_bullets?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_issues_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_send_log: {
+        Row: {
+          created_at: string
+          email: string
+          error_message: string | null
+          id: string
+          issue_id: string
+          sent_at: string | null
+          status: string
+          subscriber_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          error_message?: string | null
+          id?: string
+          issue_id: string
+          sent_at?: string | null
+          status?: string
+          subscriber_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          issue_id?: string
+          sent_at?: string | null
+          status?: string
+          subscriber_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_send_log_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_send_log_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_subscribers: {
+        Row: {
+          confirm_token_hash: string | null
+          confirmed_at: string | null
+          created_at: string
+          email: string
+          id: string
+          status: string
+          unsubscribe_token_hash: string | null
+          unsubscribed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          confirm_token_hash?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          status?: string
+          unsubscribe_token_hash?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          confirm_token_hash?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          status?: string
+          unsubscribe_token_hash?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           analyses_used: number
