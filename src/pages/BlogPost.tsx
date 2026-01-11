@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
+import { Layout } from '@/components/layout/Layout';
 import { MarkdownContent } from '@/components/blog/MarkdownContent';
 import { TableOfContents } from '@/components/blog/TableOfContents';
 import { ReadingProgress } from '@/components/blog/ReadingProgress';
@@ -171,34 +172,38 @@ export default function BlogPost() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-12 max-w-4xl">
-          <Skeleton className="h-8 w-48 mb-8" />
-          <Skeleton className="h-12 w-full mb-4" />
-          <Skeleton className="h-6 w-64 mb-8" />
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
+      <Layout>
+        <div className="min-h-screen bg-background">
+          <div className="container mx-auto px-4 py-12 max-w-4xl">
+            <Skeleton className="h-8 w-48 mb-8" />
+            <Skeleton className="h-12 w-full mb-4" />
+            <Skeleton className="h-6 w-64 mb-8" />
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
           </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-12 max-w-3xl text-center">
-          <h1 className="text-2xl font-bold mb-4">{error || 'Post not found'}</h1>
-          <Button asChild>
-            <Link to="/blog">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Blog
-            </Link>
-          </Button>
+      <Layout>
+        <div className="min-h-screen bg-background">
+          <div className="container mx-auto px-4 py-12 max-w-3xl text-center">
+            <h1 className="text-2xl font-bold mb-4">{error || 'Post not found'}</h1>
+            <Button asChild>
+              <Link to="/blog">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Blog
+              </Link>
+            </Button>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
@@ -237,7 +242,7 @@ export default function BlogPost() {
   };
 
   return (
-    <>
+    <Layout>
       <Helmet>
         <title>{pageTitle} | TheDealCalc Blog</title>
         <meta name="description" content={pageDescription} />
@@ -353,6 +358,6 @@ export default function BlogPost() {
           </div>
         </div>
       </div>
-    </>
+    </Layout>
   );
 }

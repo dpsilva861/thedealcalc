@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
+import { Layout } from '@/components/layout/Layout';
 import { BlogCard } from '@/components/blog/BlogCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,7 @@ export default function BlogCategory() {
   }, [slug]);
 
   return (
-    <>
+    <Layout>
       <Helmet>
         <title>{category?.name || 'Category'} | TheDealCalc Blog</title>
       </Helmet>
@@ -65,6 +66,6 @@ export default function BlogCategory() {
           )}
         </div>
       </div>
-    </>
+    </Layout>
   );
 }
