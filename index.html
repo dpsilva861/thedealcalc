@@ -115,10 +115,16 @@
     <meta name="twitter:description" content="Free real estate investment calculators for rental properties, BRRRR deals, fix and flips. Analyze cash flow, cap rate, ROI, and IRR instantly." />
     <meta name="twitter:image" content="https://thedealcalc.com/og-image.png" />
 
-    <!-- Fonts -->
+    <!-- Fonts - using preload + font-display:swap for non-blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
+    
+    <!-- Preconnect to AdSense/Analytics for faster ad loading after consent -->
+    <link rel="preconnect" href="https://pagead2.googlesyndication.com" />
+    <link rel="preconnect" href="https://www.google-analytics.com" />
 
     <style>
       @media print {
