@@ -11,6 +11,7 @@ export function Header() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/how-it-works", label: "How It Works" },
+    { href: "/blog", label: "Blog" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
