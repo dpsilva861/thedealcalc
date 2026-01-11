@@ -3,6 +3,13 @@
   publish = "dist"
   command = "npm run build"
 
+# Force HTTPS and canonical host (removes redirect chain)
+[[redirects]]
+  from = "https://thedealcalc.lovable.app/*"
+  to = "https://thedealcalc.com/:splat"
+  status = 301
+  force = true
+
 # SPA fallback - redirect all routes to index.html for client-side routing
 [[redirects]]
   from = "/*"
@@ -30,10 +37,28 @@
     "/privacy",
     "/terms",
     "/cookies",
-    "/disclaimer"
+    "/disclaimer",
+    "/blog"
   ]
 
-# Cache static assets
+# Critical files - no redirect, direct 200
+[[headers]]
+  for = "/ads.txt"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+    X-Robots-Tag = "noindex"
+
+[[headers]]
+  for = "/robots.txt"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# Cache static assets with content hash - immutable
 [[headers]]
   for = "/assets/*"
   [headers.values]
@@ -49,7 +74,39 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Security headers
+# Font files - long cache
+[[headers]]
+  for = "/*.woff2"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.woff"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Images - long cache
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+# Security headers for all routes
 [[headers]]
   for = "/*"
   [headers.values]
