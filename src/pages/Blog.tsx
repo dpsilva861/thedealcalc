@@ -148,6 +148,8 @@ export default function Blog() {
   // Get RSS URL from edge function
   const rssUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rss`;
 
+  const canonicalUrl = "https://thedealcalc.com/blog";
+
   return (
     <Layout>
       <Helmet>
@@ -156,14 +158,20 @@ export default function Blog() {
           name="description" 
           content="Expert insights, strategies, and analysis for real estate investors. Learn about rental property analysis, BRRRR method, syndication, and more." 
         />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={canonicalUrl} />
         <link rel="alternate" type="application/rss+xml" title="TheDealCalc Blog RSS" href={rssUrl} />
+        <meta property="og:title" content="Blog | TheDealCalc - Real Estate Investment Insights" />
+        <meta property="og:description" content="Expert insights, strategies, and analysis for real estate investors." />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Blog",
             "name": "TheDealCalc Blog",
             "description": "Real estate investment insights and analysis",
-            "url": window.location.href,
+            "url": canonicalUrl,
             "publisher": {
               "@type": "Organization",
               "name": "TheDealCalc"
