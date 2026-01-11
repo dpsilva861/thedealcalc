@@ -193,7 +193,7 @@ export default function HowItWorks() {
                 What is TheDealCalc?
               </h2>
               
-              <p className="text-muted-foreground leading-relaxed text-lg mb-6">
+              <p className="text-muted-foreground leading-relaxed mb-6">
                 TheDealCalc is a free, professional-grade real estate investment calculator designed 
                 to help investors, agents, and syndicators analyze deals quickly and accurately. 
                 Unlike basic online calculators that give you a single cap rate or cash-on-cash number, 
