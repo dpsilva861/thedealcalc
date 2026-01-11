@@ -1,5 +1,29 @@
 // Enhanced markdown to HTML converter for blog posts
 // Handles: headings with IDs, bold, italic, links, lists, code blocks, blockquotes, tables
+// Includes XSS sanitization
+
+import DOMPurify from 'dompurify';
+
+// Safe URL protocols - blocks javascript:, data:, vbscript:, etc.
+const SAFE_URL_PATTERN = /^(?:(?:https?|mailto|tel):\/\/|\/|#)/i;
+
+function sanitizeUrl(url: string): string {
+  const trimmedUrl = url.trim();
+  
+  // Allow relative URLs starting with / or #
+  if (trimmedUrl.startsWith('/') || trimmedUrl.startsWith('#')) {
+    return trimmedUrl;
+  }
+  
+  // Allow safe protocols
+  if (SAFE_URL_PATTERN.test(trimmedUrl)) {
+    return trimmedUrl;
+  }
+  
+  // Block everything else (javascript:, data:, vbscript:, etc.)
+  console.warn(`Blocked potentially unsafe URL: ${trimmedUrl}`);
+  return '#';
+}
 
 export function markdownToHtml(markdown: string): string {
   if (!markdown) return '';
@@ -74,8 +98,14 @@ export function markdownToHtml(markdown: string): string {
   html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
   html = html.replace(/_(.+?)_/g, '<em>$1</em>');
   
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>');
+  // Links - sanitize URLs to prevent XSS
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) => {
+    const safeUrl = sanitizeUrl(url);
+    // Add security attributes for external links
+    const isExternal = safeUrl.startsWith('http');
+    const attrs = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+    return `<a href="${safeUrl}" class="text-primary hover:underline"${attrs}>${text}</a>`;
+  });
   
   // Unordered lists
   html = html.replace(/^[\-\*] (.+)$/gm, '<li class="ml-4">$1</li>');
@@ -93,7 +123,31 @@ export function markdownToHtml(markdown: string): string {
   // Clean up empty paragraphs
   html = html.replace(/<p class="my-4 leading-relaxed"><\/p>/g, '');
   
-  return html;
+  // Final DOMPurify sanitization with strict allowlist
+  const sanitizedHtml = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'p', 'br', 'hr',
+      'ul', 'ol', 'li',
+      'strong', 'em', 'b', 'i',
+      'a',
+      'code', 'pre',
+      'blockquote',
+      'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      'img'
+    ],
+    ALLOWED_ATTR: [
+      'href', 'target', 'rel',
+      'src', 'alt', 'title',
+      'class', 'id',
+      'loading'
+    ],
+    ALLOW_DATA_ATTR: false,
+    // Block javascript: and data: URLs
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):\/\/|\/|#)/i
+  });
+  
+  return sanitizedHtml;
 }
 
 export function estimateReadingTime(markdown: string): number {
@@ -120,4 +174,35 @@ export function generateExcerpt(markdown: string, maxLength: number = 160): stri
   
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength).replace(/\s+\S*$/, '') + '...';
+}
+
+// Test helper for development - validates XSS payloads are neutralized
+export function testXssSanitization(): { passed: boolean; results: string[] } {
+  const results: string[] = [];
+  let passed = true;
+
+  const testCases = [
+    { input: '[click me](javascript:alert(1))', shouldNotContain: 'javascript:' },
+    { input: '[click me](data:text/html,<script>alert(1)</script>)', shouldNotContain: 'data:' },
+    { input: '<img src=x onerror=alert(1)>', shouldNotContain: 'onerror' },
+    { input: '<script>alert(1)</script>', shouldNotContain: '<script>' },
+    { input: '[safe](https://example.com)', shouldContain: 'https://example.com' },
+    { input: '[relative](/page)', shouldContain: 'href="/page"' },
+    { input: '[anchor](#section)', shouldContain: 'href="#section"' },
+  ];
+
+  for (const tc of testCases) {
+    const output = markdownToHtml(tc.input);
+    if (tc.shouldNotContain && output.includes(tc.shouldNotContain)) {
+      results.push(`FAIL: "${tc.input}" should NOT contain "${tc.shouldNotContain}"`);
+      passed = false;
+    } else if (tc.shouldContain && !output.includes(tc.shouldContain)) {
+      results.push(`FAIL: "${tc.input}" should contain "${tc.shouldContain}"`);
+      passed = false;
+    } else {
+      results.push(`PASS: "${tc.input}"`);
+    }
+  }
+
+  return { passed, results };
 }

@@ -6,6 +6,44 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Field length limits for validation
+const FIELD_LIMITS = {
+  title: 200,
+  slug: 100,
+  excerpt: 600,
+  featured_image_alt: 200,
+  seo_title: 300,
+  seo_description: 600,
+  canonical_url: 500,
+  og_image_url: 500,
+  body_markdown: 500000, // ~500KB
+  name: 100,
+  description: 1000,
+};
+
+// Max request body size (5MB)
+const MAX_BODY_SIZE = 5 * 1024 * 1024;
+
+function validateField(value: unknown, fieldName: keyof typeof FIELD_LIMITS): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string') return `${fieldName} must be a string`;
+  const limit = FIELD_LIMITS[fieldName];
+  if (value.length > limit) {
+    return `${fieldName} exceeds maximum length of ${limit} characters`;
+  }
+  return null;
+}
+
+function normalizeSlug(slug: string): string {
+  return slug
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 100);
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -13,6 +51,15 @@ serve(async (req) => {
   }
 
   try {
+    // Check Content-Length if present
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+      return new Response(
+        JSON.stringify({ error: 'Request body too large (max 5MB)' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get auth header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -81,13 +128,55 @@ serve(async (req) => {
       }
 
       case 'create': {
+        // Validate field lengths
+        const fieldErrors: string[] = [];
+        for (const field of ['title', 'slug', 'excerpt', 'featured_image_alt', 'seo_title', 'seo_description', 'canonical_url', 'og_image_url', 'body_markdown'] as const) {
+          const err = validateField(postData[field], field);
+          if (err) fieldErrors.push(err);
+        }
+        if (fieldErrors.length > 0) {
+          return new Response(
+            JSON.stringify({ error: fieldErrors.join('; ') }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Normalize slug
+        const normalizedSlug = normalizeSlug(postData.slug || '');
+        if (!normalizedSlug) {
+          return new Response(
+            JSON.stringify({ error: 'Slug is required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Check slug uniqueness
+        const { data: existingSlug } = await adminClient
+          .from('blog_posts')
+          .select('id')
+          .eq('slug', normalizedSlug)
+          .limit(1);
+        
+        if (existingSlug && existingSlug.length > 0) {
+          return new Response(
+            JSON.stringify({ error: 'Slug already exists. Please choose a different slug.' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         // Validate required fields for publish
         if (postData.status === 'published') {
-          if (!postData.title || !postData.slug || !postData.body_markdown) {
-            throw new Error('Title, slug, and content are required for publishing');
+          if (!postData.title || !normalizedSlug || !postData.body_markdown) {
+            return new Response(
+              JSON.stringify({ error: 'Title, slug, and content are required for publishing' }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
           }
           if (!postData.excerpt) {
-            throw new Error('Excerpt is required for publishing');
+            return new Response(
+              JSON.stringify({ error: 'Excerpt is required for publishing' }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
           }
           // Set posted_at to now if publishing without a date
           if (!postData.posted_at) {
@@ -99,7 +188,7 @@ serve(async (req) => {
           .from('blog_posts')
           .insert({
             title: postData.title,
-            slug: postData.slug,
+            slug: normalizedSlug,
             excerpt: postData.excerpt,
             body_markdown: postData.body_markdown,
             tags: postData.tags,
@@ -132,15 +221,63 @@ serve(async (req) => {
       }
 
       case 'update': {
-        if (!id) throw new Error('Post ID required');
+        if (!id) {
+          return new Response(
+            JSON.stringify({ error: 'Post ID required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Validate field lengths
+        const fieldErrors: string[] = [];
+        for (const field of ['title', 'slug', 'excerpt', 'featured_image_alt', 'seo_title', 'seo_description', 'canonical_url', 'og_image_url', 'body_markdown'] as const) {
+          const err = validateField(postData[field], field);
+          if (err) fieldErrors.push(err);
+        }
+        if (fieldErrors.length > 0) {
+          return new Response(
+            JSON.stringify({ error: fieldErrors.join('; ') }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Normalize slug
+        const normalizedSlug = normalizeSlug(postData.slug || '');
+        if (!normalizedSlug) {
+          return new Response(
+            JSON.stringify({ error: 'Slug is required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Check slug uniqueness (excluding current post)
+        const { data: existingSlug } = await adminClient
+          .from('blog_posts')
+          .select('id')
+          .eq('slug', normalizedSlug)
+          .neq('id', id)
+          .limit(1);
+        
+        if (existingSlug && existingSlug.length > 0) {
+          return new Response(
+            JSON.stringify({ error: 'Slug already exists. Please choose a different slug.' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
 
         // Validate required fields for publish
         if (postData.status === 'published') {
-          if (!postData.title || !postData.slug || !postData.body_markdown) {
-            throw new Error('Title, slug, and content are required for publishing');
+          if (!postData.title || !normalizedSlug || !postData.body_markdown) {
+            return new Response(
+              JSON.stringify({ error: 'Title, slug, and content are required for publishing' }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
           }
           if (!postData.excerpt) {
-            throw new Error('Excerpt is required for publishing');
+            return new Response(
+              JSON.stringify({ error: 'Excerpt is required for publishing' }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
           }
           // Set posted_at to now if publishing without a date
           if (!postData.posted_at) {
@@ -157,44 +294,12 @@ serve(async (req) => {
 
         if (oldPostError) throw oldPostError;
 
-        // Create revision snapshot
-        await adminClient
-          .from('blog_post_revisions')
-          .insert({
-            post_id: id,
-            title: oldPost.title,
-            body_markdown: oldPost.body_markdown,
-            excerpt: oldPost.excerpt,
-            updated_by: user.id,
-          });
-
-        // Check for slug change and create redirect
-        if (oldPost.slug !== postData.slug) {
-          // Check if redirect already exists
-          const { data: existingRedirect } = await adminClient
-            .from('blog_post_redirects')
-            .select('id')
-            .eq('old_slug', oldPost.slug)
-            .eq('new_slug', postData.slug)
-            .single();
-
-          if (!existingRedirect) {
-            await adminClient
-              .from('blog_post_redirects')
-              .insert({
-                post_id: id,
-                old_slug: oldPost.slug,
-                new_slug: postData.slug,
-              });
-            console.log(`Created redirect: ${oldPost.slug} -> ${postData.slug}`);
-          }
-        }
-        
+        // Perform the update FIRST
         const { data, error } = await adminClient
           .from('blog_posts')
           .update({
             title: postData.title,
-            slug: postData.slug,
+            slug: normalizedSlug,
             excerpt: postData.excerpt,
             body_markdown: postData.body_markdown,
             tags: postData.tags,
@@ -221,6 +326,50 @@ serve(async (req) => {
           .single();
 
         if (error) throw error;
+
+        // Only AFTER successful update: create revision snapshot
+        try {
+          await adminClient
+            .from('blog_post_revisions')
+            .insert({
+              post_id: id,
+              title: oldPost.title,
+              body_markdown: oldPost.body_markdown,
+              excerpt: oldPost.excerpt,
+              updated_by: user.id,
+            });
+        } catch (revisionErr) {
+          // Log but don't fail the request - revision is non-critical
+          console.error('Failed to create revision:', revisionErr);
+        }
+
+        // Check for slug change and create redirect (after successful update)
+        if (oldPost.slug !== normalizedSlug) {
+          try {
+            // Check if redirect already exists using limit(1) instead of single()
+            const { data: existingRedirects } = await adminClient
+              .from('blog_post_redirects')
+              .select('id')
+              .eq('old_slug', oldPost.slug)
+              .eq('new_slug', normalizedSlug)
+              .limit(1);
+
+            if (!existingRedirects || existingRedirects.length === 0) {
+              await adminClient
+                .from('blog_post_redirects')
+                .insert({
+                  post_id: id,
+                  old_slug: oldPost.slug,
+                  new_slug: normalizedSlug,
+                });
+              console.log(`Created redirect: ${oldPost.slug} -> ${normalizedSlug}`);
+            }
+          } catch (redirectErr) {
+            // Log but don't fail - redirect is non-critical
+            console.error('Failed to create redirect:', redirectErr);
+          }
+        }
+        
         console.log(`Updated post: ${data.slug}`);
         return new Response(
           JSON.stringify({ post: data }),
@@ -229,7 +378,12 @@ serve(async (req) => {
       }
 
       case 'delete': {
-        if (!id) throw new Error('Post ID required');
+        if (!id) {
+          return new Response(
+            JSON.stringify({ error: 'Post ID required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         const { error } = await adminClient
           .from('blog_posts')
@@ -245,7 +399,12 @@ serve(async (req) => {
       }
 
       case 'get_revisions': {
-        if (!id) throw new Error('Post ID required');
+        if (!id) {
+          return new Response(
+            JSON.stringify({ error: 'Post ID required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         const { data, error } = await adminClient
           .from('blog_post_revisions')
@@ -285,9 +444,38 @@ serve(async (req) => {
       }
 
       case 'create_category': {
-        if (!postData.name) throw new Error('Category name required');
+        if (!postData.name) {
+          return new Response(
+            JSON.stringify({ error: 'Category name required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Validate field lengths
+        const nameErr = validateField(postData.name, 'name');
+        const descErr = validateField(postData.description, 'description');
+        if (nameErr || descErr) {
+          return new Response(
+            JSON.stringify({ error: [nameErr, descErr].filter(Boolean).join('; ') }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
-        const slug = postData.slug || postData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-');
+        const slug = normalizeSlug(postData.slug || postData.name);
+
+        // Check slug uniqueness
+        const { data: existingSlug } = await adminClient
+          .from('blog_categories')
+          .select('id')
+          .eq('slug', slug)
+          .limit(1);
+        
+        if (existingSlug && existingSlug.length > 0) {
+          return new Response(
+            JSON.stringify({ error: 'Category slug already exists' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         const { data, error } = await adminClient
           .from('blog_categories')
@@ -308,13 +496,45 @@ serve(async (req) => {
       }
 
       case 'update_category': {
-        if (!id) throw new Error('Category ID required');
+        if (!id) {
+          return new Response(
+            JSON.stringify({ error: 'Category ID required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Validate field lengths
+        const nameErr = validateField(postData.name, 'name');
+        const descErr = validateField(postData.description, 'description');
+        if (nameErr || descErr) {
+          return new Response(
+            JSON.stringify({ error: [nameErr, descErr].filter(Boolean).join('; ') }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const slug = normalizeSlug(postData.slug || postData.name);
+
+        // Check slug uniqueness (excluding current)
+        const { data: existingSlug } = await adminClient
+          .from('blog_categories')
+          .select('id')
+          .eq('slug', slug)
+          .neq('id', id)
+          .limit(1);
+        
+        if (existingSlug && existingSlug.length > 0) {
+          return new Response(
+            JSON.stringify({ error: 'Category slug already exists' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         const { data, error } = await adminClient
           .from('blog_categories')
           .update({
             name: postData.name,
-            slug: postData.slug,
+            slug,
             description: postData.description || null,
             updated_at: new Date().toISOString(),
           })
@@ -331,7 +551,12 @@ serve(async (req) => {
       }
 
       case 'delete_category': {
-        if (!id) throw new Error('Category ID required');
+        if (!id) {
+          return new Response(
+            JSON.stringify({ error: 'Category ID required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         // Check if any posts reference this category
         const { data: posts, error: postsError } = await adminClient
@@ -386,9 +611,38 @@ serve(async (req) => {
       }
 
       case 'create_series': {
-        if (!postData.name) throw new Error('Series name required');
+        if (!postData.name) {
+          return new Response(
+            JSON.stringify({ error: 'Series name required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Validate field lengths
+        const nameErr = validateField(postData.name, 'name');
+        const descErr = validateField(postData.description, 'description');
+        if (nameErr || descErr) {
+          return new Response(
+            JSON.stringify({ error: [nameErr, descErr].filter(Boolean).join('; ') }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
-        const slug = postData.slug || postData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-');
+        const slug = normalizeSlug(postData.slug || postData.name);
+
+        // Check slug uniqueness
+        const { data: existingSlug } = await adminClient
+          .from('blog_series')
+          .select('id')
+          .eq('slug', slug)
+          .limit(1);
+        
+        if (existingSlug && existingSlug.length > 0) {
+          return new Response(
+            JSON.stringify({ error: 'Series slug already exists' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         const { data, error } = await adminClient
           .from('blog_series')
@@ -410,13 +664,45 @@ serve(async (req) => {
       }
 
       case 'update_series': {
-        if (!id) throw new Error('Series ID required');
+        if (!id) {
+          return new Response(
+            JSON.stringify({ error: 'Series ID required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Validate field lengths
+        const nameErr = validateField(postData.name, 'name');
+        const descErr = validateField(postData.description, 'description');
+        if (nameErr || descErr) {
+          return new Response(
+            JSON.stringify({ error: [nameErr, descErr].filter(Boolean).join('; ') }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const slug = normalizeSlug(postData.slug || postData.name);
+
+        // Check slug uniqueness (excluding current)
+        const { data: existingSlug } = await adminClient
+          .from('blog_series')
+          .select('id')
+          .eq('slug', slug)
+          .neq('id', id)
+          .limit(1);
+        
+        if (existingSlug && existingSlug.length > 0) {
+          return new Response(
+            JSON.stringify({ error: 'Series slug already exists' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         const { data, error } = await adminClient
           .from('blog_series')
           .update({
             name: postData.name,
-            slug: postData.slug,
+            slug,
             description: postData.description || null,
             order_index: postData.order_index || 0,
             updated_at: new Date().toISOString(),
@@ -434,7 +720,12 @@ serve(async (req) => {
       }
 
       case 'delete_series': {
-        if (!id) throw new Error('Series ID required');
+        if (!id) {
+          return new Response(
+            JSON.stringify({ error: 'Series ID required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         
         // Check if any posts reference this series
         const { data: posts, error: postsError } = await adminClient

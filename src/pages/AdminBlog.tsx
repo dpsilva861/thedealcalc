@@ -505,6 +505,13 @@ export default function AdminBlog() {
     return true;
   });
 
+  // Redirect to login if not authenticated (in useEffect to avoid navigate during render)
+  useEffect(() => {
+    if (!authLoading && !checkingAdmin && !user) {
+      navigate('/admin/login');
+    }
+  }, [authLoading, checkingAdmin, user, navigate]);
+
   // Loading state
   if (authLoading || checkingAdmin) {
     return (
@@ -514,9 +521,8 @@ export default function AdminBlog() {
     );
   }
 
-  // Not logged in
+  // Not logged in - render null while redirecting
   if (!user) {
-    navigate('/admin/login');
     return null;
   }
 

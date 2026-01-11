@@ -41,6 +41,21 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_admin_emails: {
+        Row: {
+          created_at: string
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
       blog_categories: {
         Row: {
           created_at: string
@@ -673,6 +688,7 @@ export type Database = {
       }
       increment_blog_view: { Args: { post_slug: string }; Returns: undefined }
       increment_zip_count: { Args: { p_zip_code: string }; Returns: undefined }
+      is_blog_admin: { Args: never; Returns: boolean }
       search_blog_posts: {
         Args: {
           category_slug?: string
