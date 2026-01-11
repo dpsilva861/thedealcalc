@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
+import { Layout } from '@/components/layout/Layout';
 import { BlogCard } from '@/components/blog/BlogCard';
 import { FeaturedHero } from '@/components/blog/FeaturedHero';
 import { BlogFilters } from '@/components/blog/BlogFilters';
@@ -147,7 +148,7 @@ export default function Blog() {
   const rssUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rss`;
 
   return (
-    <>
+    <Layout>
       <Helmet>
         <title>Blog | TheDealCalc - Real Estate Investment Insights</title>
         <meta 
@@ -269,6 +270,6 @@ export default function Blog() {
           )}
         </div>
       </div>
-    </>
+    </Layout>
   );
 }
