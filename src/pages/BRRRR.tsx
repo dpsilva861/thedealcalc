@@ -78,7 +78,7 @@ function BRRRRContent() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div ref={topRef} className="h-0" aria-hidden="true" />
+      <div ref={topRef} className="h-0" tabIndex={-1} aria-hidden="true" />
 
       <div className="w-full">
         {/* Header */}

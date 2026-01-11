@@ -1,113 +1,80 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 function getScrollParent(el: HTMLElement | null): HTMLElement | null {
-  if (!el) return null;
-
-  let parent: HTMLElement | null = el.parentElement;
-  while (parent) {
-    const style = window.getComputedStyle(parent);
+  let p = el?.parentElement ?? null;
+  while (p) {
+    const style = window.getComputedStyle(p);
     const overflowY = style.overflowY;
-    const isScrollableY =
-      (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
-      parent.scrollHeight > parent.clientHeight;
-
-    if (isScrollableY) return parent;
-    parent = parent.parentElement;
+    if ((overflowY === "auto" || overflowY === "scroll") && p.scrollHeight > p.clientHeight) {
+      return p;
+    }
+    p = p.parentElement;
   }
-
   return null;
 }
 
 /**
- * Deterministic scroll-to-top for state-based wizard step transitions.
- *
- * Two-phase approach:
- * 1. Primary: scroll immediately after DOM commit (via rAF).
- * 2. Fallback: if scroll didn't land near top, retry once at 150ms.
- *
- * This avoids the "creeping" multi-scroll effect while still handling
- * iOS Safari scroll restoration quirks.
+ * Deterministic, instant scroll-to-top for state-based wizard step transitions.
+ * - Runs after DOM commit (useLayoutEffect).
+ * - Blurs active element so the browser doesn't keep the clicked button in view.
+ * - Temporarily forces scroll-behavior:auto (defeats global smooth scrolling).
+ * - Uses ONE scroll mechanism: either scrollParent.scrollTop or window scroll.
+ * - Only ONE fallback tick (no multiple timeouts that cause "creeping").
  */
 export function useStepScrollToTop(step: unknown) {
   const topRef = useRef<HTMLDivElement | null>(null);
-  const hasRunRef = useRef(false);
-
-  useEffect(() => {
-    // Disable browser scroll restoration while on a wizard page.
-    const hist = window.history as History & { scrollRestoration?: ScrollRestoration };
-    const prev = hist.scrollRestoration;
-
-    if ("scrollRestoration" in hist) {
-      hist.scrollRestoration = "manual";
-    }
-
-    return () => {
-      if ("scrollRestoration" in hist) {
-        hist.scrollRestoration = prev ?? "auto";
-      }
-    };
-  }, []);
 
   useLayoutEffect(() => {
-    // Preserve default hash-anchor behavior on initial mount.
-    if (!hasRunRef.current && window.location.hash) {
-      hasRunRef.current = true;
-      return;
-    }
-    hasRunRef.current = true;
-
-    // Blur immediately to prevent browser from keeping clicked button in view.
-    (document.activeElement as HTMLElement | null)?.blur?.();
-
     const anchor = topRef.current;
     const scrollParent = getScrollParent(anchor);
 
+    // Prevent focus "keep in view" behavior
+    (document.activeElement as HTMLElement | null)?.blur?.();
+
+    // Force instant snap even if global smooth scroll exists
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.scrollBehavior;
+    const prevBody = body.style.scrollBehavior;
+
+    html.style.scrollBehavior = "auto";
+    body.style.scrollBehavior = "auto";
+
     const doScroll = () => {
-      // Reset scroll container if present.
-      if (scrollParent) scrollParent.scrollTop = 0;
-
-      // Focus anchor with preventScroll to avoid focus-induced scrolling.
-      if (anchor) {
-        (anchor as HTMLElement).focus?.({ preventScroll: true });
-        anchor.scrollIntoView({ block: "start", behavior: "auto" });
+      if (scrollParent) {
+        scrollParent.scrollTop = 0;
+      } else {
+        window.scrollTo(0, 0);
+        const se = document.scrollingElement as HTMLElement | null;
+        if (se) se.scrollTop = 0;
+        html.scrollTop = 0;
+        body.scrollTop = 0;
       }
-
-      // Hard fallbacks for all browsers.
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      const se = document.scrollingElement as HTMLElement | null;
-      if (se) se.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-
-      // Ensure container ended at top.
-      if (scrollParent) scrollParent.scrollTop = 0;
     };
 
-    const needsFallback = (): boolean => {
-      const parentTop = scrollParent ? scrollParent.scrollTop : 0;
-      const winTop = window.scrollY;
-      return winTop > 8 || parentTop > 8;
-    };
-
-    let fallbackTimeout: number | undefined;
-    let rafId2: number | undefined;
-
-    const rafId = requestAnimationFrame(() => {
+    // After paint/commit
+    const raf1 = requestAnimationFrame(() => {
       doScroll();
 
-      // Check if scroll succeeded after next frame.
-      rafId2 = requestAnimationFrame(() => {
-        if (needsFallback()) {
-          // One fallback attempt only.
-          fallbackTimeout = window.setTimeout(doScroll, 150);
-        }
+      // Single fallback only if not at top
+      const raf2 = requestAnimationFrame(() => {
+        const winTop = window.scrollY || html.scrollTop || body.scrollTop || 0;
+        const parentTop = scrollParent ? scrollParent.scrollTop : 0;
+
+        if (winTop > 8 || parentTop > 8) doScroll();
+
+        // Restore styles
+        html.style.scrollBehavior = prevHtml;
+        body.style.scrollBehavior = prevBody;
       });
+
+      return () => cancelAnimationFrame(raf2);
     });
 
     return () => {
-      cancelAnimationFrame(rafId);
-      if (rafId2) cancelAnimationFrame(rafId2);
-      if (fallbackTimeout) window.clearTimeout(fallbackTimeout);
+      cancelAnimationFrame(raf1);
+      html.style.scrollBehavior = prevHtml;
+      body.style.scrollBehavior = prevBody;
     };
   }, [step]);
 
