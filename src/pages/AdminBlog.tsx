@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,10 +11,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MarkdownContent } from '@/components/blog/MarkdownContent';
 import { estimateReadingTime } from '@/lib/markdown';
 import { toast } from 'sonner';
-import { Plus, Edit, Eye, Trash2, LogOut, Loader2, Upload, X, Image } from 'lucide-react';
+import { Plus, Edit, Eye, Trash2, LogOut, Loader2, Upload, X, Image, AlertTriangle, History, Folder, Star } from 'lucide-react';
+
+interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface BlogSeries {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 interface BlogPost {
   id: string;
@@ -28,8 +42,22 @@ interface BlogPost {
   status: string;
   author_name: string | null;
   featured_image_url: string | null;
+  featured_image_alt: string | null;
+  category_id: string | null;
+  series_id: string | null;
+  series_order: number | null;
+  difficulty: string | null;
+  property_type: string | null;
+  featured: boolean | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  canonical_url: string | null;
+  og_image_url: string | null;
+  view_count_total: number | null;
   created_at: string;
   updated_at: string;
+  blog_categories?: BlogCategory | null;
+  blog_series?: BlogSeries | null;
 }
 
 interface PostForm {
@@ -43,6 +71,33 @@ interface PostForm {
   status: 'draft' | 'published';
   author_name: string;
   featured_image_url: string;
+  featured_image_alt: string;
+  category_id: string;
+  series_id: string;
+  series_order: number;
+  difficulty: string;
+  property_type: string;
+  featured: boolean;
+  seo_title: string;
+  seo_description: string;
+  canonical_url: string;
+  og_image_url: string;
+}
+
+interface LintWarning {
+  field: string;
+  message: string;
+  severity: 'warning' | 'error';
+}
+
+interface Revision {
+  id: string;
+  post_id: string;
+  title: string;
+  body_markdown: string;
+  excerpt: string | null;
+  created_at: string;
+  updated_by: string | null;
 }
 
 const emptyForm: PostForm = {
@@ -55,21 +110,64 @@ const emptyForm: PostForm = {
   status: 'draft',
   author_name: 'TheDealCalc Team',
   featured_image_url: '',
+  featured_image_alt: '',
+  category_id: '',
+  series_id: '',
+  series_order: 0,
+  difficulty: '',
+  property_type: '',
+  featured: false,
+  seo_title: '',
+  seo_description: '',
+  canonical_url: '',
+  og_image_url: '',
 };
+
+const DIFFICULTY_OPTIONS = [
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' },
+];
+
+const PROPERTY_TYPE_OPTIONS = [
+  { value: 'retail', label: 'Retail' },
+  { value: 'industrial', label: 'Industrial' },
+  { value: 'multifamily', label: 'Multifamily' },
+  { value: 'office', label: 'Office' },
+  { value: 'hospitality', label: 'Hospitality' },
+  { value: 'general', label: 'General' },
+];
+
+const STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'Published' },
+];
 
 export default function AdminBlog() {
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [series, setSeries] = useState<BlogSeries[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<PostForm>(emptyForm);
+  const [originalSlug, setOriginalSlug] = useState('');
   const [saving, setSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [lintWarnings, setLintWarnings] = useState<LintWarning[]>([]);
+  const [revisions, setRevisions] = useState<Revision[]>([]);
+  const [showRevisions, setShowRevisions] = useState(false);
+  const [selectedRevision, setSelectedRevision] = useState<Revision | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Filter state
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterFeatured, setFilterFeatured] = useState('all');
 
   // Check admin status
   useEffect(() => {
@@ -98,29 +196,82 @@ export default function AdminBlog() {
     }
   }, [user, authLoading]);
 
-  // Fetch posts
+  // Fetch posts, categories, and series
   useEffect(() => {
-    async function fetchPosts() {
+    async function fetchData() {
       if (!isAdmin) return;
 
       try {
-        const { data, error } = await supabase.functions.invoke('admin-blog', {
-          body: { action: 'list' }
-        });
+        const [postsRes, catsRes, seriesRes] = await Promise.all([
+          supabase.functions.invoke('admin-blog', { body: { action: 'list' } }),
+          supabase.functions.invoke('admin-blog', { body: { action: 'list_categories' } }),
+          supabase.functions.invoke('admin-blog', { body: { action: 'list_series' } }),
+        ]);
 
-        if (error) throw error;
-        setPosts(data?.posts || []);
+        if (postsRes.error) throw postsRes.error;
+        if (catsRes.error) throw catsRes.error;
+        if (seriesRes.error) throw seriesRes.error;
+
+        setPosts(postsRes.data?.posts || []);
+        setCategories(catsRes.data?.categories || []);
+        setSeries(seriesRes.data?.series || []);
       } catch (err) {
-        console.error('Error fetching posts:', err);
-        toast.error('Failed to load posts');
+        console.error('Error fetching data:', err);
+        toast.error('Failed to load data');
       }
       setLoading(false);
     }
 
     if (isAdmin) {
-      fetchPosts();
+      fetchData();
     }
   }, [isAdmin]);
+
+  const runLintChecks = (formData: PostForm, isPublish = false): LintWarning[] => {
+    const warnings: LintWarning[] = [];
+
+    // Required checks
+    if (!formData.title) {
+      warnings.push({ field: 'title', message: 'Title is required', severity: 'error' });
+    }
+    if (!formData.slug) {
+      warnings.push({ field: 'slug', message: 'Slug is required', severity: 'error' });
+    }
+    if (!formData.body_markdown) {
+      warnings.push({ field: 'body_markdown', message: 'Content is required', severity: 'error' });
+    }
+
+    // Publish-specific checks
+    if (isPublish || formData.status === 'published') {
+      if (!formData.excerpt) {
+        warnings.push({ field: 'excerpt', message: 'Excerpt is required for publishing', severity: 'error' });
+      }
+      if (!formData.featured_image_url) {
+        warnings.push({ field: 'featured_image_url', message: 'Featured image recommended for publishing', severity: 'warning' });
+      }
+      if (formData.featured_image_url && !formData.featured_image_alt) {
+        warnings.push({ field: 'featured_image_alt', message: 'Alt text is required for featured image', severity: 'error' });
+      }
+    }
+
+    // Content quality checks
+    const h2Count = (formData.body_markdown.match(/^##\s/gm) || []).length;
+    if (h2Count === 0 && formData.body_markdown.length > 500) {
+      warnings.push({ field: 'body_markdown', message: 'Consider adding H2 headings (##) for better structure', severity: 'warning' });
+    }
+
+    // Broken link detection (basic)
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    let match;
+    while ((match = linkRegex.exec(formData.body_markdown)) !== null) {
+      const url = match[2];
+      if (!url.startsWith('http') && !url.startsWith('/') && !url.startsWith('#') && !url.startsWith('mailto:')) {
+        warnings.push({ field: 'body_markdown', message: `Potentially invalid link: ${url}`, severity: 'warning' });
+      }
+    }
+
+    return warnings;
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -129,11 +280,14 @@ export default function AdminBlog() {
 
   const handleCreateNew = () => {
     setForm(emptyForm);
+    setOriginalSlug('');
     setEditing(true);
     setPreviewMode(false);
+    setLintWarnings([]);
+    setRevisions([]);
   };
 
-  const handleEdit = (post: BlogPost) => {
+  const handleEdit = async (post: BlogPost) => {
     setForm({
       id: post.id,
       title: post.title,
@@ -145,9 +299,34 @@ export default function AdminBlog() {
       status: post.status as 'draft' | 'published',
       author_name: post.author_name || 'TheDealCalc Team',
       featured_image_url: post.featured_image_url || '',
+      featured_image_alt: post.featured_image_alt || '',
+      category_id: post.category_id || '',
+      series_id: post.series_id || '',
+      series_order: post.series_order || 0,
+      difficulty: post.difficulty || '',
+      property_type: post.property_type || '',
+      featured: post.featured || false,
+      seo_title: post.seo_title || '',
+      seo_description: post.seo_description || '',
+      canonical_url: post.canonical_url || '',
+      og_image_url: post.og_image_url || '',
     });
+    setOriginalSlug(post.slug);
     setEditing(true);
     setPreviewMode(false);
+    setLintWarnings([]);
+
+    // Fetch revisions
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-blog', {
+        body: { action: 'get_revisions', id: post.id }
+      });
+      if (!error && data?.revisions) {
+        setRevisions(data.revisions);
+      }
+    } catch (err) {
+      console.error('Error fetching revisions:', err);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -171,13 +350,12 @@ export default function AdminBlog() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only JPG, PNG, and WebP images are allowed');
       return;
     }
 
-    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image must be less than 5MB');
       return;
@@ -207,20 +385,52 @@ export default function AdminBlog() {
     }
     setUploading(false);
     
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const handleRemoveImage = () => {
-    setForm({ ...form, featured_image_url: '' });
+    setForm({ ...form, featured_image_url: '', featured_image_alt: '' });
   };
 
-  const handleSave = async () => {
-    if (!form.title || !form.slug || !form.body_markdown) {
-      toast.error('Title, slug, and content are required');
+  const handleCopyFeaturedToOG = () => {
+    if (form.featured_image_url) {
+      setForm({ ...form, og_image_url: form.featured_image_url });
+      toast.success('OG image set from featured image');
+    }
+  };
+
+  const handleRestoreRevision = (revision: Revision) => {
+    if (!confirm('Restore this revision? Current changes will be lost.')) return;
+    
+    setForm({
+      ...form,
+      title: revision.title,
+      body_markdown: revision.body_markdown,
+      excerpt: revision.excerpt || '',
+    });
+    setSelectedRevision(null);
+    setShowRevisions(false);
+    toast.success('Revision restored');
+  };
+
+  const handleSave = async (publishOverride?: boolean) => {
+    const targetStatus = publishOverride ? 'published' : form.status;
+    const isPublishing = targetStatus === 'published';
+    
+    const warnings = runLintChecks({ ...form, status: targetStatus as 'draft' | 'published' }, isPublishing);
+    setLintWarnings(warnings);
+
+    const errors = warnings.filter(w => w.severity === 'error');
+    if (errors.length > 0) {
+      toast.error(`Cannot save: ${errors[0].message}`);
       return;
+    }
+
+    if (isPublishing && warnings.length > 0) {
+      const proceed = confirm(`There are ${warnings.length} warning(s). Continue publishing?`);
+      if (!proceed) return;
     }
 
     setSaving(true);
@@ -234,13 +444,24 @@ export default function AdminBlog() {
         body_markdown: form.body_markdown,
         tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         posted_at: form.posted_at || null,
-        status: form.status,
+        status: targetStatus,
         author_name: form.author_name || 'TheDealCalc Team',
         reading_time_minutes: estimateReadingTime(form.body_markdown),
         featured_image_url: form.featured_image_url || null,
+        featured_image_alt: form.featured_image_alt || null,
+        category_id: form.category_id || null,
+        series_id: form.series_id || null,
+        series_order: form.series_order || 0,
+        difficulty: form.difficulty || null,
+        property_type: form.property_type || null,
+        featured: form.featured,
+        seo_title: form.seo_title || null,
+        seo_description: form.seo_description || null,
+        canonical_url: form.canonical_url || null,
+        og_image_url: form.og_image_url || null,
       };
 
-      const { data, error } = await supabase.functions.invoke('admin-blog', {
+      const { error } = await supabase.functions.invoke('admin-blog', {
         body: payload
       });
 
@@ -256,9 +477,11 @@ export default function AdminBlog() {
       
       setEditing(false);
       setForm(emptyForm);
-    } catch (err) {
+      setOriginalSlug('');
+    } catch (err: unknown) {
       console.error('Error saving post:', err);
-      toast.error('Failed to save post');
+      const message = err instanceof Error ? err.message : 'Failed to save post';
+      toast.error(message);
     }
     setSaving(false);
   };
@@ -272,6 +495,15 @@ export default function AdminBlog() {
       .slice(0, 60);
     setForm({ ...form, slug });
   };
+
+  // Filter posts
+  const filteredPosts = posts.filter(post => {
+    if (filterStatus !== 'all' && post.status !== filterStatus) return false;
+    if (filterCategory !== 'all' && post.category_id !== filterCategory) return false;
+    if (filterFeatured === 'featured' && !post.featured) return false;
+    if (filterFeatured === 'not_featured' && post.featured) return false;
+    return true;
+  });
 
   // Loading state
   if (authLoading || checkingAdmin) {
@@ -320,6 +552,12 @@ export default function AdminBlog() {
               <p className="text-muted-foreground">Manage your blog posts</p>
             </div>
             <div className="flex items-center gap-4">
+              <Link to="/admin/blog/taxonomy">
+                <Button variant="outline" size="sm">
+                  <Folder className="h-4 w-4 mr-2" />
+                  Categories & Series
+                </Button>
+              </Link>
               <span className="text-sm text-muted-foreground">{user.email}</span>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -330,20 +568,90 @@ export default function AdminBlog() {
 
           {editing ? (
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{form.id ? 'Edit Post' : 'New Post'}</CardTitle>
+                {form.id && revisions.length > 0 && (
+                  <Dialog open={showRevisions} onOpenChange={setShowRevisions}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <History className="h-4 w-4 mr-2" />
+                        Revisions ({revisions.length})
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Revision History</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        {revisions.map((rev) => (
+                          <div key={rev.id} className="border rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-sm text-muted-foreground">
+                                {new Date(rev.created_at).toLocaleString()}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setSelectedRevision(rev)}
+                                >
+                                  View
+                                </Button>
+                                <Button 
+                                  variant="default" 
+                                  size="sm"
+                                  onClick={() => handleRestoreRevision(rev)}
+                                >
+                                  Restore
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="font-medium truncate">{rev.title}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </CardHeader>
               <CardContent>
+                {/* Lint Warnings */}
+                {lintWarnings.length > 0 && (
+                  <div className="mb-6 p-4 border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2 text-yellow-700 dark:text-yellow-500">
+                      <AlertTriangle className="h-5 w-5" />
+                      <span className="font-medium">Content Warnings</span>
+                    </div>
+                    <ul className="text-sm space-y-1">
+                      {lintWarnings.map((w, i) => (
+                        <li key={i} className={w.severity === 'error' ? 'text-destructive' : 'text-yellow-700 dark:text-yellow-400'}>
+                          • {w.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Slug Change Warning */}
+                {form.id && originalSlug && form.slug !== originalSlug && (
+                  <div className="mb-6 p-4 border border-blue-500 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <p className="text-sm text-blue-700 dark:text-blue-400">
+                      ⓘ Changing slug will create an automatic redirect from <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">/blog/{originalSlug}</code> to the new URL.
+                    </p>
+                  </div>
+                )}
+
                 <Tabs value={previewMode ? 'preview' : 'edit'} onValueChange={(v) => setPreviewMode(v === 'preview')}>
                   <TabsList className="mb-6">
                     <TabsTrigger value="edit">Edit</TabsTrigger>
                     <TabsTrigger value="preview">Preview</TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="edit" className="space-y-4">
+                  <TabsContent value="edit" className="space-y-6">
+                    {/* Basic Info */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="title">Title</Label>
+                        <Label htmlFor="title">Title *</Label>
                         <Input
                           id="title"
                           value={form.title}
@@ -353,7 +661,7 @@ export default function AdminBlog() {
                       </div>
                       <div>
                         <Label htmlFor="slug">
-                          Slug
+                          Slug *
                           <Button
                             type="button"
                             variant="link"
@@ -373,32 +681,43 @@ export default function AdminBlog() {
                       </div>
                     </div>
 
-                    {/* Featured Image Upload */}
+                    {/* Featured Image */}
                     <div>
                       <Label>Featured Image</Label>
                       {form.featured_image_url ? (
-                        <div className="relative mt-2 inline-block">
-                          <img 
-                            src={form.featured_image_url} 
-                            alt="Featured" 
-                            className="h-32 w-auto rounded-lg object-cover"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            className="absolute -top-2 -right-2 h-6 w-6"
-                            onClick={handleRemoveImage}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                        <div className="mt-2 space-y-2">
+                          <div className="relative inline-block">
+                            <img 
+                              src={form.featured_image_url} 
+                              alt={form.featured_image_alt || 'Featured'} 
+                              className="h-32 w-auto rounded-lg object-cover"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6"
+                              onClick={handleRemoveImage}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div>
+                            <Label htmlFor="featured_image_alt">Alt Text *</Label>
+                            <Input
+                              id="featured_image_alt"
+                              value={form.featured_image_alt}
+                              onChange={(e) => setForm({ ...form, featured_image_alt: e.target.value })}
+                              placeholder="Describe this image for accessibility"
+                            />
+                          </div>
                         </div>
                       ) : (
                         <div className="mt-2">
                           <input
                             ref={fileInputRef}
                             type="file"
-                            accept="image/*"
+                            accept="image/jpeg,image/png,image/webp"
                             onChange={handleImageUpload}
                             className="hidden"
                             id="featured-image"
@@ -417,14 +736,15 @@ export default function AdminBlog() {
                             {uploading ? 'Uploading...' : 'Upload Image'}
                           </Button>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Max 5MB. JPG, PNG, WebP supported.
+                            Max 5MB. JPG, PNG, WebP only.
                           </p>
                         </div>
                       )}
                     </div>
 
+                    {/* Excerpt */}
                     <div>
-                      <Label htmlFor="excerpt">Excerpt (optional)</Label>
+                      <Label htmlFor="excerpt">Excerpt (required for publishing)</Label>
                       <Textarea
                         id="excerpt"
                         value={form.excerpt}
@@ -434,8 +754,9 @@ export default function AdminBlog() {
                       />
                     </div>
 
+                    {/* Content */}
                     <div>
-                      <Label htmlFor="body">Content (Markdown)</Label>
+                      <Label htmlFor="body">Content (Markdown) *</Label>
                       <Textarea
                         id="body"
                         value={form.body_markdown}
@@ -446,6 +767,83 @@ export default function AdminBlog() {
                       />
                     </div>
 
+                    {/* Category & Series */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label>Category</Label>
+                        <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v === 'none' ? '' : v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {categories.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Series</Label>
+                        <Select value={form.series_id} onValueChange={(v) => setForm({ ...form, series_id: v === 'none' ? '' : v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select series" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {series.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {form.series_id && (
+                        <div>
+                          <Label htmlFor="series_order">Series Order</Label>
+                          <Input
+                            id="series_order"
+                            type="number"
+                            value={form.series_order}
+                            onChange={(e) => setForm({ ...form, series_order: parseInt(e.target.value) || 0 })}
+                            min={0}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Difficulty & Property Type */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Difficulty</Label>
+                        <Select value={form.difficulty} onValueChange={(v) => setForm({ ...form, difficulty: v === 'none' ? '' : v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select difficulty" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {DIFFICULTY_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Property Type</Label>
+                        <Select value={form.property_type} onValueChange={(v) => setForm({ ...form, property_type: v === 'none' ? '' : v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select property type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Tags & Author */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="tags">Tags (comma-separated)</Label>
@@ -467,7 +865,8 @@ export default function AdminBlog() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Posted Date & Status & Featured */}
+                    <div className="grid grid-cols-3 gap-4">
                       <div>
                         <Label htmlFor="posted_at">Posted Date</Label>
                         <Input
@@ -487,10 +886,76 @@ export default function AdminBlog() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="draft">Draft</SelectItem>
-                            <SelectItem value="published">Published</SelectItem>
+                            {STATUS_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
+                      </div>
+                      <div className="flex items-center gap-3 pt-6">
+                        <Switch
+                          id="featured"
+                          checked={form.featured}
+                          onCheckedChange={(checked) => setForm({ ...form, featured: checked })}
+                        />
+                        <Label htmlFor="featured" className="flex items-center gap-1">
+                          <Star className="h-4 w-4" />
+                          Featured
+                        </Label>
+                      </div>
+                    </div>
+
+                    {/* SEO Fields */}
+                    <div className="border-t pt-6">
+                      <h3 className="font-medium mb-4">SEO Settings</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="seo_title">SEO Title (optional)</Label>
+                          <Input
+                            id="seo_title"
+                            value={form.seo_title}
+                            onChange={(e) => setForm({ ...form, seo_title: e.target.value })}
+                            placeholder="Custom title for search engines"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">Leave blank to use post title</p>
+                        </div>
+                        <div>
+                          <Label htmlFor="canonical_url">Canonical URL (optional)</Label>
+                          <Input
+                            id="canonical_url"
+                            value={form.canonical_url}
+                            onChange={(e) => setForm({ ...form, canonical_url: e.target.value })}
+                            placeholder="https://..."
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <Label htmlFor="seo_description">SEO Description (optional)</Label>
+                        <Textarea
+                          id="seo_description"
+                          value={form.seo_description}
+                          onChange={(e) => setForm({ ...form, seo_description: e.target.value })}
+                          placeholder="Custom description for search engines"
+                          rows={2}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Leave blank to use excerpt</p>
+                      </div>
+                      <div className="mt-4">
+                        <Label htmlFor="og_image_url">OG Image URL (optional)</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="og_image_url"
+                            value={form.og_image_url}
+                            onChange={(e) => setForm({ ...form, og_image_url: e.target.value })}
+                            placeholder="https://..."
+                          />
+                          {form.featured_image_url && !form.og_image_url && (
+                            <Button type="button" variant="outline" onClick={handleCopyFeaturedToOG}>
+                              <Image className="h-4 w-4 mr-2" />
+                              Use Featured
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </TabsContent>
@@ -515,7 +980,7 @@ export default function AdminBlog() {
                       {form.featured_image_url && (
                         <img 
                           src={form.featured_image_url} 
-                          alt="Featured" 
+                          alt={form.featured_image_alt || 'Featured'} 
                           className="w-full h-auto rounded-lg mb-6 max-h-96 object-cover"
                         />
                       )}
@@ -525,38 +990,81 @@ export default function AdminBlog() {
                 </Tabs>
 
                 <div className="flex justify-end gap-4 mt-6 pt-6 border-t">
-                  <Button variant="outline" onClick={() => { setEditing(false); setForm(emptyForm); }}>
+                  <Button variant="outline" onClick={() => { setEditing(false); setForm(emptyForm); setOriginalSlug(''); }}>
                     Cancel
                   </Button>
-                  <Button onClick={handleSave} disabled={saving}>
+                  <Button variant="outline" onClick={() => handleSave(false)} disabled={saving}>
                     {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    {form.id ? 'Update Post' : 'Create Post'}
+                    Save as {form.status === 'published' ? 'Published' : 'Draft'}
                   </Button>
+                  {form.status !== 'published' && (
+                    <Button onClick={() => handleSave(true)} disabled={saving}>
+                      {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Publish Now
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ) : (
             <>
-              <div className="mb-6">
+              <div className="flex items-center justify-between mb-6">
                 <Button onClick={handleCreateNew}>
                   <Plus className="h-4 w-4 mr-2" />
                   New Post
                 </Button>
+                
+                {/* Filters */}
+                <div className="flex gap-2">
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="published">Published</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterCategory} onValueChange={setFilterCategory}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterFeatured} onValueChange={setFilterFeatured}>
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue placeholder="Featured" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="featured">Featured</SelectItem>
+                      <SelectItem value="not_featured">Not Featured</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {loading ? (
                 <div className="text-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto" />
                 </div>
-              ) : posts.length === 0 ? (
+              ) : filteredPosts.length === 0 ? (
                 <Card>
                   <CardContent className="py-12 text-center">
-                    <p className="text-muted-foreground">No posts yet. Create your first post!</p>
+                    <p className="text-muted-foreground">
+                      {posts.length === 0 ? 'No posts yet. Create your first post!' : 'No posts match the current filters.'}
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {posts.map((post) => (
+                  {filteredPosts.map((post) => (
                     <Card key={post.id}>
                       <CardContent className="py-4">
                         <div className="flex items-center justify-between">
@@ -578,9 +1086,21 @@ export default function AdminBlog() {
                                 <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
                                   {post.status}
                                 </Badge>
+                                {post.featured && (
+                                  <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                                    <Star className="h-3 w-3 mr-1" />
+                                    Featured
+                                  </Badge>
+                                )}
                               </div>
                               <p className="text-sm text-muted-foreground">
-                                /blog/{post.slug} • {post.posted_at ? new Date(post.posted_at).toLocaleDateString() : 'No date'}
+                                /blog/{post.slug}
+                                {post.blog_categories && <span> • {post.blog_categories.name}</span>}
+                                {post.blog_series && <span> • {post.blog_series.name}</span>}
+                                {post.posted_at && <span> • {new Date(post.posted_at).toLocaleDateString()}</span>}
+                                {post.view_count_total !== null && post.view_count_total > 0 && (
+                                  <span> • {post.view_count_total} views</span>
+                                )}
                               </p>
                             </div>
                           </div>
@@ -609,6 +1129,37 @@ export default function AdminBlog() {
           )}
         </div>
       </div>
+
+      {/* Revision View Modal */}
+      <Dialog open={!!selectedRevision} onOpenChange={() => setSelectedRevision(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Revision from {selectedRevision && new Date(selectedRevision.created_at).toLocaleString()}</DialogTitle>
+          </DialogHeader>
+          {selectedRevision && (
+            <div className="space-y-4">
+              <div>
+                <Label>Title</Label>
+                <p className="p-2 bg-muted rounded">{selectedRevision.title}</p>
+              </div>
+              <div>
+                <Label>Excerpt</Label>
+                <p className="p-2 bg-muted rounded">{selectedRevision.excerpt || '(empty)'}</p>
+              </div>
+              <div>
+                <Label>Content</Label>
+                <pre className="p-2 bg-muted rounded text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
+                  {selectedRevision.body_markdown}
+                </pre>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setSelectedRevision(null)}>Close</Button>
+                <Button onClick={() => handleRestoreRevision(selectedRevision)}>Restore This Version</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
