@@ -4,9 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { BlogCard } from '@/components/blog/BlogCard';
+import { BlogBreadcrumb, BLOG_BREADCRUMBS } from '@/components/blog/BlogBreadcrumb';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 
 export default function BlogSeries() {
   const { slug } = useParams<{ slug: string }>();
@@ -38,16 +37,32 @@ export default function BlogSeries() {
     fetch();
   }, [slug]);
 
+  const breadcrumbItems = [
+    BLOG_BREADCRUMBS.home,
+    BLOG_BREADCRUMBS.blog,
+    { label: "Series", href: "/blog" },
+    { label: series?.name || "Series" }
+  ];
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": series?.name || "Series",
+    "description": series?.description || `Articles in the ${series?.name || 'series'} on TheDealCalc`,
+    "url": `https://thedealcalc.com/blog/series/${slug}`,
+  };
+
   return (
     <Layout>
       <Helmet>
         <title>{series?.name || 'Series'} | TheDealCalc Blog</title>
+        <meta name="description" content={series?.description || `Browse articles in the ${series?.name || 'series'}`} />
+        <link rel="canonical" href={`https://thedealcalc.com/blog/series/${slug}`} />
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
-          <Button variant="ghost" asChild className="mb-6">
-            <Link to="/blog"><ArrowLeft className="h-4 w-4 mr-2" />Back to Blog</Link>
-          </Button>
+          <BlogBreadcrumb items={breadcrumbItems} includeJsonLd={false} />
           <h1 className="text-4xl font-bold mb-2">{series?.name || 'Series'}</h1>
           {series?.description && <p className="text-muted-foreground mb-8">{series.description}</p>}
           

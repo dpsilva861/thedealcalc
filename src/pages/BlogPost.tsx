@@ -8,6 +8,7 @@ import { TableOfContents } from '@/components/blog/TableOfContents';
 import { ReadingProgress } from '@/components/blog/ReadingProgress';
 import { RelatedPosts } from '@/components/blog/RelatedPosts';
 import { SeriesNavigation } from '@/components/blog/SeriesNavigation';
+import { BlogBreadcrumb, BLOG_BREADCRUMBS } from '@/components/blog/BlogBreadcrumb';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -231,15 +232,12 @@ export default function BlogPost() {
     "mainEntityOfPage": canonicalUrl
   };
 
-  const breadcrumbLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": window.location.origin },
-      { "@type": "ListItem", "position": 2, "name": "Blog", "item": `${window.location.origin}/blog` },
-      { "@type": "ListItem", "position": 3, "name": post.title, "item": canonicalUrl }
-    ]
-  };
+  // Breadcrumb items for UI - note: JSON-LD is already handled above
+  const breadcrumbItems = [
+    BLOG_BREADCRUMBS.home,
+    BLOG_BREADCRUMBS.blog,
+    { label: post.title }
+  ];
 
   return (
     <Layout>
@@ -260,7 +258,6 @@ export default function BlogPost() {
           <meta property="article:published_time" content={new Date(post.posted_at).toISOString()} />
         )}
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
       </Helmet>
 
       <ReadingProgress />
@@ -268,12 +265,7 @@ export default function BlogPost() {
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-4xl mx-auto">
-            <Button variant="ghost" asChild className="mb-8">
-              <Link to="/blog">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Blog
-              </Link>
-            </Button>
+            <BlogBreadcrumb items={breadcrumbItems} />
 
             <div className="lg:flex lg:gap-8">
               {/* Main content */}

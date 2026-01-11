@@ -6,6 +6,7 @@ import { BlogCard } from '@/components/blog/BlogCard';
 import { FeaturedHero } from '@/components/blog/FeaturedHero';
 import { BlogFilters } from '@/components/blog/BlogFilters';
 import { BlogPagination } from '@/components/blog/BlogPagination';
+import { BlogBreadcrumb, BLOG_BREADCRUMBS } from '@/components/blog/BlogBreadcrumb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Rss } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -173,6 +174,10 @@ export default function Blog() {
 
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-12 max-w-5xl">
+          <BlogBreadcrumb 
+            items={[BLOG_BREADCRUMBS.home, BLOG_BREADCRUMBS.blog]} 
+            includeJsonLd={false} 
+          />
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-4xl font-bold mb-2">Blog</h1>
