@@ -21,12 +21,12 @@ function getScrollParent(el: HTMLElement | null): HTMLElement | null {
 /**
  * Deterministic scroll-to-top for state-based wizard step transitions.
  *
- * Why this works:
- * - Runs on `step` change (after DOM commit), not in click handlers.
- * - Blurs the active element to prevent browsers from keeping the clicked button in view.
- * - Uses an anchor `scrollIntoView()` so it works with custom scroll containers.
- * - Double-ticks (rAF + timeout) to defeat scroll restoration quirks (notably iOS).
- * - Preserves initial hash-anchor behavior by skipping the first run when a hash exists.
+ * Two-phase approach:
+ * 1. Primary: scroll immediately after DOM commit (via rAF).
+ * 2. Fallback: if scroll didn't land near top, retry once at 150ms.
+ *
+ * This avoids the "creeping" multi-scroll effect while still handling
+ * iOS Safari scroll restoration quirks.
  */
 export function useStepScrollToTop(step: unknown) {
   const topRef = useRef<HTMLDivElement | null>(null);
@@ -59,49 +59,55 @@ export function useStepScrollToTop(step: unknown) {
     // Blur immediately to prevent browser from keeping clicked button in view.
     (document.activeElement as HTMLElement | null)?.blur?.();
 
-    const scrollNow = () => {
-      const anchor = topRef.current;
-      const scrollParent = getScrollParent(anchor);
+    const anchor = topRef.current;
+    const scrollParent = getScrollParent(anchor);
 
-      // If the wizard lives in a scroll container, reset it.
+    const doScroll = () => {
+      // Reset scroll container if present.
       if (scrollParent) scrollParent.scrollTop = 0;
 
-      // Prefer anchor scrolling (works inside scroll containers).
+      // Focus anchor with preventScroll to avoid focus-induced scrolling.
       if (anchor) {
+        (anchor as HTMLElement).focus?.({ preventScroll: true });
         anchor.scrollIntoView({ block: "start", behavior: "auto" });
       }
 
-      // Hard fallbacks for iOS/scroll restoration weirdness.
+      // Hard fallbacks for all browsers.
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       const se = document.scrollingElement as HTMLElement | null;
       if (se) se.scrollTop = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
 
-      // Ensure container (if any) ended at top.
+      // Ensure container ended at top.
       if (scrollParent) scrollParent.scrollTop = 0;
     };
 
-    // Immediate attempt (may be overridden by browser scroll restoration).
-    scrollNow();
+    const needsFallback = (): boolean => {
+      const parentTop = scrollParent ? scrollParent.scrollTop : 0;
+      const winTop = window.scrollY;
+      return winTop > 8 || parentTop > 8;
+    };
 
-    // Multiple delayed ticks to defeat scroll restoration on iOS Safari + Chrome.
-    let t1: number | undefined;
-    let t2: number | undefined;
-    let t3: number | undefined;
+    let fallbackTimeout: number | undefined;
+    let rafId2: number | undefined;
 
     const rafId = requestAnimationFrame(() => {
-      scrollNow();
-      t1 = window.setTimeout(scrollNow, 50);
-      t2 = window.setTimeout(scrollNow, 150);
-      t3 = window.setTimeout(scrollNow, 300);
+      doScroll();
+
+      // Check if scroll succeeded after next frame.
+      rafId2 = requestAnimationFrame(() => {
+        if (needsFallback()) {
+          // One fallback attempt only.
+          fallbackTimeout = window.setTimeout(doScroll, 150);
+        }
+      });
     });
 
     return () => {
       cancelAnimationFrame(rafId);
-      if (t1) window.clearTimeout(t1);
-      if (t2) window.clearTimeout(t2);
-      if (t3) window.clearTimeout(t3);
+      if (rafId2) cancelAnimationFrame(rafId2);
+      if (fallbackTimeout) window.clearTimeout(fallbackTimeout);
     };
   }, [step]);
 
