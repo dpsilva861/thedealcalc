@@ -36,6 +36,12 @@ function UnderwriteContent() {
 
   const CurrentStepComponent = STEPS[currentStep].component;
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+
   const handleNext = () => {
     // Validate address step before proceeding
     if (currentStep === 0) {
@@ -59,12 +65,14 @@ function UnderwriteContent() {
 
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
+      scrollToTop();
     }
   };
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      scrollToTop();
     }
   };
 

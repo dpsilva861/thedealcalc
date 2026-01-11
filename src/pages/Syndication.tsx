@@ -35,12 +35,24 @@ function SyndicationContent() {
 
   const CurrentStepComponent = STEPS[currentStep].component;
   
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+
   const handleNext = () => {
-    if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1);
+    if (currentStep < STEPS.length - 1) {
+      setCurrentStep(currentStep + 1);
+      scrollToTop();
+    }
   };
   
   const handleBack = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      scrollToTop();
+    }
   };
 
   const handleRunAnalysis = () => {
