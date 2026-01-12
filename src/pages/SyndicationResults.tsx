@@ -75,21 +75,21 @@ function SyndicationResultsContent() {
   const handleExportPDF = async () => {
     if (!inputs) return;
     devLog.exportClicked("Syndication", "pdf");
-    exportSyndicationToPDF(inputs, results);
+    exportSyndicationToPDF({ inputs, results });
     trackEvent("export_pdf", { calculator: "syndication" });
   };
 
   const handleExportCSV = () => {
     if (!inputs) return;
     devLog.exportClicked("Syndication", "csv");
-    exportSyndicationToCSV(inputs, results);
+    exportSyndicationToCSV({ inputs, results });
     trackEvent("export_csv", { calculator: "syndication" });
   };
 
   const handleExportExcel = async () => {
     if (!inputs) return;
     devLog.exportClicked("Syndication", "excel");
-    await exportSyndicationToExcel(inputs, results);
+    await exportSyndicationToExcel({ inputs, results });
     trackEvent("export_excel", { calculator: "syndication" });
   };
 

@@ -46,7 +46,7 @@ export const devLog = {
     );
   },
 
-  exportClicked: (calculator: string, format: 'pdf' | 'csv' | 'excel') => {
+  exportClicked: (calculator: string, format: 'pdf' | 'csv' | 'excel' | 'docx' | 'pptx') => {
     if (!isDev()) return;
     console.log(
       `%c[${calculator}] 📥 Export ${format.toUpperCase()} clicked`,
