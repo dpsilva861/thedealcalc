@@ -6,39 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { 
   ArrowLeft, AlertTriangle, CheckCircle2, TrendingUp, DollarSign, 
-  Percent, Home, Download, FileSpreadsheet, RefreshCw 
+  Percent, Home
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 import { devLog } from "@/lib/devLogger";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ExportDropdown } from "@/components/exports/ExportDropdown";
+import { transformBRRRRToCanonical } from "@/lib/exports/transformers";
 import { 
   exportBRRRRToExcel, 
   exportBRRRRToCSV, 
   exportBRRRRToPDF 
 } from "@/lib/calculators/brrrr/exports";
-import { BRRRRResults as BRRRRResultsType } from "@/lib/calculators/brrrr/types";
+import { BRRRRResults as BRRRRResultsType, BRRRRInputs } from "@/lib/calculators/brrrr/types";
 
 function BRRRRResultsContent() {
   const { results: contextResults, inputs: contextInputs } = useBRRRR();
-  const [generatingPDF, setGeneratingPDF] = useState(false);
   const [localResults, setLocalResults] = useState<BRRRRResultsType | null>(null);
-  const [localInputs, setLocalInputs] = useState<any>(null);
+  const [localInputs, setLocalInputs] = useState<BRRRRInputs | null>(null);
 
   // On mount, check localStorage as fallback for refresh scenarios
   useEffect(() => {
     if (!contextResults) {
-      // Try new standardized keys first, then legacy keys
       const resultsKeys = ["dealcalc:brrrr:results", "brrrr_results"];
       const stateKeys = ["dealcalc:brrrr:state", "brrrr_state"];
       
-      // Load results
       for (const key of resultsKeys) {
         try {
           const storedResults = localStorage.getItem(key);
@@ -56,15 +48,13 @@ function BRRRRResultsContent() {
         }
       }
       
-      // Load inputs for export
       for (const key of stateKeys) {
         try {
           const storedState = localStorage.getItem(key);
           if (storedState) {
             const parsedState = JSON.parse(storedState);
-          if (parsedState && parsedState.inputs) {
+            if (parsedState && parsedState.inputs) {
               setLocalInputs(parsedState.inputs);
-              devLog.resultsLoaded("BRRRR", key);
               break;
             }
           }
@@ -76,7 +66,6 @@ function BRRRRResultsContent() {
     }
   }, [contextResults]);
 
-  // Use context results if available, otherwise fall back to localStorage
   const results = contextResults || localResults;
   const inputs = contextInputs || localInputs;
 
@@ -93,50 +82,40 @@ function BRRRRResultsContent() {
 
   const { holdingPhase, refinance, rental, metrics, riskFlags, sensitivity } = results;
 
-  const exportData = {
-    inputs,
-    results,
-    propertyAddress: undefined, // BRRRR doesn't have address input currently
-  };
+  const exportData = { inputs, results, propertyAddress: undefined };
 
   const handleExportPDF = async () => {
-    if (generatingPDF) return;
-    setGeneratingPDF(true);
     devLog.exportClicked("BRRRR", "pdf");
-    try {
-      exportBRRRRToPDF(exportData);
-      trackEvent("export_pdf", { calculator: "brrrr" });
-      toast.success("PDF downloaded");
-    } catch (err) {
-      console.error("PDF export failed:", err);
-      toast.error("Failed to generate PDF");
-    } finally {
-      setGeneratingPDF(false);
-    }
+    exportBRRRRToPDF(exportData);
+    trackEvent("export_pdf", { calculator: "brrrr" });
   };
 
   const handleExportCSV = () => {
     devLog.exportClicked("BRRRR", "csv");
-    try {
-      exportBRRRRToCSV(exportData);
-      trackEvent("export_csv", { calculator: "brrrr" });
-      toast.success("CSV exported successfully");
-    } catch (err) {
-      console.error("CSV export failed:", err);
-      toast.error("Failed to export CSV");
-    }
+    exportBRRRRToCSV(exportData);
+    trackEvent("export_csv", { calculator: "brrrr" });
   };
 
   const handleExportExcel = async () => {
     devLog.exportClicked("BRRRR", "excel");
-    try {
-      await exportBRRRRToExcel(exportData);
-      trackEvent("export_excel", { calculator: "brrrr" });
-      toast.success("Excel file exported successfully");
-    } catch (err) {
-      console.error("Excel export failed:", err);
-      toast.error("Failed to export Excel file");
-    }
+    await exportBRRRRToExcel(exportData);
+    trackEvent("export_excel", { calculator: "brrrr" });
+  };
+
+  const handleExportDocx = async () => {
+    if (!inputs) return;
+    devLog.exportClicked("BRRRR", "docx");
+    const { exportToDocx } = await import("@/lib/exports/docx");
+    const canonicalData = transformBRRRRToCanonical(inputs, results);
+    await exportToDocx(canonicalData);
+  };
+
+  const handleExportPptx = async () => {
+    if (!inputs) return;
+    devLog.exportClicked("BRRRR", "pptx");
+    const { exportToPptx } = await import("@/lib/exports/pptx");
+    const canonicalData = transformBRRRRToCanonical(inputs, results);
+    await exportToPptx(canonicalData);
   };
 
   return (
@@ -152,37 +131,14 @@ function BRRRRResultsContent() {
             <Button variant="outline" asChild>
               <Link to="/brrrr"><ArrowLeft className="h-4 w-4 mr-2" />Edit Inputs</Link>
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="hero">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={handleExportPDF} disabled={generatingPDF}>
-                  {generatingPDF ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      <span className="text-muted-foreground">Generating PDF…</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4 mr-2" />
-                      Export PDF
-                    </>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportCSV}>
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Export CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportExcel}>
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Export Excel
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <ExportDropdown
+              calculatorType="brrrr"
+              onExportExcel={handleExportExcel}
+              onExportCSV={handleExportCSV}
+              onExportPDF={handleExportPDF}
+              onExportDocx={handleExportDocx}
+              onExportPptx={handleExportPptx}
+            />
           </div>
         </div>
 

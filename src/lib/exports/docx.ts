@@ -21,7 +21,7 @@ import {
   convertInchesToTwip,
   PageBreak,
 } from 'docx';
-import { CanonicalExportData, ExportMetric, ExportWarning, SensitivityTable } from './types';
+import { CanonicalExportData, ExportMetric, ExportWarning, SensitivityTable, ExportTableRow } from './types';
 
 // Color constants (matching brand)
 const COLORS = {
@@ -56,7 +56,7 @@ function createCell(
             text,
             bold: bold ?? isHeader,
             size: isHeader ? 22 : 20,
-            color: COLORS.text,
+            color: isHeader ? COLORS.white : COLORS.text,
           }),
         ],
       }),
@@ -179,6 +179,44 @@ function createSensitivityTable(table: SensitivityTable): Table {
 }
 
 /**
+ * Create cash flow table
+ */
+function createCashFlowTable(cashFlowTable: NonNullable<CanonicalExportData['cashFlowTable']>): (Paragraph | Table)[] {
+  const { title, columns, rows } = cashFlowTable;
+  
+  const headerRow = new TableRow({
+    children: columns.map((col) => createCell(col, { isHeader: true, align: AlignmentType.CENTER })),
+  });
+
+  const dataRows = rows.map((row, idx) => {
+    const shading = idx % 2 === 1 ? COLORS.lightBg : undefined;
+    return new TableRow({
+      children: columns.map((col) => createCell(String(row[col] ?? ''), { align: AlignmentType.RIGHT, shading })),
+    });
+  });
+
+  return [
+    new Paragraph({
+      text: title,
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: 300, after: 100 },
+    }),
+    new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [headerRow, ...dataRows],
+      borders: {
+        top: { style: BorderStyle.SINGLE, size: 1, color: 'E0E0E0' },
+        bottom: { style: BorderStyle.SINGLE, size: 1, color: 'E0E0E0' },
+        left: { style: BorderStyle.SINGLE, size: 1, color: 'E0E0E0' },
+        right: { style: BorderStyle.SINGLE, size: 1, color: 'E0E0E0' },
+        insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: 'E0E0E0' },
+        insideVertical: { style: BorderStyle.SINGLE, size: 1, color: 'E0E0E0' },
+      },
+    }),
+  ];
+}
+
+/**
  * Export data to Word document
  */
 export async function exportToDocx(data: CanonicalExportData): Promise<void> {
@@ -264,6 +302,16 @@ export async function exportToDocx(data: CanonicalExportData): Promise<void> {
                 ]
               : []),
           ]),
+
+          // Cash Flow Table
+          ...(data.cashFlowTable
+            ? [
+                new Paragraph({
+                  children: [new PageBreak()],
+                }),
+                ...createCashFlowTable(data.cashFlowTable),
+              ]
+            : []),
 
           // Sensitivity Analysis
           ...(data.sensitivityTables && data.sensitivityTables.length > 0
