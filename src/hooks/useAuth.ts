@@ -35,6 +35,33 @@ export function useAuth() {
     return { error };
   };
 
+  const signUp = async (email: string, password: string) => {
+    const redirectUrl = `${window.location.origin}/admin/blog`;
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
+    });
+
+    return { data, error };
+  };
+
+  const signInWithGoogle = async () => {
+    const redirectTo = `${window.location.origin}/admin/blog`;
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+      },
+    });
+
+    return { data, error };
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     return { error };
@@ -45,6 +72,8 @@ export function useAuth() {
     session,
     loading,
     signIn,
+    signUp,
+    signInWithGoogle,
     signOut,
   };
 }
