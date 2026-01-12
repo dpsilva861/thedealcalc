@@ -51,6 +51,7 @@ const BlogTag = lazy(() => import("./pages/BlogTag"));
 const AdminBlog = lazy(() => import("./pages/AdminBlog"));
 const AdminTaxonomy = lazy(() => import("./pages/AdminTaxonomy"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,7 @@ const App = () => (
                     <Route path="/blog/:slug" element={<BlogPost />} />
                     {/* Admin */}
                     <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin/reset-password" element={<ResetPassword />} />
                     <Route path="/admin/blog" element={<AdminBlog />} />
                     <Route path="/admin/blog/taxonomy" element={<AdminTaxonomy />} />
                     <Route path="*" element={<NotFound />} />
