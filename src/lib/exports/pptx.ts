@@ -236,7 +236,7 @@ function createSourcesUsesSlide(pptx: PptxGenJS, data: CanonicalExportData): voi
       ...sourcesData.map(m => [m.label, formatValue(m)]),
     ];
     
-    slide.addTable(tableData as any, {
+    slide.addTable(tableData as PptxGenJS.TableRow[], {
       x: 0.5,
       y: 1.1,
       w: 4.3,
@@ -257,7 +257,7 @@ function createSourcesUsesSlide(pptx: PptxGenJS, data: CanonicalExportData): voi
       ...usesData.map(m => [m.label, formatValue(m)]),
     ];
     
-    slide.addTable(tableData as any, {
+    slide.addTable(tableData as PptxGenJS.TableRow[], {
       x: 5,
       y: 1.1,
       w: 4.3,
@@ -268,6 +268,51 @@ function createSourcesUsesSlide(pptx: PptxGenJS, data: CanonicalExportData): voi
       align: 'left',
     });
   }
+}
+
+/**
+ * Create cash flow slide (if available)
+ */
+function createCashFlowSlide(pptx: PptxGenJS, data: CanonicalExportData): void {
+  if (!data.cashFlowTable || data.cashFlowTable.rows.length === 0) return;
+  
+  const slide = pptx.addSlide();
+  const { title, columns, rows } = data.cashFlowTable;
+  
+  // Title
+  slide.addText(title, {
+    x: 0.5,
+    y: 0.3,
+    w: 9,
+    h: 0.6,
+    fontSize: 28,
+    bold: true,
+    color: COLORS.primary,
+    fontFace: 'Calibri',
+  });
+  
+  // Build table data
+  const headerRow = columns.map(col => ({ 
+    text: col, 
+    options: { bold: true, fill: { color: COLORS.headerBg }, color: 'FFFFFF' } 
+  }));
+  
+  // Limit rows to fit on slide
+  const displayRows = rows.slice(0, 10);
+  const dataRows = displayRows.map(row => 
+    columns.map(col => String(row[col] ?? ''))
+  );
+  
+  slide.addTable([headerRow, ...dataRows] as PptxGenJS.TableRow[], {
+    x: 0.3,
+    y: 1.0,
+    w: 9.4,
+    fontSize: 9,
+    fontFace: 'Calibri',
+    color: COLORS.text,
+    border: { color: 'E0E0E0', pt: 1 },
+    align: 'center',
+  });
 }
 
 /**
@@ -302,7 +347,7 @@ function createSensitivitySlide(pptx: PptxGenJS, table: SensitivityTable): void 
     })),
   ]);
   
-  slide.addTable([headerRow, ...dataRows] as any, {
+  slide.addTable([headerRow, ...dataRows] as PptxGenJS.TableRow[], {
     x: 0.5,
     y: 1.1,
     w: 9,
@@ -373,6 +418,7 @@ export async function exportToPptx(data: CanonicalExportData): Promise<void> {
   createMetricsSlide(pptx, data);
   createWarningsSlide(pptx, data);
   createSourcesUsesSlide(pptx, data);
+  createCashFlowSlide(pptx, data);
   
   // Add sensitivity slides
   if (data.sensitivityTables) {

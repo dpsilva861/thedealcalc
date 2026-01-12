@@ -13,7 +13,6 @@ import {
 } from "@/lib/underwriting";
 import {
   ArrowLeft,
-  Download,
   TrendingUp,
   DollarSign,
   Percent,
@@ -21,19 +20,14 @@ import {
   AlertTriangle,
   RefreshCw,
   Edit,
-  FileSpreadsheet,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 import { devLog } from "@/lib/devLogger";
 import { exportToPDF, exportToCSV, exportToExcel } from "@/lib/exportUtils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ExportDropdown } from "@/components/exports/ExportDropdown";
+import { transformUnderwritingToCanonical } from "@/lib/exports/transformers";
 
 function ResultsContent() {
   const navigate = useNavigate();
@@ -42,7 +36,6 @@ function ResultsContent() {
   const [baseResults, setBaseResults] = useState<UnderwritingResults | null>(null);
   const [outlookResults, setOutlookResults] = useState<UnderwritingResults | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [generatingPDF, setGeneratingPDF] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<PropertyAddress | null>(null);
   const [displayInputs, setDisplayInputs] = useState<UnderwritingInputs | null>(null);
 
@@ -146,7 +139,7 @@ function ResultsContent() {
     },
   ];
 
-  // Red flags / breakpoints (computed first so we can pass to exports)
+  // Red flags / breakpoints
   const redFlags: string[] = [];
   
   metrics.warnings.forEach(w => {
@@ -181,7 +174,7 @@ function ResultsContent() {
     redFlags.push("Equity multiple below 1.0x indicates loss of principal");
   }
 
-  // Export data object for all export functions
+  // Export data object for legacy export functions
   const exportData = {
     inputs: currentInputs,
     results,
@@ -192,48 +185,45 @@ function ResultsContent() {
   };
 
   const handleExportPDF = async () => {
-    if (generatingPDF) return;
-    setGeneratingPDF(true);
     devLog.exportClicked("Underwriting", "pdf");
-    try {
-      exportToPDF(exportData);
-      trackEvent("export_pdf", { calculator: "underwriting" });
-      toast.success("PDF downloaded");
-    } catch (err) {
-      console.error("PDF export failed:", err);
-      toast.error("Failed to generate PDF");
-    } finally {
-      setGeneratingPDF(false);
-    }
+    exportToPDF(exportData);
+    trackEvent("export_pdf", { calculator: "underwriting" });
   };
 
   const handleExportCSV = () => {
     devLog.exportClicked("Underwriting", "csv");
-    try {
-      exportToCSV(exportData);
-      trackEvent("export_csv", { calculator: "underwriting" });
-      toast.success("CSV exported successfully");
-    } catch (err) {
-      console.error("CSV export failed:", err);
-      toast.error("Failed to export CSV");
-    }
+    exportToCSV(exportData);
+    trackEvent("export_csv", { calculator: "underwriting" });
   };
 
   const handleExportExcel = async () => {
     devLog.exportClicked("Underwriting", "excel");
-    try {
-      await exportToExcel(exportData);
-      trackEvent("export_excel", { calculator: "underwriting" });
-      toast.success("Excel file exported successfully");
-    } catch (err) {
-      console.error("Excel export failed:", err);
-      toast.error("Failed to export Excel file");
-    }
+    await exportToExcel(exportData);
+    trackEvent("export_excel", { calculator: "underwriting" });
+  };
+
+  const handleExportDocx = async () => {
+    devLog.exportClicked("Underwriting", "docx");
+    const { exportToDocx } = await import("@/lib/exports/docx");
+    const canonicalData = transformUnderwritingToCanonical(
+      currentInputs, results, displayAddress || undefined, monthlyData, annualSummary, redFlags
+    );
+    await exportToDocx(canonicalData);
+  };
+
+  const handleExportPptx = async () => {
+    devLog.exportClicked("Underwriting", "pptx");
+    const { exportToPptx } = await import("@/lib/exports/pptx");
+    const canonicalData = transformUnderwritingToCanonical(
+      currentInputs, results, displayAddress || undefined, monthlyData, annualSummary, redFlags
+    );
+    await exportToPptx(canonicalData);
   };
 
   const handleEditInputs = () => {
     navigate("/underwrite");
   };
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-cream-dark print:bg-background">
       {/* Header */}
@@ -254,42 +244,14 @@ function ResultsContent() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="hero">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem 
-                    onClick={handleExportPDF}
-                    disabled={generatingPDF}
-                  >
-                    {generatingPDF ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        <span className="text-muted-foreground">Generating PDF…</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-4 w-4 mr-2" />
-                        Export PDF
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportCSV}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Export CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportExcel}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Export Excel
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <ExportDropdown
+              calculatorType="underwriting"
+              onExportExcel={handleExportExcel}
+              onExportCSV={handleExportCSV}
+              onExportPDF={handleExportPDF}
+              onExportDocx={handleExportDocx}
+              onExportPptx={handleExportPptx}
+            />
           </div>
         </div>
       </div>

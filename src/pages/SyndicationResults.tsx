@@ -8,14 +8,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
-import { SyndicationResults as SyndicationResultsType } from "@/lib/calculators/syndication/types";
+import { SyndicationResults as SyndicationResultsType, SyndicationInputs } from "@/lib/calculators/syndication/types";
 import { devLog } from "@/lib/devLogger";
+import { trackEvent } from "@/lib/analytics";
+import { ExportDropdown } from "@/components/exports/ExportDropdown";
+import { transformSyndicationToCanonical } from "@/lib/exports/transformers";
+import { exportSyndicationToExcel, exportSyndicationToCSV, exportSyndicationToPDF } from "@/lib/calculators/syndication/exports";
 
 function SyndicationResultsContent() {
   const [searchParams] = useSearchParams();
   const isDevMode = searchParams.get("dev") === "1";
   const { results: contextResults, inputs: contextInputs } = useSyndication();
   const [localResults, setLocalResults] = useState<SyndicationResultsType | null>(null);
+  const [localInputs, setLocalInputs] = useState<SyndicationInputs | null>(null);
 
   useEffect(() => {
     if (!contextResults) {
@@ -35,10 +40,27 @@ function SyndicationResultsContent() {
           localStorage.removeItem(key);
         }
       }
+      
+      for (const key of ["dealcalc:syndication:state", "syndication_state"]) {
+        try {
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed?.inputs) {
+              setLocalInputs(parsed.inputs);
+              break;
+            }
+          }
+        } catch (err) {
+          localStorage.removeItem(key);
+        }
+      }
     }
   }, [contextResults]);
 
   const results = contextResults || localResults;
+  const inputs = contextInputs || localInputs;
+
   if (!results) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
@@ -50,16 +72,63 @@ function SyndicationResultsContent() {
     );
   }
 
+  const handleExportPDF = async () => {
+    if (!inputs) return;
+    devLog.exportClicked("Syndication", "pdf");
+    exportSyndicationToPDF(inputs, results);
+    trackEvent("export_pdf", { calculator: "syndication" });
+  };
+
+  const handleExportCSV = () => {
+    if (!inputs) return;
+    devLog.exportClicked("Syndication", "csv");
+    exportSyndicationToCSV(inputs, results);
+    trackEvent("export_csv", { calculator: "syndication" });
+  };
+
+  const handleExportExcel = async () => {
+    if (!inputs) return;
+    devLog.exportClicked("Syndication", "excel");
+    await exportSyndicationToExcel(inputs, results);
+    trackEvent("export_excel", { calculator: "syndication" });
+  };
+
+  const handleExportDocx = async () => {
+    if (!inputs) return;
+    devLog.exportClicked("Syndication", "docx");
+    const { exportToDocx } = await import("@/lib/exports/docx");
+    const canonicalData = transformSyndicationToCanonical(inputs, results);
+    await exportToDocx(canonicalData);
+  };
+
+  const handleExportPptx = async () => {
+    if (!inputs) return;
+    devLog.exportClicked("Syndication", "pptx");
+    const { exportToPptx } = await import("@/lib/exports/pptx");
+    const canonicalData = transformSyndicationToCanonical(inputs, results);
+    await exportToPptx(canonicalData);
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Syndication Results</h1>
-          <p className="text-sm text-muted-foreground">{contextInputs?.deal_name || "Deal"} - LP/GP waterfall</p>
+          <p className="text-sm text-muted-foreground">{inputs?.deal_name || "Deal"} - LP/GP waterfall</p>
         </div>
-        <Button variant="outline" asChild>
-          <Link to="/syndication"><ArrowLeft className="h-4 w-4 mr-2" />Edit Inputs</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/syndication"><ArrowLeft className="h-4 w-4 mr-2" />Edit Inputs</Link>
+          </Button>
+          <ExportDropdown
+            calculatorType="syndication"
+            onExportExcel={handleExportExcel}
+            onExportCSV={handleExportCSV}
+            onExportPDF={handleExportPDF}
+            onExportDocx={handleExportDocx}
+            onExportPptx={handleExportPptx}
+          />
+        </div>
       </div>
       {isDevMode && <div className="mb-6"><SyndicationSelfTest /></div>}
       <Tabs defaultValue="results" className="w-full">
