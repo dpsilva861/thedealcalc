@@ -18,7 +18,8 @@ export const BRAND_DESCRIPTION =
   "Real estate investment calculators for analyzing rental properties, BRRRR deals, syndications, and NPV.";
 
 // Social profiles - only include verified, existing profiles
-// Keep empty if no public social profiles exist
+// TODO: Add verified social profile URLs once created (do not guess)
+// Examples: "https://twitter.com/thedealcalc", "https://linkedin.com/company/thedealcalc"
 export const BRAND_SAME_AS: string[] = [];
 
 // Logo dimensions (for ImageObject in schema)

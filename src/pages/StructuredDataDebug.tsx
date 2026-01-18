@@ -242,6 +242,66 @@ function validateWebPage(schema: JsonRecord): ValidationResult[] {
   return results;
 }
 
+function validateOrganization(schema: JsonRecord): ValidationResult[] {
+  const results: ValidationResult[] = [];
+  results.push({ field: "@type", status: "pass", message: "Organization" });
+
+  const requiredFields = ["name", "url"] as const;
+  for (const field of requiredFields) {
+    if (schema[field]) {
+      results.push({ field, status: "pass", message: String(schema[field]).slice(0, 60) });
+    } else {
+      results.push({ field, status: "fail", message: `Missing ${field}` });
+    }
+  }
+
+  // Logo is recommended but not required
+  if (schema.logo) {
+    const logo = schema.logo as JsonRecord;
+    if (typeof logo === "object" && logo.url) {
+      results.push({ field: "logo", status: "pass", message: String(logo.url).slice(0, 50) });
+    } else if (typeof schema.logo === "string") {
+      results.push({ field: "logo", status: "pass", message: String(schema.logo).slice(0, 50) });
+    }
+  } else {
+    results.push({ field: "logo", status: "warn", message: "No logo specified (recommended)" });
+  }
+
+  // sameAs only if social profiles exist
+  if (schema.sameAs) {
+    const sameAs = schema.sameAs as string[];
+    if (Array.isArray(sameAs) && sameAs.length > 0) {
+      results.push({ field: "sameAs", status: "pass", message: `${sameAs.length} social profiles` });
+    }
+  }
+
+  return results;
+}
+
+function validateWebSite(schema: JsonRecord): ValidationResult[] {
+  const results: ValidationResult[] = [];
+  results.push({ field: "@type", status: "pass", message: "WebSite" });
+
+  const requiredFields = ["name", "url"] as const;
+  for (const field of requiredFields) {
+    if (schema[field]) {
+      results.push({ field, status: "pass", message: String(schema[field]).slice(0, 60) });
+    } else {
+      results.push({ field, status: "fail", message: `Missing ${field}` });
+    }
+  }
+
+  // Check for SearchAction
+  if (schema.potentialAction) {
+    const action = schema.potentialAction as JsonRecord;
+    if (action["@type"] === "SearchAction") {
+      results.push({ field: "potentialAction", status: "pass", message: "SearchAction configured" });
+    }
+  }
+
+  return results;
+}
+
 function validateSchema(schema: JsonRecord): SchemaValidation {
   const type = String(schema["@type"] || "Unknown");
   let results: ValidationResult[] = [];
@@ -263,6 +323,12 @@ function validateSchema(schema: JsonRecord): SchemaValidation {
       break;
     case "WebPage":
       results = validateWebPage(schema);
+      break;
+    case "Organization":
+      results = validateOrganization(schema);
+      break;
+    case "WebSite":
+      results = validateWebSite(schema);
       break;
     default:
       results = [{ field: "@type", status: "warn", message: `Unknown schema type: ${type}` }];
