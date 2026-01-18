@@ -42,6 +42,7 @@ import { CalculatorSelector } from '@/components/calculators/CalculatorSelector'
 import { ExportDropdown } from '@/components/exports/ExportDropdown';
 import { transformNPVToCanonical } from '@/lib/exports/npvTransformer';
 import { exportNPVToExcel, exportNPVToCSV, exportNPVToPDF } from '@/lib/calculators/npv/exports';
+import { generateDiscountRateSensitivity, NPVSensitivityRow } from '@/lib/calculators/npv/sensitivity';
 import { formatCurrency, formatPercent } from '@/lib/calculators/types';
 import { trackEvent } from '@/lib/analytics';
 import { devLog } from '@/lib/devLogger';
@@ -57,6 +58,7 @@ import {
   TrendingDown,
   AlertTriangle,
   CheckCircle2,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -74,7 +76,8 @@ function NPVCalculatorContent() {
   } = useNPV();
 
   const [showDiscountFactors, setShowDiscountFactors] = useState(false);
-
+  const [sensitivityData, setSensitivityData] = useState<NPVSensitivityRow[] | null>(null);
+  const [showSensitivity, setShowSensitivity] = useState(false);
   useEffect(() => {
     trackEvent('page_view', { page: '/npv-calculator' });
   }, []);
@@ -141,6 +144,15 @@ function NPVCalculatorContent() {
     const { exportToPptx } = await import('@/lib/exports/pptx');
     const canonicalData = transformNPVToCanonical(inputs, results);
     await exportToPptx(canonicalData);
+  };
+
+  // Sensitivity analysis handler
+  const handleGenerateSensitivity = () => {
+    if (!results) return;
+    trackEvent('generate_sensitivity', { calculator: 'npv' });
+    const sensitivity = generateDiscountRateSensitivity(inputs);
+    setSensitivityData(sensitivity);
+    setShowSensitivity(true);
   };
 
   const getFrequencyLabel = (freq: string) => {
@@ -593,6 +605,73 @@ function NPVCalculatorContent() {
                     </Table>
                   </div>
                 </CardContent>
+              </Card>
+
+              {/* Sensitivity Analysis */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Sensitivity Analysis
+                    </CardTitle>
+                    <CardDescription>See how NPV changes with discount rate</CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateSensitivity}
+                  >
+                    {sensitivityData ? 'Regenerate' : 'Generate'}
+                  </Button>
+                </CardHeader>
+                {showSensitivity && sensitivityData && sensitivityData.length > 0 && (
+                  <CardContent>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Discount Rate</TableHead>
+                            <TableHead className="text-right">NPV</TableHead>
+                            <TableHead className="text-right">PV Inflows</TableHead>
+                            <TableHead className="text-right">PV Outflows</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {sensitivityData.map((row, idx) => {
+                            const isBase = Math.abs(row.discountRate - inputs.discountRateAnnual) < 0.001;
+                            return (
+                              <TableRow 
+                                key={idx} 
+                                className={isBase ? 'bg-primary/10 font-medium' : ''}
+                              >
+                                <TableCell>
+                                  {formatPercent(row.discountRate)}
+                                  {isBase && <span className="ml-2 text-xs text-primary">(Base)</span>}
+                                </TableCell>
+                                <TableCell className={cn(
+                                  'text-right',
+                                  row.npv >= 0 ? 'text-primary' : 'text-destructive'
+                                )}>
+                                  {formatCurrency(row.npv)}
+                                </TableCell>
+                                <TableCell className="text-right text-primary">
+                                  {formatCurrency(row.pvInflows)}
+                                </TableCell>
+                                <TableCell className="text-right text-destructive">
+                                  -{formatCurrency(row.pvOutflows)}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      Range: 6% to 14% at 1% intervals. Highlighted row shows your base case.
+                    </p>
+                  </CardContent>
+                )}
               </Card>
             </>
           ) : (

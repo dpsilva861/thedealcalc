@@ -35,6 +35,7 @@ const CapRateCalculator = lazy(() => import("./pages/CapRateCalculator"));
 const CashOnCashCalculator = lazy(() => import("./pages/CashOnCashCalculator"));
 const RealEstateInvestmentCalculator = lazy(() => import("./pages/RealEstateInvestmentCalculator"));
 const NPVCalculator = lazy(() => import("./pages/NPVCalculator"));
+const About = lazy(() => import("./pages/About"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
 const Contact = lazy(() => import("./pages/Contact"));
