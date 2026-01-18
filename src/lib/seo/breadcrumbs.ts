@@ -28,7 +28,7 @@ export function generateBreadcrumbSchema(items: BreadcrumbItem[]) {
  */
 export const BREADCRUMBS = {
   home: { name: "Home", path: "/" },
-  calculators: { name: "Calculators", path: "/" },
+  calculators: { name: "Calculators", path: "/calculators" },
   brrrr: { name: "BRRRR Calculator", path: "/brrrr-calculator" },
   syndication: { name: "Syndication Calculator", path: "/syndication-calculator" },
   rental: { name: "Rental Property Calculator", path: "/rental-property-calculator" },
@@ -36,6 +36,7 @@ export const BREADCRUMBS = {
   cashOnCash: { name: "Cash on Cash Calculator", path: "/cash-on-cash-calculator" },
   fixAndFlip: { name: "Fix and Flip Calculator", path: "/fix-and-flip-calculator" },
   realEstateInvestment: { name: "Investment Calculator", path: "/real-estate-investment-calculator" },
+  npv: { name: "NPV Calculator", path: "/npv-calculator" },
   howItWorks: { name: "How It Works", path: "/how-it-works" },
   about: { name: "About", path: "/about" },
   contact: { name: "Contact", path: "/contact" },
