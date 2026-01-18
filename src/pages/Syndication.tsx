@@ -19,15 +19,23 @@ import { RelatedCalculators } from "@/components/calculators/RelatedCalculators"
 import { SavedScenariosPanel } from "@/components/calculators/SavedScenariosPanel";
 import { Button } from "@/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { validateSyndicationInputs } from "@/lib/calculators/syndication/validation";
+import { DEFAULT_SYNDICATION_INPUTS } from "@/lib/calculators/syndication/types";
 import { useSyndicationScenarios } from "@/hooks/useSyndicationScenarios";
+import { copyShareLink, decodeSyndicationParams } from "@/hooks/useShareLink";
 import { trackEvent } from "@/lib/analytics";
-import { ArrowLeft, ArrowRight, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Play, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import SyndicationSelfTest from "@/components/syndication/SyndicationSelfTest";
 import { useStepScrollToTop } from "@/hooks/useStepScrollToTop";
@@ -93,7 +101,7 @@ const jsonLd = {
 
 function SyndicationContent() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isDevMode = searchParams.get("dev") === "1";
   const {
     currentStep,
@@ -113,9 +121,32 @@ function SyndicationContent() {
     useCallback((loaded) => setInputs(loaded), [setInputs])
   );
 
+  // Load share params on mount
+  useEffect(() => {
+    const decoded = decodeSyndicationParams(searchParams);
+    if (decoded) {
+      const defaults = DEFAULT_SYNDICATION_INPUTS;
+      const merged = {
+        ...defaults,
+        hold_period_months: decoded.hold_period_months || defaults.hold_period_months,
+        acquisition: { ...defaults.acquisition, ...decoded.acquisition },
+        debt: { ...defaults.debt, ...decoded.debt },
+        equity: { ...defaults.equity, ...decoded.equity },
+        proforma: { ...defaults.proforma, ...decoded.proforma },
+        exit: { ...defaults.exit, ...decoded.exit },
+        waterfall: { ...defaults.waterfall, ...decoded.waterfall },
+      };
+      setInputs(merged);
+      toast.info('Inputs loaded from shared link');
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
+
   useEffect(() => {
     trackEvent("page_view", { page: "/syndication" });
   }, []);
+
+  const handleShare = () => copyShareLink('syndication', inputs);
 
   const CurrentStepComponent = STEPS[currentStep].component;
 
@@ -172,7 +203,22 @@ function SyndicationContent() {
               <h1 className="text-2xl font-bold text-foreground">Syndication Analyzer</h1>
             </div>
           </div>
-          <SyndicationPresetSelector />
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={handleShare}>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Copies a link that restores these inputs. Does not auto-run analysis.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <SyndicationPresetSelector />
+          </div>
         </div>
 
         <SyndicationStepIndicator

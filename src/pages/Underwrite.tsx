@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,12 @@ import { useUnderwriting } from "@/contexts/UnderwritingContext";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { SavedScenariosPanel } from "@/components/calculators/SavedScenariosPanel";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -22,8 +28,10 @@ import {
 } from "@/components/ui/accordion";
 import { validateInputs } from "@/lib/validation";
 import { useUnderwriteScenarios } from "@/hooks/useUnderwriteScenarios";
+import { copyShareLink, decodeUnderwriteParams } from "@/hooks/useShareLink";
+import { getDefaultInputs } from "@/lib/underwriting";
 import { trackEvent } from "@/lib/analytics";
-import { ArrowLeft, ArrowRight, Play, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Play, RotateCcw, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useStepScrollToTop } from "@/hooks/useStepScrollToTop";
 
@@ -88,6 +96,7 @@ const jsonLd = {
 
 function UnderwriteContent() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     currentStep,
     setCurrentStep,
@@ -106,9 +115,29 @@ function UnderwriteContent() {
     useCallback((loaded) => updateInputs(loaded), [updateInputs])
   );
 
+  // Load share params on mount
+  useEffect(() => {
+    const decoded = decodeUnderwriteParams(searchParams);
+    if (decoded) {
+      const defaults = getDefaultInputs();
+      const merged = {
+        ...defaults,
+        acquisition: { ...defaults.acquisition, ...decoded.acquisition },
+        income: { ...defaults.income, ...decoded.income },
+        expenses: { ...defaults.expenses, ...decoded.expenses },
+        financing: { ...defaults.financing, ...decoded.financing },
+      };
+      updateInputs(merged);
+      toast.info('Inputs loaded from shared link');
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
+
   useEffect(() => {
     trackEvent("page_view", { page: "/underwrite" });
   }, []);
+
+  const handleShare = () => copyShareLink('underwrite', inputs);
 
   const CurrentStepComponent = STEPS[currentStep].component;
 
@@ -227,10 +256,25 @@ function UnderwriteContent() {
                   Free to use • No signup required
                 </p>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleReset}>
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reset
-              </Button>
+              <div className="flex items-center gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" onClick={handleShare}>
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copies a link that restores these inputs. Does not auto-run analysis.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Button variant="ghost" size="sm" onClick={handleReset}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset
+                </Button>
+              </div>
             </div>
             <StepIndicator
               steps={STEPS}
