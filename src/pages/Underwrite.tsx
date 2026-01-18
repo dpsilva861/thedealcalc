@@ -44,27 +44,27 @@ const STEPS = [
 const faqs = [
   {
     question: "What is real estate underwriting?",
-    answer: "Underwriting is the process of analyzing a property's financials to determine if it meets your investment criteria. It includes projecting income, expenses, and returns over a hold period to assess risk and potential reward."
+    answer: "Underwriting is the process of modeling a property's income, expenses, financing, and exit assumptions to estimate returns and risk. It helps you decide whether a deal meets your criteria before committing capital."
   },
   {
-    question: "What is cash flow in rental property investing?",
-    answer: "Cash flow is the money remaining after all operating expenses and debt service payments. Positive cash flow means the property generates income after covering all costs. Negative cash flow means you're subsidizing the property each month."
+    question: "What does cash flow (CF) mean?",
+    answer: "Cash flow is the money left after operating expenses and debt payments. Positive cash flow means the property generates surplus cash. Negative cash flow means the property requires cash support to cover costs."
   },
   {
     question: "What is NOI (Net Operating Income)?",
-    answer: "NOI is gross rental income minus operating expenses, before mortgage payments and taxes. NOI = Effective Gross Income - Operating Expenses. It's used to calculate cap rate and is a key metric for comparing properties regardless of financing."
+    answer: "NOI is income after operating expenses but before financing and taxes. It is commonly used to compare properties regardless of loan structure and is used in metrics like cap rate and valuation."
   },
   {
-    question: "What is DSCR (Debt Service Coverage Ratio)?",
-    answer: "DSCR measures a property's ability to cover its debt payments. DSCR = NOI / Annual Debt Service. A DSCR of 1.25 means the property generates 25% more income than needed for loan payments. Most lenders require 1.0-1.25x minimum."
+    question: "What is DSCR?",
+    answer: "DSCR (Debt Service Coverage Ratio) compares NOI to debt service. It indicates how much cushion the property's income provides relative to required loan payments."
   },
   {
-    question: "How do I account for vacancy?",
-    answer: "Enter your expected economic vacancy rate (typically 5-10% for residential, higher for commercial). The calculator reduces gross potential rent by this percentage to estimate effective gross income."
+    question: "How should I model vacancy?",
+    answer: "Vacancy reflects expected loss from unoccupied units and non-payment. Modeling vacancy reduces gross potential rent to an effective income level that is more conservative than assuming full occupancy."
   },
   {
-    question: "What reserves should I budget?",
-    answer: "Common reserves include capital expenditures (CapEx) for major repairs (typically 5-10% of gross rent), and a maintenance reserve for routine repairs (5-8% of gross rent). Reserves reduce cash flow but protect against unexpected costs."
+    question: "Why include reserves in underwriting?",
+    answer: "Reserves account for future repairs and replacements that don't occur evenly each month. Including reserves makes cash flow estimates more realistic and reduces the risk of overestimating distributable cash."
   },
 ];
 

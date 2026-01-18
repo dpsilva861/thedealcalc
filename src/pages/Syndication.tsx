@@ -49,27 +49,27 @@ const STEPS = [
 const faqs = [
   {
     question: "What is a real estate syndication?",
-    answer: "A syndication is a partnership structure where multiple investors pool capital to acquire properties larger than they could buy individually. The General Partner (GP) sponsors and manages the deal, while Limited Partners (LPs) contribute capital and receive passive returns."
+    answer: "A syndication is a structure where multiple investors pool capital to buy a property. A sponsor (often called the General Partner or GP) typically sources the deal and manages execution, while other investors (often called Limited Partners or LPs) contribute capital and receive passive distributions based on the deal terms."
   },
   {
-    question: "What is a preferred return (pref)?",
-    answer: "A preferred return is a minimum annualized return that Limited Partners receive before the General Partner participates in profits. Common preferred returns are 6-10% annually. The pref can be paid from operating cash flow or accrue until sale."
+    question: "What is a preferred return?",
+    answer: "A preferred return is a distribution priority that allocates cash flow to LPs before certain profit splits apply. Depending on the agreement, it may be paid from current cash flow or accrue and be paid later."
   },
   {
-    question: "How does a waterfall distribution work?",
-    answer: "A waterfall defines how profits are split between LP and GP at different return thresholds. Typically, LPs receive their preferred return first (Tier 1), then remaining profits are split with the GP receiving an increasing share (promote) at higher IRR hurdles."
+    question: "What is a waterfall distribution?",
+    answer: "A waterfall is a set of rules that determines how cash flow and sale proceeds are split between LPs and the GP across one or more tiers. Each tier can change the split based on meeting defined return hurdles."
   },
   {
-    question: "What is a promote in syndication?",
-    answer: "A promote (also called carried interest) is the GP's share of profits above the preferred return. For example, after LPs receive their 8% pref, profits might split 70/30 LP/GP. At higher IRR thresholds, the GP's promote may increase to 40% or 50%."
+    question: "What is a promote?",
+    answer: "A promote (also called carried interest) is the GP's share of profits in certain tiers of the waterfall. It is typically earned after LPs receive specified distributions defined by the partnership agreement."
   },
   {
     question: "What is equity multiple?",
-    answer: "Equity multiple is total distributions received divided by total capital invested. An equity multiple of 2.0x means investors doubled their money. Unlike IRR, equity multiple doesn't account for timing—it just measures total return."
+    answer: "Equity multiple measures total cash returned relative to the cash invested. It answers: for each dollar invested, how many dollars were returned over the life of the investment. It does not account for when the cash is received."
   },
   {
-    question: "How is IRR different from equity multiple?",
-    answer: "IRR (Internal Rate of Return) is the annualized return accounting for timing of cash flows. A deal returning 2.0x over 3 years has higher IRR than 2.0x over 7 years. IRR penalizes longer hold periods; equity multiple does not."
+    question: "What is IRR and how is it different from equity multiple?",
+    answer: "IRR (Internal Rate of Return) is a time-weighted, annualized return metric that accounts for when cash flows occur. Equity multiple measures total return without timing. Two deals can have the same equity multiple but different IRRs if one returns cash sooner."
   },
 ];
 
@@ -102,6 +102,14 @@ function SyndicationContent() {
   } = useSyndication();
 
   const topRef = useStepScrollToTop(currentStep);
+
+  // Dev-only: log schema types being rendered
+  useEffect(() => {
+    if (import.meta.env.DEV && jsonLd?.["@graph"]) {
+      const types = (jsonLd["@graph"] as Array<{ "@type"?: string }>).map(item => item["@type"]).filter(Boolean);
+      console.log("[Syndication] JSON-LD schema types:", types);
+    }
+  }, []);
 
   // Saved scenarios
   const { scenarios, saveScenario, loadScenario, deleteScenario } = useSyndicationScenarios(
