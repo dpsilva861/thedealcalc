@@ -12,13 +12,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 import { 
   CheckCircle2, 
   XCircle, 
   AlertTriangle, 
   Search,
   RefreshCw,
-  FileCode2
+  FileCode2,
+  Code2
 } from 'lucide-react';
 
 interface SeoCheckResult {
@@ -269,6 +271,12 @@ export default function SeoDebug() {
             <p className="text-xs text-muted-foreground mt-2">
               Enter a route path to navigate and check its SEO metadata
             </p>
+            <div className="mt-4 pt-4 border-t">
+              <Link to="/structured-data-debug" className="flex items-center gap-2 text-primary hover:underline">
+                <Code2 className="h-4 w-4" />
+                Open Structured Data Validator
+              </Link>
+            </div>
           </CardContent>
         </Card>
         

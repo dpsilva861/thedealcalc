@@ -2,48 +2,39 @@
 
 ## Overview
 
-This document describes the prerendering strategy for TheDealCalc, a Vite-based Single Page Application (SPA). Prerendering generates static HTML files at build time, improving SEO by providing crawlers with fully-rendered content.
+This document describes the prerendering implementation for TheDealCalc, a Vite-based Single Page Application (SPA). Prerendering generates static HTML files at build time, improving SEO by providing crawlers with fully-rendered content.
 
 ## Why Prerender?
 
-Search engine crawlers may have limited JavaScript execution capabilities. While modern crawlers (Googlebot) can render JavaScript, prerendering provides:
+Search engine crawlers may have limited JavaScript execution capabilities. Prerendering provides:
 
 1. **Faster indexing** - Crawlers see content immediately
 2. **Better social previews** - OG/Twitter tags are present in initial HTML
 3. **Improved performance** - First Contentful Paint is faster
 4. **Reliability** - No dependency on JavaScript execution
 
-## Current Architecture
+## Implementation
 
-TheDealCalc uses:
-- **Vite** as the build tool
-- **React** with client-side routing (react-router-dom)
-- **react-helmet-async** for dynamic meta tags
+TheDealCalc uses a custom Playwright-based prerender script that:
 
-## Prerendering Options for Vite SPAs
+1. Runs after `npm run build`
+2. Starts a local server serving the dist folder
+3. Uses Playwright (headless Chromium) to visit each route
+4. Waits for React hydration and Helmet meta tag injection
+5. Saves the complete HTML to `dist/<route>/index.html`
+6. Validates all required SEO tags are present
 
-### Option 1: vite-plugin-ssr (Recommended for Future)
+## File Structure
 
-A full SSR/SSG solution for Vite. Would require significant refactoring but provides the best SEO results.
-
-### Option 2: vite-plugin-prerender (Current Recommendation)
-
-A simpler approach that prerenders specified routes at build time using Puppeteer.
-
-```bash
-npm install vite-plugin-prerender --save-dev
 ```
-
-### Option 3: External Prerendering Service
-
-Services like Prerender.io or Rendertron can be used without code changes:
-- Add middleware to detect crawlers
-- Serve prerendered content to bots
-- Serve SPA to regular users
+scripts/
+├── prerender.mjs         # Main prerender script
+├── verify-prerender.mjs  # Verification script
+```
 
 ## Routes to Prerender
 
-### Indexable Routes (PRERENDER THESE)
+The routes are defined in `scripts/prerender.mjs`. Current list:
 
 ```
 /
@@ -67,119 +58,156 @@ Services like Prerender.io or Rendertron can be used without code changes:
 /ad-tech-providers
 ```
 
-### Excluded Routes (DO NOT PRERENDER)
+### Adding New Routes
 
-```
-/results
-/brrrr/results
-/syndication/results
-/admin/*
-/seo-debug
-/sitemap-debug
-```
+1. Open `scripts/prerender.mjs`
+2. Add the route to `ROUTES_TO_PRERENDER` array
+3. Also add to `scripts/verify-prerender.mjs` `ROUTES_TO_VERIFY` array
+4. Run `npm run prerender` to test
 
-## Implementation with vite-plugin-prerender
+### Excluded Routes (NEVER prerender)
 
-Add to `vite.config.ts`:
+- `/results` - User-specific results (noindex)
+- `/brrrr/results` - User-specific results (noindex)
+- `/syndication/results` - User-specific results (noindex)
+- `/admin/*` - Admin pages (blocked in robots.txt)
+- `/seo-debug` - Internal debug (noindex)
+- `/sitemap-debug` - Internal debug (noindex)
+- `/structured-data-debug` - Internal debug (noindex)
 
-```typescript
-import prerender from 'vite-plugin-prerender';
-import path from 'path';
+## Usage
 
-const routes = [
-  '/',
-  '/calculators',
-  '/npv-calculator',
-  '/rental-property-calculator',
-  // ... add all indexable routes
-];
+### Prerequisites
 
-export default defineConfig({
-  plugins: [
-    react(),
-    prerender({
-      routes,
-      renderer: '@prerenderer/renderer-puppeteer',
-      rendererOptions: {
-        headless: true,
-        renderAfterTime: 2000, // Wait for React to render
-      },
-      postProcess(context) {
-        // Minify HTML
-        context.html = context.html.trim();
-        return context;
-      },
-    }),
-  ],
-});
+Install Playwright browsers (one-time):
+
+```bash
+npx playwright install chromium
 ```
 
-## Using Prerender.io (No Code Changes)
+### Manual Prerendering
 
-1. Sign up at https://prerender.io
-2. Get your API token
-3. Configure Netlify to use Prerender middleware
+```bash
+# 1. Build the app
+npm run build
 
-In `netlify.toml`:
+# 2. Run prerender
+node scripts/prerender.mjs
 
-```toml
-[[plugins]]
-package = "@netlify/plugin-nextjs"
-
-[[redirects]]
-from = "/*"
-to = "/.netlify/functions/prerender/:splat"
-status = 200
-conditions = {Role = ["bot"]}
+# 3. Verify prerendered files
+node scripts/verify-prerender.mjs
 ```
 
-Or use the Prerender.io middleware in a Netlify function.
+### Automated Build (Netlify)
+
+In `netlify.toml` or build settings:
+
+```bash
+npm run build && npx playwright install chromium --with-deps && node scripts/prerender.mjs && node scripts/verify-prerender.mjs
+```
 
 ## Verification
 
-After implementing prerendering:
+The verification script (`scripts/verify-prerender.mjs`) checks each prerendered HTML file for:
 
-1. **Check source HTML** - View page source should show full meta tags
-2. **Use Google Search Console** - Request indexing and check rendered HTML
-3. **Test with curl** - `curl https://thedealcalc.com/npv-calculator` should show meta tags
-4. **Use Lighthouse** - Check SEO score
-5. **Use Facebook Debugger** - https://developers.facebook.com/tools/debug/
-6. **Use Twitter Card Validator** - https://cards-dev.twitter.com/validator
+| Element | Requirement |
+|---------|-------------|
+| `<title>` | Must exist |
+| Meta description | Must exist |
+| Canonical | Must start with `https://thedealcalc.com` |
+| og:title | Must exist |
+| og:description | Must exist |
+| og:url | Must start with `https://thedealcalc.com` |
+| og:type | Must exist |
+| og:image | Must be absolute URL |
+| twitter:card | Must be `summary_large_image` |
+| twitter:image | Must exist |
+| JSON-LD | At least one valid block |
 
-## Current Status
+If any route fails verification, the script exits with code 1 (fails the build).
 
-As of the current implementation:
-- ✅ All meta tags are correctly set via react-helmet-async
-- ✅ JSON-LD structured data is present
-- ✅ OG and Twitter cards are configured
-- ⏳ Build-time prerendering requires additional plugin installation
-- ⏳ For production SEO, consider Prerender.io integration
+## Output
 
-## Netlify Configuration
+After prerendering, the `dist` folder contains:
 
-The current Netlify configuration in `netlify.toml` should work with a prerendering service:
-
-```toml
-[build]
-  publish = "dist"
-  command = "npm run build"
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
+```
+dist/
+├── index.html              # Prerendered /
+├── calculators/
+│   └── index.html          # Prerendered /calculators
+├── npv-calculator/
+│   └── index.html          # Prerendered /npv-calculator
+├── rental-property-calculator/
+│   └── index.html          # Prerendered /rental-property-calculator
+└── ... (other routes)
 ```
 
-## Recommended Next Steps
+## Hydration
 
-1. **Immediate**: Use Prerender.io for crawler-specific rendering
-2. **Short-term**: Add vite-plugin-prerender for static routes
-3. **Long-term**: Consider migrating to Astro or similar for better SSG support
+Prerendered pages still contain the React app bundle. When a user visits:
 
-## Resources
+1. Browser receives prerendered HTML (fast FCP)
+2. React hydrates and takes over
+3. SPA routing works normally for subsequent navigation
 
-- [Vite SSR Guide](https://vitejs.dev/guide/ssr.html)
-- [Prerender.io Documentation](https://prerender.io/documentation)
-- [Google's JavaScript SEO Guide](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics)
-- [react-helmet-async](https://github.com/staylor/react-helmet-async)
+## Troubleshooting
+
+### "dist directory not found"
+
+Run `npm run build` before prerendering.
+
+### "Playwright not found"
+
+Run `npx playwright install chromium` to install the browser.
+
+### Timeout errors
+
+Increase the timeout in `prerender.mjs`:
+```javascript
+await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
+```
+
+### Missing meta tags in prerendered output
+
+1. Check that the page component uses `<Helmet>` or `<SeoHead>`
+2. Increase the wait time in `prerender.mjs` for Helmet to render:
+```javascript
+await page.waitForTimeout(3000); // Increase from 2000
+```
+
+## Alternatives Considered
+
+| Option | Notes |
+|--------|-------|
+| vite-plugin-prerender | Requires additional plugin, Puppeteer-based |
+| Prerender.io | External service, costs money |
+| vite-plugin-ssr | Full SSR solution, requires significant refactoring |
+
+The custom Playwright approach was chosen for:
+- Full control over the process
+- No external dependencies beyond Playwright
+- Clear verification of output
+- Easy to debug and extend
+
+## Performance Impact
+
+- Build time: +30-60 seconds (depending on route count)
+- Disk space: ~100-200KB per prerendered route
+- Runtime: Zero impact (same SPA behavior)
+
+## Monitoring
+
+Use these tools to verify prerendering works:
+
+1. **curl** - Check source HTML contains meta tags
+   ```bash
+   curl https://thedealcalc.com/npv-calculator | grep '<title>'
+   ```
+
+2. **Google Search Console** - Request indexing, check rendered HTML
+
+3. **Rich Results Test** - https://search.google.com/test/rich-results
+
+4. **Facebook Debugger** - https://developers.facebook.com/tools/debug/
+
+5. **Twitter Card Validator** - https://cards-dev.twitter.com/validator
