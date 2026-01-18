@@ -41,16 +41,6 @@ const STEPS = [
   { label: "Review", shortLabel: "Review", component: ReviewStep },
 ];
 
-const STEPS = [
-  { label: "Address", shortLabel: "Address", component: AddressStep },
-  { label: "Property", shortLabel: "Property", component: AcquisitionStep },
-  { label: "Income", shortLabel: "Income", component: IncomeStep },
-  { label: "Expenses", shortLabel: "Expenses", component: ExpensesStep },
-  { label: "Renovation", shortLabel: "Reno", component: RenovationStep },
-  { label: "Financing", shortLabel: "Finance", component: FinancingStep },
-  { label: "Review", shortLabel: "Review", component: ReviewStep },
-];
-
 const faqs = [
   {
     question: "What is real estate underwriting?",
@@ -436,19 +426,7 @@ function UnderwriteContent() {
                 <li><strong>When to Use Cash-on-Cash:</strong> Evaluating your actual expected returns, comparing leveraged investments.</li>
               </ul>
 
-              <h2 className="text-xl font-display font-semibold text-foreground mb-4">
-                Frequently Asked Questions
-              </h2>
-              <Accordion type="single" collapsible className="mb-8">
-                {faqs.map((faq, idx) => (
-                  <AccordionItem key={idx} value={`faq-${idx}`}>
-                    <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+              <CalculatorFaqs faqs={faqs} />
             </section>
 
             <p className="text-xs text-muted-foreground text-center mt-8">

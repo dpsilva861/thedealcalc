@@ -46,16 +46,6 @@ const STEPS = [
   { label: "Review", component: SyndicationReviewStep },
 ];
 
-const STEPS = [
-  { label: "Acquisition", component: SyndicationAcquisitionStep },
-  { label: "Debt", component: SyndicationDebtStep },
-  { label: "Equity", component: SyndicationEquityStep },
-  { label: "Pro Forma", component: SyndicationProformaStep },
-  { label: "Exit", component: SyndicationExitStep },
-  { label: "Waterfall", component: SyndicationWaterfallStep },
-  { label: "Review", component: SyndicationReviewStep },
-];
-
 const faqs = [
   {
     question: "What is a real estate syndication?",
@@ -380,19 +370,7 @@ function SyndicationContent() {
             <li><strong>Investor Requirements:</strong> Many syndications require accredited investor status; REITs are open to everyone.</li>
           </ul>
 
-          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
-            Frequently Asked Questions
-          </h2>
-          <Accordion type="single" collapsible className="mb-8">
-            {faqs.map((faq, idx) => (
-              <AccordionItem key={idx} value={`faq-${idx}`}>
-                <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <CalculatorFaqs faqs={faqs} />
         </section>
 
         <p className="text-xs text-muted-foreground text-center mt-8">
