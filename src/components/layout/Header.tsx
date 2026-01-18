@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
-import { Calculator, Menu, Tag } from "lucide-react";
+import { Calculator, Menu, Tag, Home, RefreshCcw, Users, Building2, Building } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
+import { CALCULATOR_REGISTRY } from "@/lib/calculators/registry";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +11,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+
+// Icon map for dynamic icon rendering in mobile nav
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Home,
+  RefreshCcw,
+  Users,
+  Calculator,
+  Building2,
+  Building,
+};
 
 export function Header() {
   const location = useLocation();
@@ -22,11 +33,12 @@ export function Header() {
     { href: "/blog/tags", label: "Tags", icon: Tag },
   ];
 
-  const calculatorLinks = [
-    { href: "/brrrr", label: "BRRRR Calculator" },
-    { href: "/underwrite", label: "Underwrite" },
-    { href: "/syndication", label: "Syndication" },
-  ];
+  // Use the central registry for calculator links (available calculators only)
+  const calculatorLinks = CALCULATOR_REGISTRY.filter(c => c.status === "available").map(calc => ({
+    href: calc.path,
+    label: calc.name,
+    icon: calc.icon,
+  }));
 
   // Check if active - for blog routes, highlight both Blog and Tags appropriately
   const isActive = (path: string) => {
@@ -43,7 +55,7 @@ export function Header() {
     return location.pathname === path;
   };
 
-  const isCalculatorActive = (path: string) => location.pathname === path;
+  const isCalculatorActive = (path: string) => location.pathname === path || location.pathname.startsWith(path);
 
   const handleLinkClick = () => {
     setMobileMenuOpen(false);
@@ -118,28 +130,31 @@ export function Header() {
                 );
               })}
               
-              {/* Calculator links directly in mobile menu */}
+              {/* Calculator links directly in mobile menu - from shared registry */}
               <div className="border-t border-border pt-4 mt-2">
                 <span className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Calculators
                 </span>
                 <div className="mt-2 flex flex-col gap-1">
-                  {calculatorLinks.map(link => (
-                    <Link
-                      key={link.href}
-                      to={link.href}
-                      onClick={handleLinkClick}
-                      className={cn(
-                        "px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-2",
-                        isCalculatorActive(link.href)
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      )}
-                    >
-                      <Calculator className="h-4 w-4" />
-                      {link.label}
-                    </Link>
-                  ))}
+                  {calculatorLinks.map(link => {
+                    const IconComponent = ICON_MAP[link.icon] || Calculator;
+                    return (
+                      <Link
+                        key={link.href}
+                        to={link.href}
+                        onClick={handleLinkClick}
+                        className={cn(
+                          "px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-2",
+                          isCalculatorActive(link.href)
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        )}
+                      >
+                        <IconComponent className="h-4 w-4" />
+                        {link.label}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             </nav>
