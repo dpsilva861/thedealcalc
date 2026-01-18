@@ -174,14 +174,25 @@ export default function Blog() {
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "Blog",
-            "name": "TheDealCalc Blog",
-            "description": "Real estate investment insights and analysis",
-            "url": canonicalUrl,
-            "publisher": {
-              "@type": "Organization",
-              "name": "TheDealCalc"
-            }
+            "@graph": [
+              {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                  { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
+                  { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://thedealcalc.com/blog" }
+                ]
+              },
+              {
+                "@type": "Blog",
+                "name": "TheDealCalc Blog",
+                "description": "Real estate investment insights and analysis",
+                "url": canonicalUrl,
+                "publisher": {
+                  "@type": "Organization",
+                  "name": "TheDealCalc"
+                }
+              }
+            ]
           })}
         </script>
       </Helmet>
