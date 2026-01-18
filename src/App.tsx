@@ -34,9 +34,9 @@ const FixAndFlipCalculator = lazy(() => import("./pages/FixAndFlipCalculator"));
 const CapRateCalculator = lazy(() => import("./pages/CapRateCalculator"));
 const CashOnCashCalculator = lazy(() => import("./pages/CashOnCashCalculator"));
 const RealEstateInvestmentCalculator = lazy(() => import("./pages/RealEstateInvestmentCalculator"));
+const NPVCalculator = lazy(() => import("./pages/NPVCalculator"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
-const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const AdTechProviders = lazy(() => import("./pages/AdTechProviders"));
 
@@ -95,8 +95,8 @@ const App = () => (
                       <Route path="/cap-rate-calculator" element={<CapRateCalculator />} />
                       <Route path="/cash-on-cash-calculator" element={<CashOnCashCalculator />} />
                       <Route path="/real-estate-investment-calculator" element={<RealEstateInvestmentCalculator />} />
+                      <Route path="/npv-calculator" element={<NPVCalculator />} />
                       <Route path="/disclaimer" element={<Disclaimer />} />
-                      <Route path="/cookies" element={<CookiePolicy />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/contact" element={<Contact />} />
                       <Route path="/ad-tech-providers" element={<AdTechProviders />} />
