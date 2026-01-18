@@ -1,5 +1,4 @@
-// src/pages/StructuredDataDebug.tsx
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
@@ -15,6 +14,10 @@ import {
   Search,
   XCircle,
 } from "lucide-react";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 type JsonRecord = Record<string, unknown>;
 
@@ -32,6 +35,10 @@ interface SchemaValidation {
 }
 
 type SourceKind = "dom" | "fetch";
+
+// ============================================================================
+// Validators
+// ============================================================================
 
 function validateBreadcrumbList(schema: JsonRecord): ValidationResult[] {
   const results: ValidationResult[] = [];
@@ -109,8 +116,11 @@ function validateSoftwareApplication(schema: JsonRecord): ValidationResult[] {
 
   const requiredFields = ["name", "applicationCategory", "operatingSystem", "url"] as const;
   for (const field of requiredFields) {
-    if (schema[field]) results.push({ field, status: "pass", message: String(schema[field]).slice(0, 60) });
-    else results.push({ field, status: "fail", message: `Missing ${field}` });
+    if (schema[field]) {
+      results.push({ field, status: "pass", message: String(schema[field]).slice(0, 60) });
+    } else {
+      results.push({ field, status: "fail", message: `Missing ${field}` });
+    }
   }
 
   const offers = schema.offers as JsonRecord | undefined;
@@ -128,13 +138,15 @@ function validateSoftwareApplication(schema: JsonRecord): ValidationResult[] {
 function validateFAQPage(schema: JsonRecord): ValidationResult[] {
   const results: ValidationResult[] = [];
 
-  if (schema["@type"] === "FAQPage") results.push({ field: "@type", status: "pass", message: "FAQPage" });
-  else
+  if (schema["@type"] === "FAQPage") {
+    results.push({ field: "@type", status: "pass", message: "FAQPage" });
+  } else {
     results.push({
       field: "@type",
       status: "fail",
       message: `Expected FAQPage, got ${String(schema["@type"])}`,
     });
+  }
 
   const mainEntity = schema.mainEntity;
   if (!mainEntity) {
@@ -168,8 +180,12 @@ function validateFAQPage(schema: JsonRecord): ValidationResult[] {
     }
   }
 
-  if (mainEntity.length > 3) results.push({ field: "remaining", status: "pass", message: `+${mainEntity.length - 3} more questions` });
-  if (questionsValid && mainEntity.length > 0) results.push({ field: "structure", status: "pass", message: "All questions valid" });
+  if (mainEntity.length > 3) {
+    results.push({ field: "remaining", status: "pass", message: `+${mainEntity.length - 3} more questions` });
+  }
+  if (questionsValid && mainEntity.length > 0) {
+    results.push({ field: "structure", status: "pass", message: "All checked questions valid" });
+  }
 
   return results;
 }
@@ -179,29 +195,50 @@ function validateArticle(schema: JsonRecord): ValidationResult[] {
   const validTypes = ["Article", "BlogPosting", "NewsArticle"];
   const schemaType = String(schema["@type"]);
 
-  if (validTypes.includes(schemaType)) results.push({ field: "@type", status: "pass", message: schemaType });
-  else results.push({ field: "@type", status: "fail", message: `Expected Article/BlogPosting, got ${schemaType}` });
+  if (validTypes.includes(schemaType)) {
+    results.push({ field: "@type", status: "pass", message: schemaType });
+  } else {
+    results.push({ field: "@type", status: "fail", message: `Expected Article/BlogPosting, got ${schemaType}` });
+  }
 
   const requiredFields = ["headline", "datePublished", "author", "image", "mainEntityOfPage", "url"] as const;
   for (const field of requiredFields) {
     if (schema[field]) {
-      const value = typeof schema[field] === "object" ? JSON.stringify(schema[field]).slice(0, 40) + "..." : String(schema[field]).slice(0, 40);
+      const value =
+        typeof schema[field] === "object"
+          ? JSON.stringify(schema[field]).slice(0, 40) + "..."
+          : String(schema[field]).slice(0, 40);
       results.push({ field, status: "pass", message: value });
     } else {
       results.push({ field, status: "fail", message: `Missing ${field}` });
     }
   }
 
-  if (schema.dateModified) results.push({ field: "dateModified", status: "pass", message: String(schema.dateModified) });
-  else results.push({ field: "dateModified", status: "warn", message: "Not specified (recommended)" });
+  if (schema.dateModified) {
+    results.push({ field: "dateModified", status: "pass", message: String(schema.dateModified) });
+  } else {
+    results.push({ field: "dateModified", status: "warn", message: "Not specified (recommended)" });
+  }
 
   return results;
 }
 
 function validateWebPage(schema: JsonRecord): ValidationResult[] {
-  const results: ValidationResult[] = [{ field: "@type", status: "pass", message: "WebPage" }];
-  if (schema.name) results.push({ field: "name", status: "pass", message: String(schema.name).slice(0, 50) });
-  if (schema.url) results.push({ field: "url", status: "pass", message: String(schema.url) });
+  const results: ValidationResult[] = [];
+  results.push({ field: "@type", status: "pass", message: "WebPage" });
+
+  if (schema.name) {
+    results.push({ field: "name", status: "pass", message: String(schema.name).slice(0, 50) });
+  } else {
+    results.push({ field: "name", status: "warn", message: "Missing name" });
+  }
+
+  if (schema.url) {
+    results.push({ field: "url", status: "pass", message: String(schema.url) });
+  } else {
+    results.push({ field: "url", status: "warn", message: "Missing url" });
+  }
+
   return results;
 }
 
@@ -231,8 +268,13 @@ function validateSchema(schema: JsonRecord): SchemaValidation {
       results = [{ field: "@type", status: "warn", message: `Unknown schema type: ${type}` }];
   }
 
-  return { type, valid: results.every((r) => r.status !== "fail"), results, raw: schema };
+  const hasFail = results.some((r) => r.status === "fail");
+  return { type, valid: !hasFail, results, raw: schema };
 }
+
+// ============================================================================
+// Extraction functions
+// ============================================================================
 
 function extractSchemasFromDOM(): SchemaValidation[] {
   const scripts = document.querySelectorAll('script[type="application/ld+json"]');
@@ -243,7 +285,9 @@ function extractSchemasFromDOM(): SchemaValidation[] {
     try {
       const parsed = JSON.parse(content);
       if (parsed["@graph"] && Array.isArray(parsed["@graph"])) {
-        for (const schema of parsed["@graph"]) validations.push(validateSchema(schema as JsonRecord));
+        for (const item of parsed["@graph"]) {
+          validations.push(validateSchema(item as JsonRecord));
+        }
       } else {
         validations.push(validateSchema(parsed as JsonRecord));
       }
@@ -251,7 +295,13 @@ function extractSchemasFromDOM(): SchemaValidation[] {
       validations.push({
         type: "Parse Error",
         valid: false,
-        results: [{ field: "JSON", status: "fail", message: `Invalid JSON: ${e instanceof Error ? e.message : "Unknown error"}` }],
+        results: [
+          {
+            field: "JSON",
+            status: "fail",
+            message: `Invalid JSON: ${e instanceof Error ? e.message : "Unknown error"}`,
+          },
+        ],
         raw: content,
       });
     }
@@ -262,16 +312,19 @@ function extractSchemasFromDOM(): SchemaValidation[] {
 
 function extractSchemasFromHTML(html: string): SchemaValidation[] {
   const validations: SchemaValidation[] = [];
-  const jsonLdRegex =
-    /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  const jsonLdRegex = /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
 
   let match: RegExpExecArray | null;
   while ((match = jsonLdRegex.exec(html)) !== null) {
     const content = (match[1] || "").trim();
+    if (!content) continue;
+
     try {
       const parsed = JSON.parse(content);
       if (parsed["@graph"] && Array.isArray(parsed["@graph"])) {
-        for (const schema of parsed["@graph"]) validations.push(validateSchema(schema as JsonRecord));
+        for (const item of parsed["@graph"]) {
+          validations.push(validateSchema(item as JsonRecord));
+        }
       } else {
         validations.push(validateSchema(parsed as JsonRecord));
       }
@@ -279,7 +332,13 @@ function extractSchemasFromHTML(html: string): SchemaValidation[] {
       validations.push({
         type: "Parse Error",
         valid: false,
-        results: [{ field: "JSON", status: "fail", message: `Invalid JSON: ${e instanceof Error ? e.message : "Unknown error"}` }],
+        results: [
+          {
+            field: "JSON",
+            status: "fail",
+            message: `Invalid JSON: ${e instanceof Error ? e.message : "Unknown error"}`,
+          },
+        ],
         raw: content,
       });
     }
@@ -288,9 +347,17 @@ function extractSchemasFromHTML(html: string): SchemaValidation[] {
   return validations;
 }
 
+// ============================================================================
+// UI Components
+// ============================================================================
+
 function StatusIcon({ status }: { status: "pass" | "fail" | "warn" }) {
-  if (status === "pass") return <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />;
-  if (status === "fail") return <XCircle className="h-4 w-4 text-red-600 shrink-0" />;
+  if (status === "pass") {
+    return <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />;
+  }
+  if (status === "fail") {
+    return <XCircle className="h-4 w-4 text-red-600 shrink-0" />;
+  }
   return <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0" />;
 }
 
@@ -312,8 +379,8 @@ function SchemaCard({ validation }: { validation: SchemaValidation }) {
       </div>
 
       <div className="space-y-1.5 mb-4">
-        {validation.results.map((result, j) => (
-          <div key={j} className="flex items-start gap-2 text-sm">
+        {validation.results.map((result, idx) => (
+          <div key={idx} className="flex items-start gap-2 text-sm">
             <StatusIcon status={result.status} />
             <span className="font-mono text-muted-foreground min-w-[120px] shrink-0">
               {result.field}
@@ -334,7 +401,7 @@ function SchemaCard({ validation }: { validation: SchemaValidation }) {
       </div>
 
       <button
-        onClick={() => setShowRaw((s) => !s)}
+        onClick={() => setShowRaw((prev) => !prev)}
         className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
         type="button"
       >
@@ -351,11 +418,16 @@ function SchemaCard({ validation }: { validation: SchemaValidation }) {
   );
 }
 
+// ============================================================================
+// Main Page Component
+// ============================================================================
+
 export default function StructuredDataDebug() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const initializedRef = useRef(false);
+
   const [testRoute, setTestRoute] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
   const [validations, setValidations] = useState<SchemaValidation[]>([]);
   const [source, setSource] = useState<SourceKind>("dom");
   const [route, setRoute] = useState<string>(window.location.pathname);
@@ -365,7 +437,8 @@ export default function StructuredDataDebug() {
     const total = validations.length;
     const passed = validations.filter((v) => v.valid).length;
     const failed = total - passed;
-    return { total, passed, failed, allValid: total > 0 && failed === 0 };
+    const allValid = total > 0 && failed === 0;
+    return { total, passed, failed, allValid };
   }, [validations]);
 
   const validateCurrentDOM = useCallback(() => {
@@ -374,14 +447,16 @@ export default function StructuredDataDebug() {
     setSource("dom");
     setRoute(window.location.pathname);
 
+    // Small delay to allow Helmet to render meta tags
     setTimeout(() => {
-      setValidations(extractSchemasFromDOM());
+      const extracted = extractSchemasFromDOM();
+      setValidations(extracted);
       setIsLoading(false);
     }, 150);
   }, []);
 
   const validateFetchedRoute = useCallback(
-    async (rawRoute: string) => {
+    async (rawRoute: string, updateQueryString = true) => {
       const normalized = rawRoute.startsWith("/") ? rawRoute : `/${rawRoute}`;
 
       setIsLoading(true);
@@ -394,11 +469,18 @@ export default function StructuredDataDebug() {
           credentials: "same-origin",
           headers: { Accept: "text/html" },
         });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+        }
 
         const html = await resp.text();
-        setValidations(extractSchemasFromHTML(html));
-        setSearchParams({ test: normalized }, { replace: true });
+        const extracted = extractSchemasFromHTML(html);
+        setValidations(extracted);
+        
+        if (updateQueryString) {
+          setSearchParams({ test: normalized }, { replace: true });
+        }
       } catch (e) {
         setValidations([]);
         setError(e instanceof Error ? e.message : "Failed to fetch route");
@@ -409,11 +491,40 @@ export default function StructuredDataDebug() {
     [setSearchParams]
   );
 
+  const handleValidateDOMClick = useCallback(() => {
+    setSearchParams({}, { replace: true });
+    setTestRoute("");
+    validateCurrentDOM();
+  }, [setSearchParams, validateCurrentDOM]);
+
+  const handleValidateFetchClick = useCallback(() => {
+    const trimmed = testRoute.trim();
+    if (trimmed) {
+      void validateFetchedRoute(trimmed, true);
+    }
+  }, [testRoute, validateFetchedRoute]);
+
+  const handleInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        const trimmed = testRoute.trim();
+        if (trimmed) {
+          void validateFetchedRoute(trimmed, true);
+        }
+      }
+    },
+    [testRoute, validateFetchedRoute]
+  );
+
+  // Initial load only - check for ?test= param
   useEffect(() => {
-    const test = searchParams.get("test");
-    if (test) {
-      setTestRoute(test);
-      void validateFetchedRoute(test);
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    const testParam = searchParams.get("test");
+    if (testParam) {
+      setTestRoute(testParam);
+      void validateFetchedRoute(testParam, false);
     } else {
       validateCurrentDOM();
     }
@@ -424,22 +535,26 @@ export default function StructuredDataDebug() {
       <Helmet>
         <title>Structured Data Debug | TheDealCalc (Internal)</title>
         <meta name="robots" content="noindex,nofollow" />
+        <meta name="description" content="Internal JSON-LD structured data validation tool" />
       </Helmet>
 
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6 py-8 px-4">
+        {/* Header */}
         <div>
           <h1 className="text-2xl font-bold">Structured Data Validator</h1>
-          <p className="text-sm text-muted-foreground">JSON-LD schema.org validation — noindex</p>
+          <p className="text-sm text-muted-foreground">
+            JSON-LD schema.org validation tool — noindex, internal use only
+          </p>
         </div>
 
+        {/* Overall Status Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-3">
             <CardTitle>Overall Status</CardTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => validateCurrentDOM()} type="button">
-                <RefreshCw className="h-4 w-4 mr-2" /> Validate DOM
-              </Button>
-            </div>
+            <Button variant="outline" onClick={handleValidateDOMClick} type="button">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Validate DOM
+            </Button>
           </CardHeader>
           <CardContent className="space-y-2">
             {error ? (
@@ -450,12 +565,14 @@ export default function StructuredDataDebug() {
                   <div className="text-sm text-muted-foreground break-all">{error}</div>
                 </div>
               </div>
-            ) : stats.total === 0 ? (
+            ) : stats.total === 0 && !isLoading ? (
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-600" />
                 <div>
                   <div className="font-medium">No Structured Data Found</div>
-                  <div className="text-sm text-muted-foreground">Expected at least BreadcrumbList on indexable pages</div>
+                  <div className="text-sm text-muted-foreground">
+                    Expected at least BreadcrumbList on indexable pages
+                  </div>
                 </div>
               </div>
             ) : stats.allValid ? (
@@ -468,7 +585,7 @@ export default function StructuredDataDebug() {
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : stats.total > 0 ? (
               <div className="flex items-center gap-2">
                 <XCircle className="h-5 w-5 text-red-600" />
                 <div>
@@ -478,10 +595,11 @@ export default function StructuredDataDebug() {
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
           </CardContent>
         </Card>
 
+        {/* Fetch & Validate Route Card */}
         <Card>
           <CardHeader>
             <CardTitle>Fetch & Validate Route</CardTitle>
@@ -492,14 +610,10 @@ export default function StructuredDataDebug() {
                 value={testRoute}
                 onChange={(e) => setTestRoute(e.target.value)}
                 placeholder="/npv-calculator"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && testRoute.trim()) void validateFetchedRoute(testRoute.trim());
-                }}
+                onKeyDown={handleInputKeyDown}
               />
               <Button
-                onClick={() => {
-                  if (testRoute.trim()) void validateFetchedRoute(testRoute.trim());
-                }}
+                onClick={handleValidateFetchClick}
                 disabled={isLoading || !testRoute.trim()}
                 type="button"
               >
@@ -507,27 +621,20 @@ export default function StructuredDataDebug() {
                 Validate
               </Button>
             </div>
-            <div className="text-sm text-muted-foreground">
-              Fetches the route HTML and extracts JSON-LD blocks for validation. Does not navigate away.
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Fetches the route&apos;s HTML and extracts JSON-LD blocks for validation. Does not
+              navigate away from this page.
+            </p>
           </CardContent>
         </Card>
 
+        {/* Results Card */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
             <CardTitle>Results</CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary">{source === "dom" ? "DOM" : "Fetched"}</Badge>
               <Badge variant="outline">{route}</Badge>
-              {source === "fetch" && (
-                <Button
-                  variant="ghost"
-                  onClick={() => setSearchParams({ test: route }, { replace: true })}
-                  type="button"
-                >
-                  permalink
-                </Button>
-              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
