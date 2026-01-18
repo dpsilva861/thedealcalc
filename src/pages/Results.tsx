@@ -12,7 +12,6 @@ import {
   UnderwritingInputs,
 } from "@/lib/underwriting";
 import {
-  ArrowLeft,
   TrendingUp,
   DollarSign,
   Percent,
@@ -22,7 +21,6 @@ import {
   Edit,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 import { devLog } from "@/lib/devLogger";
 import { exportToPDF, exportToCSV, exportToExcel } from "@/lib/exportUtils";
@@ -31,11 +29,10 @@ import { transformUnderwritingToCanonical } from "@/lib/exports/transformers";
 
 function ResultsContent() {
   const navigate = useNavigate();
-  const { inputs: contextInputs, propertyAddress: contextAddress, results: contextResults } = useUnderwriting();
+  const { inputs: contextInputs, propertyAddress: contextAddress } = useUnderwriting();
 
   const [baseResults, setBaseResults] = useState<UnderwritingResults | null>(null);
   const [outlookResults, setOutlookResults] = useState<UnderwritingResults | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [displayAddress, setDisplayAddress] = useState<PropertyAddress | null>(null);
   const [displayInputs, setDisplayInputs] = useState<UnderwritingInputs | null>(null);
 
@@ -64,7 +61,6 @@ function ResultsContent() {
       }
     }
 
-    setError(null);
     setDisplayAddress(propertyAddress);
     setDisplayInputs(inputs);
 
@@ -82,9 +78,9 @@ function ResultsContent() {
       setBaseResults(base);
       setOutlookResults(outlook);
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Unknown error";
       console.error("Underwriting report generation failed:", e);
-      setError(message);
+      setBaseResults(null);
+      setOutlookResults(null);
     }
   }, [contextInputs, contextAddress]);
 
