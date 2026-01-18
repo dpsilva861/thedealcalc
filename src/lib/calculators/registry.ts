@@ -39,6 +39,17 @@ export const CALCULATORS: CalculatorMetadata[] = [
     path: "/syndication",
   },
   {
+    id: "npv",
+    name: "NPV Calculator",
+    shortDescription: "Net Present Value analysis",
+    description:
+      "Calculate Net Present Value with support for multiple period frequencies, beginning/end timing conventions, and custom or recurring cash flows.",
+    icon: "Calculator",
+    tier: "basic",
+    status: "available",
+    path: "/npv-calculator",
+  },
+  {
     id: "commercial",
     name: "Commercial Underwriting",
     shortDescription: "Office, retail, and industrial properties",
