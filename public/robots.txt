@@ -14,5 +14,14 @@ Disallow: /api/
 Disallow: /admin/
 Disallow: /admin
 
+# Block results pages (noindex already set, but belt-and-suspenders)
+Disallow: /results
+Disallow: /brrrr/results
+Disallow: /syndication/results
+
+# Block internal debug tools
+Disallow: /seo-debug
+Disallow: /sitemap-debug
+
 # Sitemap
 Sitemap: https://thedealcalc.com/sitemap.xml
