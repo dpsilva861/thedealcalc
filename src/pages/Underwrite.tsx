@@ -11,6 +11,7 @@ import { RenovationStep } from "@/components/underwriting/steps/RenovationStep";
 import { FinancingStep } from "@/components/underwriting/steps/FinancingStep";
 import { ReviewStep } from "@/components/underwriting/steps/ReviewStep";
 import { useUnderwriting } from "@/contexts/UnderwritingContext";
+import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { validateInputs } from "@/lib/validation";
 import { trackEvent } from "@/lib/analytics";
 import { ArrowLeft, ArrowRight, Play, RotateCcw } from "lucide-react";
@@ -193,6 +194,9 @@ function UnderwriteContent() {
           </div>
         </div>
       </div>
+
+      {/* Related Calculators */}
+      <RelatedCalculators currentPath="/underwrite" />
     </div>
   );
 }
