@@ -11,6 +11,7 @@ import {
   BRRRRReviewStep,
 } from "@/components/brrrr/steps";
 import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
+import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { Button } from "@/components/ui/button";
 import { validateBRRRRInputs } from "@/lib/calculators/brrrr/validation";
 import { trackEvent } from "@/lib/analytics";
@@ -130,6 +131,9 @@ function BRRRRContent() {
           )}
         </div>
       </div>
+
+      {/* Related Calculators */}
+      <RelatedCalculators currentPath="/brrrr" />
     </div>
   );
 }

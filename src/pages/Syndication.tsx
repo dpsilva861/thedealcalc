@@ -14,6 +14,7 @@ import {
   SyndicationReviewStep,
 } from "@/components/syndication/steps";
 import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
+import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { Button } from "@/components/ui/button";
 import { validateSyndicationInputs } from "@/lib/calculators/syndication/validation";
 import { trackEvent } from "@/lib/analytics";
@@ -126,6 +127,9 @@ function SyndicationContent() {
           <SyndicationSelfTest />
         </div>
       )}
+
+      {/* Related Calculators */}
+      <RelatedCalculators currentPath="/syndication" />
     </div>
   );
 }
