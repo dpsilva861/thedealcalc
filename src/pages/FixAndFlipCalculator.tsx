@@ -102,6 +102,12 @@ export default function FixAndFlipCalculator() {
         <meta property="og:description" content="Free fix and flip calculator with rehab costs, holding costs, profit, and ROI analysis. Export to PDF, CSV, Excel." />
         <meta property="og:url" content="https://thedealcalc.com/fix-and-flip-calculator" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-fix-flip.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Fix and Flip Calculator (Free) | Rehab Costs, Profit, ROI — TheDealCalc" />
+        <meta name="twitter:description" content="Free fix and flip calculator for house flippers." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-fix-flip.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
         </script>

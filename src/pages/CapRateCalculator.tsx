@@ -100,6 +100,12 @@ export default function CapRateCalculator() {
         <meta property="og:description" content="Free cap rate calculator with NOI, property value, and risk analysis. Export to PDF, CSV, Excel." />
         <meta property="og:url" content="https://thedealcalc.com/cap-rate-calculator" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-cap-rate.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Cap Rate Calculator (Free) | Capitalization Rate, NOI — TheDealCalc" />
+        <meta name="twitter:description" content="Free cap rate calculator with NOI and property value analysis." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-cap-rate.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
         </script>
