@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { HelpTooltip } from '@/components/ui/help-tooltip';
 import {
   Tooltip,
   TooltipContent,
@@ -66,7 +67,6 @@ import {
   Lightbulb,
   Plus,
   Trash2,
-  HelpCircle,
   TrendingUp,
   TrendingDown,
   AlertTriangle,
@@ -75,6 +75,7 @@ import {
   Share2,
   Save,
   FolderOpen,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -82,23 +83,23 @@ import { cn } from '@/lib/utils';
 const faqs = [
   {
     question: "What is Net Present Value (NPV)?",
-    answer: "NPV is the difference between the present value of future cash inflows and the present value of cash outflows. It measures whether an investment creates or destroys value given a required rate of return."
+    answer: "NPV tells you how much value an investment creates today by converting all future cash flows into today's dollars using your required return (discount rate). A positive NPV means the investment creates value above your required return."
   },
   {
-    question: "How do I calculate NPV?",
-    answer: "NPV = CF₀ + CF₁/(1+r)¹ + CF₂/(1+r)² + ... + CFₙ/(1+r)ⁿ. Discount each future cash flow by (1+r)^t where r is the periodic discount rate and t is the period number."
-  },
-  {
-    question: "What is a good NPV?",
-    answer: "A positive NPV means the investment exceeds your required return and creates value. A negative NPV means it falls short. Generally, accept projects with NPV > 0 when comparing similar-risk investments."
-  },
-  {
-    question: "NPV vs IRR: what's the difference?",
-    answer: "NPV gives a dollar value of wealth created. IRR gives the effective return rate. NPV is preferred for comparing projects because it accounts for investment size and timing."
+    question: "How do I interpret NPV results?",
+    answer: "NPV > 0 means the investment exceeds your required return and creates value. NPV < 0 means it falls short of your required return. NPV = 0 means it exactly meets your required return. Generally, accept investments with NPV > 0."
   },
   {
     question: "What discount rate should I use?",
-    answer: "Use your required rate of return or cost of capital. Common rates: 8-12% for real estate, 10-15% for corporate projects, 20-30% for venture investments."
+    answer: "Use your required rate of return or cost of capital. Common rates: 8-12% for real estate, 10-15% for corporate projects, 20-30% for venture investments. The higher the risk, the higher the discount rate."
+  },
+  {
+    question: "NPV vs IRR: what's the difference?",
+    answer: "NPV gives a dollar value of wealth created. IRR gives the effective return rate. NPV is generally preferred for comparing projects because it accounts for investment size and timing differences."
+  },
+  {
+    question: "Why are future dollars worth less than today's dollars?",
+    answer: "Money you have today can be invested to earn returns. $100 today earning 10% becomes $110 next year. So $110 next year is only worth $100 today. NPV uses this principle to compare cash flows from different time periods."
   },
   {
     question: "Is this NPV calculator free?",
@@ -370,17 +371,12 @@ function NPVCalculatorContent() {
                 {/* Discount Rate */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="discountRate">Annual Discount Rate</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>The required annual return used to discount future cash flows. Higher rates reduce present value.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Label htmlFor="discountRate">Discount Rate (Required Return)</Label>
+                    <HelpTooltip 
+                      content={
+                        <p>Your required annual return on investment. This rate converts future cash flows into today's dollars. A higher rate means future cash flows are worth less today.</p>
+                      }
+                    />
                   </div>
                   <div className="relative">
                     <Input
@@ -398,17 +394,12 @@ function NPVCalculatorContent() {
                 {/* Period Frequency */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label>Period Frequency</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>How often cash flows occur. The annual rate is converted: r_periodic = (1 + r_annual)^(1/m) - 1.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Label>Cash Flow Frequency</Label>
+                    <HelpTooltip 
+                      content={
+                        <p>How often you receive or pay cash flows. Monthly means 12 cash flows per year, quarterly means 4, annual means 1.</p>
+                      }
+                    />
                   </div>
                   <Select
                     value={inputs.periodFrequency}
@@ -428,17 +419,12 @@ function NPVCalculatorContent() {
                 {/* Timing Convention */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label>Timing Convention</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>End of period assumes cash flows at period end (standard). Beginning of period treats them as occurring at the start.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Label>When Cash Flows Occur</Label>
+                    <HelpTooltip 
+                      content={
+                        <p>End of period (standard): Cash flows arrive at the end of each period. Beginning of period: Cash flows arrive at the start of each period, giving them slightly more value.</p>
+                      }
+                    />
                   </div>
                   <Select
                     value={inputs.timingConvention}
@@ -467,16 +453,11 @@ function NPVCalculatorContent() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label>Cash Flow Entry Mode</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>Single + Recurring: CF₀ plus repeating cash flows with optional growth. Custom Series: enter each period individually.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <HelpTooltip 
+                      content={
+                        <p>Single + Recurring: Enter an upfront investment plus regular repeating cash flows. Custom Series: Enter each period's cash flow individually for irregular amounts.</p>
+                      }
+                    />
                   </div>
                   <Tabs
                     value={inputs.cashFlowMode}
@@ -491,17 +472,12 @@ function NPVCalculatorContent() {
                       {/* Initial Investment */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Label htmlFor="initialInvestment">Initial Investment (CF₀)</Label>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs">
-                                <p>Cash flow at time zero, usually negative for an upfront investment. Example: -100000.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Label htmlFor="initialInvestment">Initial Investment (Cash Outflow)</Label>
+                          <HelpTooltip 
+                            content={
+                              <p>The upfront amount you invest today. Enter as a negative number (e.g., -100000) since money is flowing out from you.</p>
+                            }
+                          />
                         </div>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
@@ -519,17 +495,12 @@ function NPVCalculatorContent() {
                       {/* Periodic Cash Flow */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Label htmlFor="periodicCashFlow">Periodic Cash Flow</Label>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs">
-                                <p>Cash flow received (positive) or paid (negative) each period. Can include ongoing costs or income.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Label htmlFor="periodicCashFlow">Future Cash Flows (per period)</Label>
+                          <HelpTooltip 
+                            content={
+                              <p>The cash you receive (positive) or pay (negative) each period. For investments, this is typically positive income flowing to you.</p>
+                            }
+                          />
                         </div>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
@@ -548,16 +519,11 @@ function NPVCalculatorContent() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <Label htmlFor="numberOfPeriods">Number of Periods</Label>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs">
-                                <p>How many periods the recurring cash flow continues. Example: 5 years or 60 months.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <HelpTooltip 
+                            content={
+                              <p>How many periods the cash flows continue. Example: 5 years, 20 quarters, or 60 months depending on your frequency setting.</p>
+                            }
+                          />
                         </div>
                         <Input
                           id="numberOfPeriods"
@@ -573,16 +539,11 @@ function NPVCalculatorContent() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <Label htmlFor="growthRate">Growth Rate per Period</Label>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs">
-                                <p>Percentage change applied each period. CFₜ = CF₁ × (1 + g)^(t-1). Leave 0 for flat cash flows.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <HelpTooltip 
+                            content={
+                              <p>How much your cash flow grows each period. Set to 0% for flat cash flows, or enter a growth rate if cash flows increase over time (e.g., 3% annual rent increases).</p>
+                            }
+                          />
                         </div>
                         <div className="relative">
                           <Input
@@ -606,31 +567,23 @@ function NPVCalculatorContent() {
                               <TableHead className="w-20">
                                 <div className="flex items-center gap-1">
                                   {getFrequencyLabel(inputs.periodFrequency)}
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
-                                      </TooltipTrigger>
-                                      <TooltipContent className="max-w-xs">
-                                        <p>CF₀ = initial investment (period 0). CF₁, CF₂, etc. = future period cash flows.</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                  <HelpTooltip 
+                                    iconClassName="h-3 w-3"
+                                    content={
+                                      <p>Period 0 is today (your initial investment). Periods 1, 2, etc. are future cash flows.</p>
+                                    }
+                                  />
                                 </div>
                               </TableHead>
                               <TableHead>
                                 <div className="flex items-center gap-1">
                                   Cash Flow
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
-                                      </TooltipTrigger>
-                                      <TooltipContent className="max-w-xs">
-                                        <p>Enter each period's cash flow. Negative = outflow, positive = inflow.</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                  <HelpTooltip 
+                                    iconClassName="h-3 w-3"
+                                    content={
+                                      <p>Enter each period's cash flow. Negative = money you pay out, positive = money you receive.</p>
+                                    }
+                                  />
                                 </div>
                               </TableHead>
                               <TableHead className="w-16"></TableHead>
@@ -640,7 +593,7 @@ function NPVCalculatorContent() {
                             {inputs.customCashFlows.map((cf, idx) => (
                               <TableRow key={idx}>
                                 <TableCell className="font-medium">
-                                  {idx === 0 ? 'CF₀' : `CF${idx}`}
+                                  {idx === 0 ? 'Today' : `${getFrequencyLabel(inputs.periodFrequency)} ${idx}`}
                                 </TableCell>
                                 <TableCell>
                                   <div className="relative">
@@ -681,7 +634,7 @@ function NPVCalculatorContent() {
                                           </span>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          <p>CF₀ cannot be removed</p>
+                                          <p>Initial investment cannot be removed</p>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
@@ -801,8 +754,16 @@ function NPVCalculatorContent() {
                   {scenarios.length > 0 ? (
                     <ul className="space-y-2">
                       {scenarios.map((s: SavedNPVScenario) => (
-                        <li key={s.id} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
-                          <span className="truncate flex-1">{s.name}</span>
+                        <li
+                          key={s.id}
+                          className="flex items-center justify-between p-2 rounded-md bg-muted text-sm"
+                        >
+                          <div>
+                            <span className="font-medium">{s.name}</span>
+                            <span className="text-muted-foreground ml-2 text-xs">
+                              {new Date(s.savedAt).toLocaleDateString()}
+                            </span>
+                          </div>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="sm" onClick={() => loadScenario(s.id)}>
                               Load
@@ -859,7 +820,7 @@ function NPVCalculatorContent() {
                     {/* What this means */}
                     <p className="text-sm text-muted-foreground mt-4 pt-4 border-t">
                       {results.npv >= 0 
-                        ? "This investment exceeds your required return. The positive NPV represents the wealth created above the discount rate."
+                        ? "This investment exceeds your required return. The positive NPV represents extra value created above the discount rate."
                         : "This investment falls short of your required return. Consider adjusting assumptions or seeking alternatives."}
                     </p>
                   </CardContent>
@@ -875,14 +836,14 @@ function NPVCalculatorContent() {
                       <div className="flex items-center gap-3">
                         <TrendingUp className="h-5 w-5 text-primary" />
                         <div>
-                          <dt className="text-sm text-muted-foreground">PV of Inflows</dt>
+                          <dt className="text-sm text-muted-foreground">Present Value of Inflows</dt>
                           <dd className="font-semibold text-primary">{formatCurrency(results.pvOfInflows)}</dd>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <TrendingDown className="h-5 w-5 text-destructive" />
                         <div>
-                          <dt className="text-sm text-muted-foreground">PV of Outflows</dt>
+                          <dt className="text-sm text-muted-foreground">Present Value of Outflows</dt>
                           <dd className="font-semibold text-destructive">-{formatCurrency(results.pvOfOutflows)}</dd>
                         </div>
                       </div>
@@ -921,23 +882,20 @@ function NPVCalculatorContent() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-lg">Period Breakdown</CardTitle>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowDiscountFactors(!showDiscountFactors)}
-                          >
-                            {showDiscountFactors ? 'Hide' : 'Show'} Discount Factors
-                            <HelpCircle className="h-3 w-3 ml-1 text-muted-foreground" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>Discount factor = 1/(1+r)^t for end-of-period, or 1/(1+r)^(t-1) for beginning-of-period.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowDiscountFactors(!showDiscountFactors)}
+                      className="flex items-center gap-1"
+                    >
+                      {showDiscountFactors ? 'Hide' : 'Show'} Discount Factors
+                      <HelpTooltip 
+                        iconClassName="h-3 w-3"
+                        content={
+                          <p>The discount factor shows how much each future dollar is worth today. For example, 0.9091 means $1 in that period is worth about $0.91 today.</p>
+                        }
+                      />
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     <div className="border rounded-lg overflow-hidden max-h-80 overflow-y-auto">
@@ -1006,7 +964,7 @@ function NPVCalculatorContent() {
                       {sensitivityData ? 'Regenerate' : 'Generate'}
                     </Button>
                   </CardHeader>
-                  {showSensitivity && sensitivityData && sensitivityData.length > 0 && (
+                  {showSensitivity && sensitivityData && (
                     <CardContent>
                       <div className="border rounded-lg overflow-hidden">
                         <Table>
@@ -1014,33 +972,37 @@ function NPVCalculatorContent() {
                             <TableRow>
                               <TableHead>Discount Rate</TableHead>
                               <TableHead className="text-right">NPV</TableHead>
-                              <TableHead className="text-right">PV Inflows</TableHead>
-                              <TableHead className="text-right">PV Outflows</TableHead>
+                              <TableHead className="text-right">Change</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {sensitivityData.map((row, idx) => {
-                              const isBase = Math.abs(row.discountRate - inputs.discountRateAnnual) < 0.001;
+                            {sensitivityData.map((row) => {
+                              const isBaseCase = Math.abs(row.discountRate - inputs.discountRateAnnual) < 0.001;
+                              const baseNpv = sensitivityData.find(r => Math.abs(r.discountRate - inputs.discountRateAnnual) < 0.001)?.npv ?? 0;
+                              const npvDelta = row.npv - baseNpv;
+                              
                               return (
-                                <TableRow 
-                                  key={idx} 
-                                  className={isBase ? 'bg-primary/10 font-medium' : ''}
+                                <TableRow
+                                  key={row.discountRate}
+                                  className={isBaseCase ? 'bg-primary/10' : ''}
                                 >
-                                  <TableCell>
+                                  <TableCell className="font-medium">
                                     {formatPercent(row.discountRate)}
-                                    {isBase && <span className="ml-2 text-xs text-primary">(Base)</span>}
+                                    {isBaseCase && (
+                                      <span className="ml-2 text-xs text-muted-foreground">(base)</span>
+                                    )}
                                   </TableCell>
                                   <TableCell className={cn(
-                                    'text-right',
+                                    'text-right font-semibold',
                                     row.npv >= 0 ? 'text-primary' : 'text-destructive'
                                   )}>
                                     {formatCurrency(row.npv)}
                                   </TableCell>
-                                  <TableCell className="text-right text-primary">
-                                    {formatCurrency(row.pvInflows)}
-                                  </TableCell>
-                                  <TableCell className="text-right text-destructive">
-                                    -{formatCurrency(row.pvOutflows)}
+                                  <TableCell className={cn(
+                                    'text-right',
+                                    npvDelta >= 0 ? 'text-primary' : 'text-destructive'
+                                  )}>
+                                    {npvDelta >= 0 ? '+' : ''}{formatCurrency(npvDelta)}
                                   </TableCell>
                                 </TableRow>
                               );
@@ -1071,44 +1033,82 @@ function NPVCalculatorContent() {
           </div>
         </div>
 
-        {/* SEO Content */}
+        {/* SEO Content - Simplified explanation */}
         <section className="mt-16 max-w-4xl mx-auto">
           <h2 className="text-2xl font-display font-bold text-foreground mb-6">
             What is Net Present Value (NPV)?
           </h2>
           <div className="prose prose-slate dark:prose-invert max-w-none mb-8">
-            <p>
-              Net Present Value (NPV) measures the difference between the present value of future cash inflows 
-              and the present value of cash outflows over a given time period. It's a fundamental metric in 
-              capital budgeting and investment analysis that accounts for the time value of money.
+            <p className="text-lg">
+              Net Present Value (NPV) tells you how much value an investment creates <strong>today</strong>, 
+              after converting future cash flows into today's dollars using your required return (discount rate).
             </p>
+            
+            <div className="my-6 p-4 bg-muted rounded-lg not-prose">
+              <h4 className="font-semibold mb-3">How to interpret your results:</h4>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                  <span><strong>NPV &gt; 0:</strong> Creates value above your required return — generally a good investment</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                  <span><strong>NPV &lt; 0:</strong> Returns less than your required return — may not be worth pursuing</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="h-5 w-5 flex items-center justify-center text-muted-foreground mt-0.5 shrink-0">=</span>
+                  <span><strong>NPV = 0:</strong> Exactly meets your required return — a break-even investment</span>
+                </li>
+              </ul>
+            </div>
+
+            <h3 className="text-xl font-display font-semibold text-foreground mb-3">
+              Why future dollars are worth less
+            </h3>
             <p>
-              A positive NPV indicates that the projected earnings exceed the anticipated costs, meaning the 
-              investment will generate value above your required rate of return. Conversely, a negative NPV 
-              suggests the investment would destroy value relative to your discount rate.
+              A dollar today is worth more than a dollar tomorrow because you could invest it and earn a return. 
+              NPV accounts for this by "discounting" each future cash flow back to today's value, then adding them up. 
+              The discount rate represents your required return — the minimum return you'd accept given the investment's risk.
             </p>
           </div>
 
-          <h3 className="text-xl font-display font-semibold text-foreground mb-4">
-            NPV Formula
-          </h3>
-          <div className="p-4 bg-muted rounded-lg mb-8 font-mono text-sm">
-            NPV = CF₀ + CF₁/(1+r)¹ + CF₂/(1+r)² + ... + CFₙ/(1+r)ⁿ
-          </div>
-          <p className="text-muted-foreground mb-8">
-            Where CFₜ is the cash flow at period t, r is the discount rate per period, and n is the total 
-            number of periods. CF₀ (initial investment) is typically negative.
-          </p>
+          {/* Formula in Accordion */}
+          <Accordion type="single" collapsible className="mb-8">
+            <AccordionItem value="formula">
+              <AccordionTrigger className="text-left font-semibold">
+                Show the NPV formula
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="p-4 bg-muted rounded-lg font-mono text-sm mb-4">
+                  NPV = CF₀ + CF₁/(1+r)¹ + CF₂/(1+r)² + ... + CFₙ/(1+r)ⁿ
+                </div>
+                <dl className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex gap-2">
+                    <dt className="font-mono font-semibold text-foreground">CFₜ</dt>
+                    <dd>Cash flow at time period t (CF₀ is today, usually negative for your initial investment)</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="font-mono font-semibold text-foreground">r</dt>
+                    <dd>Discount rate per period (your required return)</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="font-mono font-semibold text-foreground">n</dt>
+                    <dd>Total number of periods</dd>
+                  </div>
+                </dl>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
           <h3 className="text-xl font-display font-semibold text-foreground mb-4">
             How to Use This NPV Calculator
           </h3>
           <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
-            <li>Enter your annual discount rate (required rate of return)</li>
-            <li>Choose period frequency: annual, quarterly, or monthly</li>
-            <li>Select timing convention: end-of-period (standard) or beginning-of-period</li>
-            <li>Enter cash flows using Single + Recurring mode or Custom Series for irregular flows</li>
-            <li>Click "Calculate NPV" to see results, breakdown, and sensitivity analysis</li>
+            <li>Enter your discount rate (your required annual return on investment)</li>
+            <li>Choose how often cash flows occur: yearly, quarterly, or monthly</li>
+            <li>Select when cash flows happen: end of period (standard) or beginning</li>
+            <li>Enter your initial investment (negative) and future cash flows (usually positive)</li>
+            <li>Click "Calculate NPV" to see your results, period-by-period breakdown, and sensitivity analysis</li>
           </ul>
 
           {/* FAQ Accordion */}
