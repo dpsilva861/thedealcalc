@@ -22,6 +22,7 @@ Disallow: /syndication/results
 # Block internal debug tools
 Disallow: /seo-debug
 Disallow: /sitemap-debug
+Disallow: /structured-data-debug
 
 # Sitemap
 Sitemap: https://thedealcalc.com/sitemap.xml

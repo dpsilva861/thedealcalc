@@ -59,6 +59,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 // Internal debug pages - lazy loaded (noindex)
 const SeoDebug = lazy(() => import("./pages/SeoDebug"));
 const SitemapDebug = lazy(() => import("./pages/SitemapDebug"));
+const StructuredDataDebug = lazy(() => import("./pages/StructuredDataDebug"));
 
 const queryClient = new QueryClient();
 
@@ -122,6 +123,7 @@ const App = () => (
                       {/* Internal SEO Debug Tools (noindex) */}
                       <Route path="/seo-debug" element={<SeoDebug />} />
                       <Route path="/sitemap-debug" element={<SitemapDebug />} />
+                      <Route path="/structured-data-debug" element={<StructuredDataDebug />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
