@@ -56,6 +56,10 @@ const AdminTaxonomy = lazy(() => import("./pages/AdminTaxonomy"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
+// Internal debug pages - lazy loaded (noindex)
+const SeoDebug = lazy(() => import("./pages/SeoDebug"));
+const SitemapDebug = lazy(() => import("./pages/SitemapDebug"));
+
 const queryClient = new QueryClient();
 
 // Minimal loading fallback - prevents layout shift
@@ -115,6 +119,9 @@ const App = () => (
                       <Route path="/admin/reset-password" element={<ResetPassword />} />
                       <Route path="/admin/blog" element={<AdminBlog />} />
                       <Route path="/admin/blog/taxonomy" element={<AdminTaxonomy />} />
+                      {/* Internal SEO Debug Tools (noindex) */}
+                      <Route path="/seo-debug" element={<SeoDebug />} />
+                      <Route path="/sitemap-debug" element={<SitemapDebug />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
