@@ -83,35 +83,31 @@ const metrics = [
 const faqs = [
   {
     question: "What is a real estate investment calculator?",
-    answer: "A real estate investment calculator is a financial analysis tool that helps investors evaluate potential property investments. By inputting purchase price, rental income, operating expenses, and financing terms, you can calculate key metrics like cash flow, cap rate, cash-on-cash return, and IRR to determine if a deal makes financial sense."
+    answer: "It's a tool that estimates investment performance from inputs like price, income, expenses, financing, and hold period. It helps compare deals using common metrics."
   },
   {
-    question: "What is cash flow in real estate investing?",
-    answer: "Cash flow is the money left over after paying all property expenses and mortgage payments. Positive cash flow means your rental income exceeds your costs, generating monthly income. Negative cash flow means you're paying out of pocket each month. Our calculators show both monthly and annual cash flow projections."
+    question: "What does \"cash flow (CF)\" mean?",
+    answer: "Cash flow is the money left after operating expenses and debt payments. Positive cash flow means the property pays you; negative cash flow means you're covering the shortfall."
   },
   {
-    question: "What is Net Operating Income (NOI)?",
-    answer: "Net Operating Income (NOI) is your gross rental income minus all operating expenses like property taxes, insurance, maintenance, and property management—but before mortgage payments. NOI is used to calculate cap rate and is a key metric for comparing properties regardless of financing."
+    question: "What is NOI (Net Operating Income)?",
+    answer: "NOI is income from the property minus operating expenses, before mortgage payments and taxes. It's used in cap rate and valuation."
   },
   {
-    question: "What is cap rate and how is it calculated?",
-    answer: "Cap rate (capitalization rate) equals NOI divided by property value, expressed as a percentage. For example, $50,000 NOI on a $500,000 property = 10% cap rate. Cap rate measures unlevered return and helps compare properties across different markets and price points."
+    question: "What is cap rate?",
+    answer: "Cap rate is NOI divided by property value. It's a quick way to compare properties on an unlevered basis (ignoring financing)."
   },
   {
     question: "What is IRR in simple terms?",
-    answer: "Internal Rate of Return (IRR) is your annualized total return accounting for all cash flows over time, including monthly income and eventual sale proceeds. Unlike simple return metrics, IRR considers when you receive money—getting returns sooner is better. IRR is the gold standard for comparing different investment opportunities."
+    answer: "IRR is the annualized rate that makes the present value of all cash flows equal to zero. It accounts for timing of cash flows, including sale proceeds."
   },
   {
-    question: "What does discount rate mean in real estate analysis?",
-    answer: "The discount rate is the required return you use to evaluate whether an investment is worthwhile. It represents your opportunity cost—what you could earn elsewhere. A higher discount rate means you require higher returns to justify the investment. Common discount rates for real estate range from 8-15% depending on risk."
+    question: "What is a discount rate?",
+    answer: "The discount rate is the return you require to take the risk. It's used to convert future cash flows into today's dollars."
   },
   {
     question: "What is NPV and when is it useful?",
-    answer: "Net Present Value (NPV) calculates whether an investment creates or destroys value by discounting all future cash flows to today's dollars using your required return rate. NPV > 0 means the investment exceeds your required return; NPV < 0 means it falls short. NPV is useful for comparing investments with different timelines and cash flow patterns."
-  },
-  {
-    question: "Are these calculators really free?",
-    answer: "Yes, TheDealCalc is 100% free with no signup required. You can run unlimited analyses, export to PDF/CSV/Excel, and share results—all without creating an account or paying fees. We never store your deal data, so your information stays private."
+    answer: "Net Present Value (NPV) is the present value of future cash flows minus the initial investment. NPV is useful for deciding whether a deal clears a required return and for comparing options with different timing."
   },
 ];
 
