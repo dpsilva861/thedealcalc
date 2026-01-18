@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { InlineAd, AdSlot, adConfig } from "@/components/ads";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import {
   Hammer,
   DollarSign,
@@ -56,40 +57,19 @@ const faqs = [
 ];
 
 export default function FixAndFlipCalculator() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
-          { "@type": "ListItem", "position": 3, "name": "Fix and Flip Calculator", "item": "https://thedealcalc.com/fix-and-flip-calculator" }
-        ]
-      },
-      {
-        "@type": "SoftwareApplication",
-        "name": "Fix and Flip Calculator",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Any",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Free fix and flip calculator for house flippers. Analyze rehab costs, holding costs, profit, and ROI instantly.",
-        "url": "https://thedealcalc.com/fix-and-flip-calculator"
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": faqs.map(faq => ({
-          "@type": "Question",
-          "name": faq.question,
-          "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
-        }))
-      }
-    ]
-  };
+  const jsonLd = buildCalculatorPageSchema(
+    {
+      name: "Fix and Flip Calculator",
+      description: "Free fix and flip calculator for house flippers. Analyze rehab costs, holding costs, profit, and ROI instantly.",
+      canonicalPath: "/fix-and-flip-calculator"
+    },
+    [
+      { name: "Home", path: "/" },
+      { name: "Calculators", path: "/calculators" },
+      { name: "Fix and Flip Calculator", path: "/fix-and-flip-calculator" }
+    ],
+    faqs
+  );
 
   return (
     <Layout>

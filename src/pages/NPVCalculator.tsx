@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { buildCalculatorPageSchema } from '@/lib/seo/schemaBuilders';
 import { Layout } from '@/components/layout/Layout';
 import { NPVProvider, useNPV } from '@/contexts/NPVContext';
 import { Button } from '@/components/ui/button';
@@ -249,41 +250,20 @@ function NPVCalculatorContent() {
     }
   };
 
-  // JSON-LD structured data
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
-          { "@type": "ListItem", "position": 3, "name": "NPV Calculator", "item": "https://thedealcalc.com/npv-calculator" }
-        ]
-      },
-      {
-        "@type": "SoftwareApplication",
-        "name": "NPV Calculator",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Any",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Free Net Present Value calculator with support for multiple period frequencies, timing conventions, and custom cash flows.",
-        "url": "https://thedealcalc.com/npv-calculator"
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": faqs.map(faq => ({
-          "@type": "Question",
-          "name": faq.question,
-          "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
-        }))
-      }
-    ]
-  };
+  // JSON-LD structured data using centralized schema builder
+  const jsonLd = buildCalculatorPageSchema(
+    {
+      name: "NPV Calculator",
+      description: "Free Net Present Value calculator with support for multiple period frequencies, timing conventions, and custom cash flows.",
+      canonicalPath: "/npv-calculator"
+    },
+    [
+      { name: "Home", path: "/" },
+      { name: "Calculators", path: "/calculators" },
+      { name: "NPV Calculator", path: "/npv-calculator" }
+    ],
+    faqs
+  );
 
   return (
     <>

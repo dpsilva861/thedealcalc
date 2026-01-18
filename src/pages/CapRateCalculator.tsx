@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { InlineAd, AdSlot, adConfig } from "@/components/ads";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import {
   PieChart,
   Calculator,
@@ -54,40 +55,19 @@ const faqs = [
 ];
 
 export default function CapRateCalculator() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
-          { "@type": "ListItem", "position": 3, "name": "Cap Rate Calculator", "item": "https://thedealcalc.com/cap-rate-calculator" }
-        ]
-      },
-      {
-        "@type": "SoftwareApplication",
-        "name": "Cap Rate Calculator",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Any",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Free cap rate calculator for real estate investors. Calculate capitalization rate, NOI, and property value instantly.",
-        "url": "https://thedealcalc.com/cap-rate-calculator"
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": faqs.map(faq => ({
-          "@type": "Question",
-          "name": faq.question,
-          "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
-        }))
-      }
-    ]
-  };
+  const jsonLd = buildCalculatorPageSchema(
+    {
+      name: "Cap Rate Calculator",
+      description: "Free cap rate calculator for real estate investors. Calculate capitalization rate, NOI, and property value instantly.",
+      canonicalPath: "/cap-rate-calculator"
+    },
+    [
+      { name: "Home", path: "/" },
+      { name: "Calculators", path: "/calculators" },
+      { name: "Cap Rate Calculator", path: "/cap-rate-calculator" }
+    ],
+    faqs
+  );
 
   return (
     <Layout>

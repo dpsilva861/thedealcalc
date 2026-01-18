@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { InlineAd } from "@/components/ads";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import {
   Building2,
   Users,
@@ -69,76 +70,18 @@ const faqs = [
 ];
 
 export default function SyndicationCalculatorLanding() {
-  const breadcrumbSchema = {
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://thedealcalc.com/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Syndication Calculator",
-        "item": "https://thedealcalc.com/syndication-calculator"
-      }
-    ]
-  };
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      breadcrumbSchema,
-      {
-        "@type": "SoftwareApplication",
-        "@id": "https://thedealcalc.com/syndication-calculator#app",
-        "name": "Real Estate Syndication Calculator",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Web Browser",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Free real estate syndication calculator for modeling GP/LP structures, waterfall distributions, IRR, equity multiple, and preferred returns.",
-        "featureList": [
-          "GP/LP waterfall modeling",
-          "IRR calculation",
-          "Equity multiple analysis",
-          "Preferred return modeling",
-          "Cash-on-cash projections",
-          "Multi-year proforma",
-          "PDF/Excel export"
-        ]
-      },
-      {
-        "@type": "WebPage",
-        "@id": "https://thedealcalc.com/syndication-calculator#webpage",
-        "url": "https://thedealcalc.com/syndication-calculator",
-        "name": "Syndication Calculator (Free) | Real Estate GP/LP Waterfall & IRR Analysis — TheDealCalc",
-        "description": "Free real estate syndication calculator: model GP/LP splits, waterfall distributions, IRR, equity multiple, and preferred returns. Complete syndication analysis.",
-        "isPartOf": {
-          "@id": "https://thedealcalc.com/#website"
-        },
-        "about": {
-          "@id": "https://thedealcalc.com/syndication-calculator#app"
-        }
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": faqs.map(faq => ({
-          "@type": "Question",
-          "name": faq.question,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": faq.answer
-          }
-        }))
-      }
-    ]
-  };
+  const jsonLd = buildCalculatorPageSchema(
+    {
+      name: "Real Estate Syndication Calculator",
+      description: "Free real estate syndication calculator for modeling GP/LP structures, waterfall distributions, IRR, equity multiple, and preferred returns.",
+      canonicalPath: "/syndication-calculator"
+    },
+    [
+      { name: "Home", path: "/" },
+      { name: "Syndication Calculator", path: "/syndication-calculator" }
+    ],
+    faqs
+  );
 
   return (
     <Layout>

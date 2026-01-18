@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { InlineAd } from "@/components/ads";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import {
   RefreshCcw,
   Hammer,
@@ -67,76 +68,18 @@ const faqs = [
 ];
 
 export default function BRRRRCalculatorLanding() {
-  const breadcrumbSchema = {
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": "https://thedealcalc.com/"
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "BRRRR Calculator",
-        "item": "https://thedealcalc.com/brrrr-calculator"
-      }
-    ]
-  };
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      breadcrumbSchema,
-      {
-        "@type": "SoftwareApplication",
-        "@id": "https://thedealcalc.com/brrrr-calculator#app",
-        "name": "BRRRR Calculator",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Web Browser",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Free BRRRR calculator for analyzing Buy-Rehab-Rent-Refinance-Repeat real estate deals with rehab costs, holding period, refinance cash-out, and rental returns.",
-        "featureList": [
-          "Cash left in deal calculation",
-          "Cash-on-cash return analysis",
-          "DSCR calculation",
-          "Refinance cash-out modeling",
-          "Holding cost calculation",
-          "Risk flag identification",
-          "PDF/Excel export"
-        ]
-      },
-      {
-        "@type": "WebPage",
-        "@id": "https://thedealcalc.com/brrrr-calculator#webpage",
-        "url": "https://thedealcalc.com/brrrr-calculator",
-        "name": "BRRRR Calculator (Free) | Buy, Rehab, Rent, Refinance Analysis — TheDealCalc",
-        "description": "Free BRRRR calculator: analyze rehab costs, holding period, refinance cash-out, and rental returns. Complete Buy-Rehab-Rent-Refinance-Repeat analysis.",
-        "isPartOf": {
-          "@id": "https://thedealcalc.com/#website"
-        },
-        "about": {
-          "@id": "https://thedealcalc.com/brrrr-calculator#app"
-        }
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": faqs.map(faq => ({
-          "@type": "Question",
-          "name": faq.question,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": faq.answer
-          }
-        }))
-      }
-    ]
-  };
+  const jsonLd = buildCalculatorPageSchema(
+    {
+      name: "BRRRR Calculator",
+      description: "Free BRRRR calculator for analyzing Buy-Rehab-Rent-Refinance-Repeat real estate deals with rehab costs, holding period, refinance cash-out, and rental returns.",
+      canonicalPath: "/brrrr-calculator"
+    },
+    [
+      { name: "Home", path: "/" },
+      { name: "BRRRR Calculator", path: "/brrrr-calculator" }
+    ],
+    faqs
+  );
 
   return (
     <Layout>

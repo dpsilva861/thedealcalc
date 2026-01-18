@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { InlineAd, AdSlot, adConfig } from "@/components/ads";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import {
   Calculator,
   TrendingUp,
@@ -55,40 +56,19 @@ const faqs = [
 ];
 
 export default function RentalPropertyCalculator() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
-          { "@type": "ListItem", "position": 3, "name": "Rental Property Calculator", "item": "https://thedealcalc.com/rental-property-calculator" }
-        ]
-      },
-      {
-        "@type": "SoftwareApplication",
-        "name": "Rental Property Calculator",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Any",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Free rental property calculator for real estate investors. Analyze cash flow, cap rate, cash-on-cash return, and IRR with 30-year projections.",
-        "url": "https://thedealcalc.com/rental-property-calculator"
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": faqs.map(faq => ({
-          "@type": "Question",
-          "name": faq.question,
-          "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
-        }))
-      }
-    ]
-  };
+  const jsonLd = buildCalculatorPageSchema(
+    {
+      name: "Rental Property Calculator",
+      description: "Free rental property calculator for real estate investors. Analyze cash flow, cap rate, cash-on-cash return, and IRR with 30-year projections.",
+      canonicalPath: "/rental-property-calculator"
+    },
+    [
+      { name: "Home", path: "/" },
+      { name: "Calculators", path: "/calculators" },
+      { name: "Rental Property Calculator", path: "/rental-property-calculator" }
+    ],
+    faqs
+  );
 
   return (
     <Layout>
