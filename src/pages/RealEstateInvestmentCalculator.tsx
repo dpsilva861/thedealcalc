@@ -196,8 +196,70 @@ export default function RealEstateInvestmentCalculator() {
         </div>
       </section>
 
-      {/* Why TheDealCalc */}
+      {/* Educational Content Section */}
       <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto prose prose-slate dark:prose-invert">
+            <h2 className="font-display text-2xl font-bold text-foreground mb-6">
+              What is a Real Estate Investment Calculator?
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              A real estate investment calculator is a financial analysis tool that helps investors evaluate potential property investments before committing capital. By inputting purchase price, rental income, operating expenses, financing terms, and other key variables, investors can quickly determine whether a deal makes financial sense and meets their return requirements.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              Professional real estate investors never buy properties based on gut feeling or hope. They run the numbers—calculating cash flow, cap rate, cash-on-cash return, Internal Rate of Return (IRR), and other metrics—to make informed decisions backed by data. TheDealCalc provides these professional-grade calculations completely free.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Why Real Estate Analysis Matters
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Avoid costly mistakes:</strong> A property that looks like a good deal on the surface may have hidden expenses or unrealistic income projections. Analysis reveals the truth.</li>
+              <li><strong>Compare opportunities objectively:</strong> Standard metrics let you compare a $150,000 duplex in the Midwest to a $500,000 condo in California on equal terms.</li>
+              <li><strong>Optimize financing:</strong> See how different down payments, interest rates, and loan terms affect your returns and cash flow.</li>
+              <li><strong>Plan for the future:</strong> Project returns over your entire hold period, including eventual sale, to understand total wealth building potential.</li>
+              <li><strong>Negotiate effectively:</strong> When you know exactly what a property is worth based on its income, you can make confident offers and walk away from overpriced deals.</li>
+            </ul>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Key Investment Metrics Explained
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              <strong>Cash Flow:</strong> The money left over after all expenses and mortgage payments. Monthly cash flow is what you actually take home from your investment.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              <strong>Cap Rate (Capitalization Rate):</strong> Net Operating Income divided by property value. Shows unlevered return, useful for comparing properties regardless of financing.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              <strong>Cash-on-Cash Return:</strong> Annual cash flow divided by total cash invested. Tells you what percentage return you're earning on your actual money in the deal.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              <strong>Internal Rate of Return (IRR):</strong> The annualized total return considering all cash flows over time, including appreciation and eventual sale. The gold standard for comparing investments.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              <strong>Debt Service Coverage Ratio (DSCR):</strong> Net Operating Income divided by mortgage payments. Measures your cushion for covering debt—lenders typically require 1.2x or higher.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              <strong>Equity Multiple:</strong> Total distributions received divided by total equity invested. A 2x equity multiple means you doubled your money over the hold period.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Choosing the Right Calculator
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Rental Property Calculator:</strong> Best for analyzing traditional buy-and-hold rental investments with long-term cash flow projections</li>
+              <li><strong>BRRRR Calculator:</strong> Designed for the Buy-Rehab-Rent-Refinance-Repeat strategy where you recycle capital through refinancing</li>
+              <li><strong>Fix and Flip Calculator:</strong> Optimized for short-term renovation projects where you sell quickly for profit</li>
+              <li><strong>Syndication Analyzer:</strong> Built for multi-investor deals with complex LP/GP waterfall structures and preferred returns</li>
+              <li><strong>Cap Rate Calculator:</strong> Quick tool for comparing properties based on unlevered returns</li>
+              <li><strong>Cash-on-Cash Calculator:</strong> Focus on levered returns and the impact of financing on your actual cash investment</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Why TheDealCalc */}
+      <section className="py-16 bg-cream-dark">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="font-display text-3xl font-bold text-foreground mb-8">

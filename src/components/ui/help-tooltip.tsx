@@ -1,10 +1,18 @@
 import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerClose,
+} from "@/components/ui/drawer";
 
 interface HelpTooltipProps {
   content: React.ReactNode;
+  title?: string;
   className?: string;
   iconClassName?: string;
   side?: "top" | "bottom" | "left" | "right";
@@ -12,64 +20,100 @@ interface HelpTooltipProps {
 }
 
 /**
- * Mobile-friendly help tooltip that opens on click/tap on touch devices
- * and on hover on desktop devices.
+ * Mobile-friendly help tooltip that:
+ * - Desktop: shows tooltip on hover
+ * - Mobile/touch: opens bottom drawer on tap
  */
 export function HelpTooltip({
   content,
+  title = "Help",
   className,
   iconClassName,
   side = "top",
   align = "center",
 }: HelpTooltipProps) {
   const [open, setOpen] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [isTouchDevice, setIsTouchDevice] = React.useState(false);
 
   // Detect touch/coarse pointer device
   React.useEffect(() => {
-    const mediaQuery = window.matchMedia("(pointer: coarse)");
-    setIsTouchDevice(mediaQuery.matches);
-
-    const handler = (e: MediaQueryListEvent) => setIsTouchDevice(e.matches);
-    mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
-  }, []);
-
-  // Close on click outside for touch devices
-  React.useEffect(() => {
-    if (!isTouchDevice || !open) return;
-
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      const target = e.target as HTMLElement;
-      // Don't close if clicking the tooltip content itself
-      if (target.closest("[data-radix-popper-content-wrapper]")) return;
-      setOpen(false);
+    const checkTouchDevice = () => {
+      const coarse = window.matchMedia("(pointer: coarse)").matches;
+      const maxWidth = window.matchMedia("(max-width: 768px)").matches;
+      setIsTouchDevice(coarse || maxWidth);
     };
-
-    // Small delay to prevent immediate close on the opening click
-    const timeout = setTimeout(() => {
-      document.addEventListener("click", handleClickOutside);
-      document.addEventListener("touchstart", handleClickOutside);
-    }, 10);
-
+    
+    checkTouchDevice();
+    
+    const coarseQuery = window.matchMedia("(pointer: coarse)");
+    const widthQuery = window.matchMedia("(max-width: 768px)");
+    
+    const handler = () => checkTouchDevice();
+    coarseQuery.addEventListener("change", handler);
+    widthQuery.addEventListener("change", handler);
+    
     return () => {
-      clearTimeout(timeout);
-      document.removeEventListener("click", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
+      coarseQuery.removeEventListener("change", handler);
+      widthQuery.removeEventListener("change", handler);
     };
-  }, [isTouchDevice, open]);
+  }, []);
 
   const handleTriggerClick = (e: React.MouseEvent | React.TouchEvent) => {
     if (isTouchDevice) {
       e.preventDefault();
       e.stopPropagation();
-      setOpen((prev) => !prev);
+      setDrawerOpen(true);
     }
   };
 
+  // On mobile, render a button that opens a drawer
+  if (isTouchDevice) {
+    return (
+      <>
+        <button
+          type="button"
+          aria-label="Help"
+          className={cn(
+            "inline-flex items-center justify-center pointer-events-auto min-w-[44px] min-h-[44px] -m-2.5 p-2.5",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full",
+            className
+          )}
+          onClick={handleTriggerClick}
+        >
+          <HelpCircle
+            className={cn(
+              "h-5 w-5 text-muted-foreground",
+              iconClassName
+            )}
+          />
+        </button>
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <DrawerContent>
+            <DrawerHeader className="relative">
+              <DrawerTitle className="text-lg font-semibold">{title}</DrawerTitle>
+              <DrawerClose asChild>
+                <button
+                  className="absolute right-4 top-4 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full hover:bg-muted"
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </DrawerClose>
+            </DrawerHeader>
+            <div className="px-4 pb-8 text-muted-foreground">
+              {content}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </>
+    );
+  }
+
+  // On desktop, use standard tooltip with hover
   return (
-    <TooltipPrimitive.Provider delayDuration={isTouchDevice ? 0 : 100}>
-      <TooltipPrimitive.Root open={isTouchDevice ? open : undefined} onOpenChange={isTouchDevice ? setOpen : undefined}>
+    <TooltipPrimitive.Provider delayDuration={100}>
+      <TooltipPrimitive.Root open={open} onOpenChange={setOpen}>
         <TooltipPrimitive.Trigger asChild>
           <button
             type="button"
@@ -79,8 +123,6 @@ export function HelpTooltip({
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full",
               className
             )}
-            onClick={handleTriggerClick}
-            onTouchEnd={isTouchDevice ? handleTriggerClick : undefined}
           >
             <HelpCircle
               className={cn(

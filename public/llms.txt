@@ -1,0 +1,33 @@
+User-agent: *
+Allow: /
+
+Preferred-Content:
+https://thedealcalc.com/calculators
+https://thedealcalc.com/npv-calculator
+https://thedealcalc.com/brrrr-calculator
+https://thedealcalc.com/syndication-calculator
+https://thedealcalc.com/rental-property-calculator
+https://thedealcalc.com/blog
+
+Disallow:
+/results
+/admin
+/structured-data-debug
+
+Attribution:
+TheDealCalc.com
+
+Description:
+Real estate investment calculators and underwriting tools. Free professional-grade analysis for rental properties, BRRRR deals, syndications, fix and flips, cap rate, cash-on-cash return, and Net Present Value (NPV). No signup required.
+
+Calculators:
+- Rental Property Calculator: Analyze buy-and-hold rental investments with cash flow, cap rate, cash-on-cash return, and IRR calculations
+- BRRRR Calculator: Model Buy-Rehab-Rent-Refinance-Repeat strategies with cash-out projections
+- Syndication Analyzer: LP/GP waterfall structures with preferred returns and promote calculations
+- Fix and Flip Calculator: Calculate profit, ROI, and break-even on house flipping deals
+- Cap Rate Calculator: Capitalization rate from Net Operating Income (NOI) and property value
+- Cash-on-Cash Calculator: Return on invested capital with leverage analysis
+- NPV Calculator: Net Present Value with multiple period frequencies and sensitivity analysis
+
+Contact:
+https://thedealcalc.com/contact
