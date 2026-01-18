@@ -26,19 +26,15 @@ const faqs = [
   },
   {
     question: "How do I calculate cap rate?",
-    answer: "Cap Rate = Annual Net Operating Income ÷ Property Value × 100. For example: if NOI is $50,000 and property value is $500,000, cap rate = $50,000 ÷ $500,000 = 10%. Our calculator handles this automatically."
+    answer: "Cap Rate = Annual Net Operating Income ÷ Property Value × 100. For example: if NOI is $50,000 and property value is $500,000, cap rate = $50,000 ÷ $500,000 = 10%."
   },
   {
-    question: "What is a good cap rate?",
-    answer: "Cap rates vary by market, property type, and risk. Generally: 4-6% for Class A properties in prime markets, 6-8% for Class B in secondary markets, 8-10%+ for Class C or tertiary markets. Lower cap rates indicate lower risk but also lower returns."
+    question: "What is a typical cap rate range?",
+    answer: "Cap rates vary by market, property type, and risk. Class A properties in prime markets often trade at 4-6%, Class B properties in secondary markets at 6-8%, and Class C or tertiary market properties at 8-10% or higher."
   },
   {
     question: "Cap rate vs cash-on-cash return: what's the difference?",
     answer: "Cap rate measures unlevered return (ignores financing), while cash-on-cash measures levered return (accounts for your actual cash investment and debt service). Cap rate is property-focused; cash-on-cash is investor-focused."
-  },
-  {
-    question: "Why do cap rates matter for investors?",
-    answer: "Cap rates help you: compare properties across markets, estimate property value (Value = NOI / Cap Rate), assess risk level, and determine if a deal is priced fairly relative to similar properties."
   },
   {
     question: "What is NOI for cap rate calculation?",
@@ -46,11 +42,7 @@ const faqs = [
   },
   {
     question: "How do cap rates affect property values?",
-    answer: "Cap rates and property values have an inverse relationship. When cap rates compress (go down), property values increase. When cap rates expand (go up), property values decrease. Value = NOI / Cap Rate."
-  },
-  {
-    question: "Is this cap rate calculator free?",
-    answer: "Yes! TheDealCalc is 100% free with no signup required. Calculate cap rates, NOI, and property values instantly. Export to PDF, CSV, or Excel."
+    answer: "Cap rates and property values have an inverse relationship. When cap rates compress (decrease), property values increase. When cap rates expand (increase), property values decrease. Value = NOI / Cap Rate."
   },
 ];
 

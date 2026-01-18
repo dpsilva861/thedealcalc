@@ -5,4 +5,5 @@
  */
 
 export * from './breadcrumbs';
+export * from './faqs';
 export * from './schemaBuilders';

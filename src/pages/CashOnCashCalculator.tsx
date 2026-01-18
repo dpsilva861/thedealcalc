@@ -23,35 +23,27 @@ import {
 const faqs = [
   {
     question: "What is cash-on-cash return?",
-    answer: "Cash-on-cash return (CoC) measures your annual pre-tax cash flow relative to the total cash you invested. CoC = Annual Cash Flow ÷ Total Cash Invested × 100. It's one of the most important metrics for rental property investors."
+    answer: "Cash-on-cash return (CoC) measures your annual pre-tax cash flow relative to the total cash you invested. CoC = Annual Cash Flow ÷ Total Cash Invested × 100. It shows the return on your actual out-of-pocket investment."
   },
   {
     question: "How do I calculate cash-on-cash return?",
     answer: "Cash-on-Cash = (Annual Cash Flow ÷ Total Cash Invested) × 100. Annual Cash Flow = NOI - Debt Service. Total Cash Invested = Down Payment + Closing Costs + Rehab Costs + Any Other Cash Outlay."
   },
   {
-    question: "What is a good cash-on-cash return?",
-    answer: "Most investors target 8-12% cash-on-cash return. However, 'good' varies: 6-8% may be acceptable in stable markets with strong appreciation potential, while 12%+ is expected in riskier or cash-flow-focused markets."
+    question: "What is a typical cash-on-cash return target?",
+    answer: "Many investors target 8-12% cash-on-cash return. However, acceptable returns vary: 6-8% may work in stable markets with appreciation potential, while 12%+ is often expected in riskier or cash-flow-focused strategies."
   },
   {
     question: "Cash-on-cash vs cap rate: what's the difference?",
-    answer: "Cap rate ignores financing (measures unlevered return), while cash-on-cash accounts for your actual cash investment and debt payments. Cash-on-cash is what you actually earn on YOUR money; cap rate is what the property earns overall."
-  },
-  {
-    question: "Why is cash-on-cash return important?",
-    answer: "Cash-on-cash tells you the actual return on your invested capital. It helps you: compare deals, assess whether leverage is helping or hurting, and determine if a property meets your investment criteria."
+    answer: "Cap rate ignores financing (measures unlevered return), while cash-on-cash accounts for your actual cash investment and debt payments. Cash-on-cash shows what you earn on YOUR invested capital; cap rate shows what the property earns overall."
   },
   {
     question: "How does leverage affect cash-on-cash return?",
-    answer: "Leverage can amplify cash-on-cash return when the property's return exceeds your borrowing cost. With 75% LTV at 7% interest on a 9% cap rate property, your cash-on-cash can exceed 15%. But leverage also increases risk if returns fall."
+    answer: "Leverage can amplify cash-on-cash return when the property's yield exceeds your borrowing cost (positive leverage). With 75% LTV at 7% interest on a 9% cap rate property, cash-on-cash can exceed 15%. But leverage also increases risk."
   },
   {
-    question: "Should I focus on cash-on-cash or appreciation?",
-    answer: "It depends on your goals. Cash-on-cash is important for income investors who need regular cash flow. Appreciation investors may accept lower cash-on-cash in exchange for expected property value growth. Most investors want both."
-  },
-  {
-    question: "Is this cash-on-cash calculator free?",
-    answer: "Yes! TheDealCalc is 100% free with no signup required. Calculate cash-on-cash return, compare scenarios, and export results to PDF, CSV, or Excel."
+    question: "What is positive vs negative leverage?",
+    answer: "Positive leverage occurs when borrowing increases your returns (property yield > loan cost). Negative leverage occurs when borrowing reduces returns (property yield < loan cost). Rising interest rates can turn positive leverage negative."
   },
 ];
 

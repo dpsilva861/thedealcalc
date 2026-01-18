@@ -14,18 +14,14 @@ import { ReviewStep } from "@/components/underwriting/steps/ReviewStep";
 import { useUnderwriting } from "@/contexts/UnderwritingContext";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { SavedScenariosPanel } from "@/components/calculators/SavedScenariosPanel";
+import { CalculatorFaqs } from "@/components/seo/CalculatorFaqs";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { validateInputs } from "@/lib/validation";
 import { useUnderwriteScenarios } from "@/hooks/useUnderwriteScenarios";
 import { copyShareLink, decodeUnderwriteParams } from "@/hooks/useShareLink";
@@ -45,54 +41,56 @@ const STEPS = [
   { label: "Review", shortLabel: "Review", component: ReviewStep },
 ];
 
+const STEPS = [
+  { label: "Address", shortLabel: "Address", component: AddressStep },
+  { label: "Property", shortLabel: "Property", component: AcquisitionStep },
+  { label: "Income", shortLabel: "Income", component: IncomeStep },
+  { label: "Expenses", shortLabel: "Expenses", component: ExpensesStep },
+  { label: "Renovation", shortLabel: "Reno", component: RenovationStep },
+  { label: "Financing", shortLabel: "Finance", component: FinancingStep },
+  { label: "Review", shortLabel: "Review", component: ReviewStep },
+];
+
 const faqs = [
   {
     question: "What is real estate underwriting?",
-    answer: "Underwriting is the process of analyzing a property's financials to determine if it meets your investment criteria. It includes projecting income, expenses, and returns over a hold period."
+    answer: "Underwriting is the process of analyzing a property's financials to determine if it meets your investment criteria. It includes projecting income, expenses, and returns over a hold period to assess risk and potential reward."
   },
   {
-    question: "What metrics should I focus on?",
-    answer: "Key metrics include Cash-on-Cash Return, Cap Rate, DSCR (Debt Service Coverage Ratio), and IRR. This calculator computes all of these automatically based on your inputs."
+    question: "What is cash flow in rental property investing?",
+    answer: "Cash flow is the money remaining after all operating expenses and debt service payments. Positive cash flow means the property generates income after covering all costs. Negative cash flow means you're subsidizing the property each month."
+  },
+  {
+    question: "What is NOI (Net Operating Income)?",
+    answer: "NOI is gross rental income minus operating expenses, before mortgage payments and taxes. NOI = Effective Gross Income - Operating Expenses. It's used to calculate cap rate and is a key metric for comparing properties regardless of financing."
+  },
+  {
+    question: "What is DSCR (Debt Service Coverage Ratio)?",
+    answer: "DSCR measures a property's ability to cover its debt payments. DSCR = NOI / Annual Debt Service. A DSCR of 1.25 means the property generates 25% more income than needed for loan payments. Most lenders require 1.0-1.25x minimum."
   },
   {
     question: "How do I account for vacancy?",
-    answer: "Enter your expected economic vacancy rate (typically 5-10%). The calculator reduces gross income by this percentage to estimate effective gross income."
+    answer: "Enter your expected economic vacancy rate (typically 5-10% for residential, higher for commercial). The calculator reduces gross potential rent by this percentage to estimate effective gross income."
   },
   {
-    question: "Is this rental calculator free?",
-    answer: "Yes! TheDealCalc rental property calculator is 100% free with no signup. Analyze deals, compare scenarios, and export professional reports."
+    question: "What reserves should I budget?",
+    answer: "Common reserves include capital expenditures (CapEx) for major repairs (typically 5-10% of gross rent), and a maintenance reserve for routine repairs (5-8% of gross rent). Reserves reduce cash flow but protect against unexpected costs."
   },
 ];
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-        { "@type": "ListItem", "position": 2, "name": "Rental Property Calculator", "item": "https://thedealcalc.com/underwrite" }
-      ]
-    },
-    {
-      "@type": "SoftwareApplication",
-      "name": "Rental Property Calculator",
-      "applicationCategory": "FinanceApplication",
-      "operatingSystem": "Any",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-      "description": "Free rental property calculator for real estate investors. Analyze cash flow, cap rate, IRR, and DSCR with 30-year projections.",
-      "url": "https://thedealcalc.com/underwrite"
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": faqs.map(faq => ({
-        "@type": "Question",
-        "name": faq.question,
-        "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
-      }))
-    }
-  ]
-};
+const jsonLd = buildCalculatorPageSchema(
+  {
+    name: "Rental Property Calculator",
+    description: "Rental property calculator for real estate investors. Analyze cash flow, cap rate, IRR, and DSCR with projections.",
+    canonicalPath: "/underwrite"
+  },
+  [
+    { name: "Home", path: "/" },
+    { name: "Calculators", path: "/calculators" },
+    { name: "Rental Property Calculator", path: "/underwrite" }
+  ],
+  faqs
+);
 
 function UnderwriteContent() {
   const navigate = useNavigate();

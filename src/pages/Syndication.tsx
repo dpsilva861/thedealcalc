@@ -17,6 +17,8 @@ import {
 import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { SavedScenariosPanel } from "@/components/calculators/SavedScenariosPanel";
+import { CalculatorFaqs } from "@/components/seo/CalculatorFaqs";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -24,12 +26,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { validateSyndicationInputs } from "@/lib/calculators/syndication/validation";
 import { DEFAULT_SYNDICATION_INPUTS } from "@/lib/calculators/syndication/types";
 import { useSyndicationScenarios } from "@/hooks/useSyndicationScenarios";
@@ -50,54 +46,56 @@ const STEPS = [
   { label: "Review", component: SyndicationReviewStep },
 ];
 
+const STEPS = [
+  { label: "Acquisition", component: SyndicationAcquisitionStep },
+  { label: "Debt", component: SyndicationDebtStep },
+  { label: "Equity", component: SyndicationEquityStep },
+  { label: "Pro Forma", component: SyndicationProformaStep },
+  { label: "Exit", component: SyndicationExitStep },
+  { label: "Waterfall", component: SyndicationWaterfallStep },
+  { label: "Review", component: SyndicationReviewStep },
+];
+
 const faqs = [
   {
     question: "What is a real estate syndication?",
-    answer: "A syndication is a partnership where multiple investors pool capital to acquire larger properties. The General Partner (GP) manages the deal while Limited Partners (LPs) provide capital and receive passive returns."
+    answer: "A syndication is a partnership structure where multiple investors pool capital to acquire properties larger than they could buy individually. The General Partner (GP) sponsors and manages the deal, while Limited Partners (LPs) contribute capital and receive passive returns."
   },
   {
     question: "What is a preferred return (pref)?",
-    answer: "A preferred return is a hurdle rate that LPs must receive before the GP participates in profits. Common prefs are 6-10% annually, paid from operating cash flow or at sale."
+    answer: "A preferred return is a minimum annualized return that Limited Partners receive before the General Partner participates in profits. Common preferred returns are 6-10% annually. The pref can be paid from operating cash flow or accrue until sale."
   },
   {
-    question: "How does the waterfall distribution work?",
-    answer: "A waterfall defines how profits are split between LP and GP at different return thresholds. Typically, LPs receive their pref first, then returns are split with the GP receiving an increasing 'promote' at higher IRR tiers."
+    question: "How does a waterfall distribution work?",
+    answer: "A waterfall defines how profits are split between LP and GP at different return thresholds. Typically, LPs receive their preferred return first (Tier 1), then remaining profits are split with the GP receiving an increasing share (promote) at higher IRR hurdles."
   },
   {
-    question: "Is this syndication calculator free?",
-    answer: "Yes! TheDealCalc syndication analyzer is 100% free with no signup. Model complex waterfall structures, LP/GP splits, and full deal economics."
+    question: "What is a promote in syndication?",
+    answer: "A promote (also called carried interest) is the GP's share of profits above the preferred return. For example, after LPs receive their 8% pref, profits might split 70/30 LP/GP. At higher IRR thresholds, the GP's promote may increase to 40% or 50%."
+  },
+  {
+    question: "What is equity multiple?",
+    answer: "Equity multiple is total distributions received divided by total capital invested. An equity multiple of 2.0x means investors doubled their money. Unlike IRR, equity multiple doesn't account for timing—it just measures total return."
+  },
+  {
+    question: "How is IRR different from equity multiple?",
+    answer: "IRR (Internal Rate of Return) is the annualized return accounting for timing of cash flows. A deal returning 2.0x over 3 years has higher IRR than 2.0x over 7 years. IRR penalizes longer hold periods; equity multiple does not."
   },
 ];
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-        { "@type": "ListItem", "position": 2, "name": "Syndication Analyzer", "item": "https://thedealcalc.com/syndication" }
-      ]
-    },
-    {
-      "@type": "SoftwareApplication",
-      "name": "Syndication Analyzer",
-      "applicationCategory": "FinanceApplication",
-      "operatingSystem": "Any",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-      "description": "Free real estate syndication calculator. Model LP/GP waterfall structures, preferred returns, and investor distributions.",
-      "url": "https://thedealcalc.com/syndication"
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": faqs.map(faq => ({
-        "@type": "Question",
-        "name": faq.question,
-        "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
-      }))
-    }
-  ]
-};
+const jsonLd = buildCalculatorPageSchema(
+  {
+    name: "Syndication Analyzer",
+    description: "Real estate syndication calculator. Model LP/GP waterfall structures, preferred returns, and investor distributions.",
+    canonicalPath: "/syndication"
+  },
+  [
+    { name: "Home", path: "/" },
+    { name: "Calculators", path: "/calculators" },
+    { name: "Syndication Analyzer", path: "/syndication" }
+  ],
+  faqs
+);
 
 function SyndicationContent() {
   const navigate = useNavigate();

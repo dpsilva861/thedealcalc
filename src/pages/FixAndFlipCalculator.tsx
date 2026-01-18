@@ -24,35 +24,27 @@ import {
 const faqs = [
   {
     question: "What is a fix and flip?",
-    answer: "Fix and flip is a real estate investment strategy where you buy a distressed property, renovate it, and sell it quickly for profit. Unlike BRRRR, you don't hold the property long-term—the goal is to exit with profit after repairs are complete."
+    answer: "Fix and flip is a real estate investment strategy where you buy a distressed property, renovate it to increase value, and sell it for profit. Unlike buy-and-hold strategies, the goal is to exit quickly after repairs are complete."
   },
   {
     question: "How do I calculate fix and flip profit?",
-    answer: "Profit = Sale Price - Purchase Price - Renovation Costs - Holding Costs - Selling Costs (agent commissions, closing costs). Our calculator models all these components and shows your net profit and ROI."
+    answer: "Profit = Sale Price - Purchase Price - Renovation Costs - Holding Costs - Selling Costs. Selling costs include agent commissions (typically 5-6%) and seller closing costs (1-2%)."
   },
   {
     question: "What is ARV in fix and flip?",
-    answer: "ARV (After Repair Value) is the estimated market value of the property after all renovations are complete. It's the price you expect to sell for. Accurate ARV estimation is critical—overestimating can turn a profitable flip into a loss."
+    answer: "ARV (After Repair Value) is the estimated market value of the property after all renovations are complete. It's determined by comparing to similar recently sold properties (comps). Accurate ARV estimation is critical—overestimating can turn a profitable flip into a loss."
   },
   {
     question: "What is the 70% rule in house flipping?",
-    answer: "The 70% rule states you should pay no more than 70% of ARV minus repair costs. For example: if ARV is $300,000 and repairs are $50,000, max purchase = ($300,000 × 0.70) - $50,000 = $160,000. This builds in profit margin and cushion for unexpected costs."
+    answer: "The 70% rule states you should pay no more than 70% of ARV minus repair costs. For example: if ARV is $300,000 and repairs are $50,000, max purchase = ($300,000 × 0.70) - $50,000 = $160,000. This builds in profit margin and cost cushion."
   },
   {
     question: "What holding costs should I include?",
-    answer: "Include: loan interest, property taxes, insurance, utilities, and any HOA fees during the renovation and selling period. These can add up quickly—a 6-month hold at $2,000/month is $12,000 off your profit."
+    answer: "Include: loan interest payments, property taxes, insurance, utilities, and any HOA fees during the renovation and selling period. A 6-month hold at $2,000/month adds $12,000 to your costs."
   },
   {
     question: "What selling costs should I budget?",
-    answer: "Budget 8-10% of sale price for selling costs: 5-6% for real estate agent commissions, 1-2% for seller closing costs, and 1-2% for staging, photography, and contingency. Our calculator lets you input your expected selling costs."
-  },
-  {
-    question: "What is a good ROI for a fix and flip?",
-    answer: "Most flippers target 15-25% ROI on their total investment. This means if you invest $200,000 total (purchase + rehab + holding + selling), you'd want $30,000-$50,000 profit. Higher ROI compensates for risk and effort."
-  },
-  {
-    question: "Is this fix and flip calculator free?",
-    answer: "Yes! TheDealCalc is 100% free with no signup required. Analyze unlimited fix and flip deals and export results to PDF, CSV, or Excel. We never store your deal data."
+    answer: "Budget 8-10% of sale price for selling costs: 5-6% for real estate agent commissions, 1-2% for seller closing costs, and 1-2% for staging, photography, and contingency."
   },
 ];
 
