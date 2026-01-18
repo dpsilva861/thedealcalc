@@ -35,6 +35,7 @@ const CapRateCalculator = lazy(() => import("./pages/CapRateCalculator"));
 const CashOnCashCalculator = lazy(() => import("./pages/CashOnCashCalculator"));
 const RealEstateInvestmentCalculator = lazy(() => import("./pages/RealEstateInvestmentCalculator"));
 const NPVCalculator = lazy(() => import("./pages/NPVCalculator"));
+const Calculators = lazy(() => import("./pages/Calculators"));
 const About = lazy(() => import("./pages/About"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
@@ -97,6 +98,7 @@ const App = () => (
                       <Route path="/cash-on-cash-calculator" element={<CashOnCashCalculator />} />
                       <Route path="/real-estate-investment-calculator" element={<RealEstateInvestmentCalculator />} />
                       <Route path="/npv-calculator" element={<NPVCalculator />} />
+                      <Route path="/calculators" element={<Calculators />} />
                       <Route path="/disclaimer" element={<Disclaimer />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/contact" element={<Contact />} />
