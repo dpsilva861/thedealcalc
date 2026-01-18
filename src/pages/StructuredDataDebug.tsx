@@ -438,7 +438,14 @@ export default function StructuredDataDebug() {
     const passed = validations.filter((v) => v.valid).length;
     const failed = total - passed;
     const allValid = total > 0 && failed === 0;
-    return { total, passed, failed, allValid };
+    
+    // Count schema types found
+    const typeCounts: Record<string, number> = {};
+    validations.forEach((v) => {
+      typeCounts[v.type] = (typeCounts[v.type] || 0) + 1;
+    });
+    
+    return { total, passed, failed, allValid, typeCounts };
   }, [validations]);
 
   const validateCurrentDOM = useCallback(() => {
@@ -583,6 +590,9 @@ export default function StructuredDataDebug() {
                   <div className="text-sm text-muted-foreground">
                     {stats.passed} passed, {stats.failed} failed of {stats.total} total
                   </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Types: {Object.entries(stats.typeCounts).map(([type, count]) => `${type} (${count})`).join(", ")}
+                  </div>
                 </div>
               </div>
             ) : stats.total > 0 ? (
@@ -592,6 +602,9 @@ export default function StructuredDataDebug() {
                   <div className="font-medium">{stats.failed} schema(s) failed</div>
                   <div className="text-sm text-muted-foreground">
                     {stats.passed} passed, {stats.failed} failed of {stats.total} total
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Types: {Object.entries(stats.typeCounts).map(([type, count]) => `${type} (${count})`).join(", ")}
                   </div>
                 </div>
               </div>
