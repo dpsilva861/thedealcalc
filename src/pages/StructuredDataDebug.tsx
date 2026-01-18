@@ -2,17 +2,16 @@
  * Structured Data Debug Tool
  * 
  * Internal diagnostic page for validating JSON-LD structured data.
- * This page is noindex and blocked in robots.txt.
+ * Validates schemas by fetching route HTML (not navigating away).
  * 
- * Features:
- * - Validates current page's JSON-LD
- * - Can navigate to and validate any route via ?test=/route
- * - Validates: BreadcrumbList, SoftwareApplication, FAQPage, Article
+ * Usage:
+ * - /structured-data-debug - validates current page DOM
+ * - /structured-data-debug?test=/npv-calculator - fetches and validates that route
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +25,8 @@ import {
   RefreshCw,
   Code2,
   ArrowLeft,
-  ExternalLink
+  Globe,
+  FileCode
 } from 'lucide-react';
 
 // ============================================================================
@@ -44,6 +44,13 @@ interface SchemaValidation {
   valid: boolean;
   results: ValidationResult[];
   raw: unknown;
+}
+
+interface ValidationState {
+  validations: SchemaValidation[];
+  source: 'dom' | 'fetch';
+  route: string;
+  error: string | null;
 }
 
 // ============================================================================
@@ -162,7 +169,7 @@ function validateFAQPage(schema: Record<string, unknown>): ValidationResult[] {
     const q = mainEntity[i] as Record<string, unknown>;
     
     if (q['@type'] !== 'Question') {
-      results.push({ field: `Q${i + 1}.@type`, status: 'fail', message: `Expected Question` });
+      results.push({ field: `Q${i + 1}.@type`, status: 'fail', message: 'Expected Question' });
       questionsValid = false;
     }
     
@@ -179,7 +186,7 @@ function validateFAQPage(schema: Record<string, unknown>): ValidationResult[] {
   }
   
   if (mainEntity.length > 3) {
-    results.push({ field: 'remaining', status: 'pass', message: `+${mainEntity.length - 3} more questions (not shown)` });
+    results.push({ field: 'remaining', status: 'pass', message: `+${mainEntity.length - 3} more questions` });
   }
   
   if (questionsValid && mainEntity.length > 0) {
@@ -269,9 +276,12 @@ function validateSchema(schema: Record<string, unknown>): SchemaValidation {
 }
 
 // ============================================================================
-// DOM Extraction
+// Extraction Functions
 // ============================================================================
 
+/**
+ * Extract JSON-LD schemas from DOM (current page)
+ */
 function extractSchemasFromDOM(): SchemaValidation[] {
   const scripts = document.querySelectorAll('script[type="application/ld+json"]');
   const validations: SchemaValidation[] = [];
@@ -305,6 +315,45 @@ function extractSchemasFromDOM(): SchemaValidation[] {
   return validations;
 }
 
+/**
+ * Extract JSON-LD schemas from fetched HTML string
+ */
+function extractSchemasFromHTML(html: string): SchemaValidation[] {
+  const validations: SchemaValidation[] = [];
+  
+  // Match all JSON-LD script blocks
+  const jsonLdRegex = /<script\s+[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+  
+  while ((match = jsonLdRegex.exec(html)) !== null) {
+    const content = match[1].trim();
+    try {
+      const parsed = JSON.parse(content);
+      
+      if (parsed['@graph'] && Array.isArray(parsed['@graph'])) {
+        for (const schema of parsed['@graph']) {
+          validations.push(validateSchema(schema as Record<string, unknown>));
+        }
+      } else {
+        validations.push(validateSchema(parsed as Record<string, unknown>));
+      }
+    } catch (e) {
+      validations.push({
+        type: 'Parse Error',
+        valid: false,
+        results: [{ 
+          field: 'JSON', 
+          status: 'fail', 
+          message: `Invalid JSON: ${e instanceof Error ? e.message : 'Unknown error'}` 
+        }],
+        raw: content,
+      });
+    }
+  }
+  
+  return validations;
+}
+
 // ============================================================================
 // Components
 // ============================================================================
@@ -322,14 +371,12 @@ function StatusIcon({ status }: { status: 'pass' | 'fail' | 'warn' }) {
 function SchemaCard({ validation, index }: { validation: SchemaValidation; index: number }) {
   const [showRaw, setShowRaw] = useState(false);
   
+  const bgClass = validation.valid 
+    ? 'border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20' 
+    : 'border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20';
+  
   return (
-    <div 
-      className={`border rounded-lg p-4 ${
-        validation.valid 
-          ? 'border-green-200 bg-green-50/50 dark:bg-green-950/20' 
-          : 'border-red-200 bg-red-50/50 dark:bg-red-950/20'
-      }`}
-    >
+    <div className={`border rounded-lg p-4 ${bgClass}`}>
       <div className="flex items-center gap-2 mb-3">
         <StatusIcon status={validation.valid ? 'pass' : 'fail'} />
         <span className="font-semibold">{validation.type}</span>
@@ -340,7 +387,7 @@ function SchemaCard({ validation, index }: { validation: SchemaValidation; index
       
       <div className="space-y-1.5 mb-4">
         {validation.results.map((result, j) => (
-          <div key={j} className="flex items-start gap-2 text-sm">
+          <div key={`${index}-${j}`} className="flex items-start gap-2 text-sm">
             <StatusIcon status={result.status} />
             <span className="font-mono text-muted-foreground min-w-[100px] shrink-0">
               {result.field}
@@ -361,6 +408,7 @@ function SchemaCard({ validation, index }: { validation: SchemaValidation; index
       <button 
         onClick={() => setShowRaw(!showRaw)}
         className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+        type="button"
       >
         <Code2 className="h-3 w-3" />
         {showRaw ? 'Hide' : 'View'} raw JSON-LD
@@ -380,41 +428,95 @@ function SchemaCard({ validation, index }: { validation: SchemaValidation; index
 // ============================================================================
 
 export default function StructuredDataDebug() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const [validations, setValidations] = useState<SchemaValidation[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [testRoute, setTestRoute] = useState('');
-  const [targetRoute, setTargetRoute] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [state, setState] = useState<ValidationState>({
+    validations: [],
+    source: 'dom',
+    route: '/structured-data-debug',
+    error: null,
+  });
   
-  // Check for ?test= parameter on mount
+  /**
+   * Validate current page DOM
+   */
+  const validateCurrentDOM = useCallback(() => {
+    setIsLoading(true);
+    setTimeout(() => {
+      const validations = extractSchemasFromDOM();
+      setState({
+        validations,
+        source: 'dom',
+        route: window.location.pathname,
+        error: null,
+      });
+      setIsLoading(false);
+    }, 100);
+  }, []);
+  
+  /**
+   * Fetch and validate a route's HTML
+   */
+  const validateFetchedRoute = useCallback(async (route: string) => {
+    setIsLoading(true);
+    setState(prev => ({ ...prev, error: null }));
+    
+    try {
+      // Normalize route
+      const normalizedRoute = route.startsWith('/') ? route : `/${route}`;
+      
+      // Fetch the route HTML
+      const response = await fetch(normalizedRoute, {
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'text/html',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const html = await response.text();
+      const validations = extractSchemasFromHTML(html);
+      
+      setState({
+        validations,
+        source: 'fetch',
+        route: normalizedRoute,
+        error: null,
+      });
+      
+      // Update URL without navigating
+      setSearchParams({ test: normalizedRoute }, { replace: true });
+      
+    } catch (e) {
+      setState({
+        validations: [],
+        source: 'fetch',
+        route: route,
+        error: e instanceof Error ? e.message : 'Failed to fetch route',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setSearchParams]);
+  
+  // On mount: check for ?test= param
   useEffect(() => {
     const testParam = searchParams.get('test');
     if (testParam) {
-      setTargetRoute(testParam);
-      // Navigate to that route, then come back
-      navigate(testParam, { replace: false });
+      setTestRoute(testParam);
+      validateFetchedRoute(testParam);
+    } else {
+      validateCurrentDOM();
     }
-  }, [searchParams, navigate]);
-  
-  // Run validation when page loads or after navigation
-  const runValidation = useCallback(() => {
-    setIsLoading(true);
-    // Wait for React/Helmet to render
-    setTimeout(() => {
-      setValidations(extractSchemasFromDOM());
-      setIsLoading(false);
-    }, 300);
-  }, []);
-  
-  useEffect(() => {
-    runValidation();
-  }, [runValidation]);
+  }, []); // Only run on mount
   
   const handleTestRoute = () => {
-    if (testRoute) {
-      const cleanRoute = testRoute.startsWith('/') ? testRoute : `/${testRoute}`;
-      window.location.href = `/structured-data-debug?test=${encodeURIComponent(cleanRoute)}`;
+    if (testRoute.trim()) {
+      validateFetchedRoute(testRoute.trim());
     }
   };
   
@@ -424,17 +526,24 @@ export default function StructuredDataDebug() {
     }
   };
   
-  const allValid = validations.length > 0 && validations.every(v => v.valid);
-  const totalSchemas = validations.length;
-  const passedSchemas = validations.filter(v => v.valid).length;
-  const currentPath = window.location.pathname;
+  const handleValidateDOM = () => {
+    setSearchParams({}, { replace: true });
+    setTestRoute('');
+    validateCurrentDOM();
+  };
+  
+  // Calculate stats
+  const totalSchemas = state.validations.length;
+  const passedSchemas = state.validations.filter(v => v.valid).length;
+  const failedSchemas = totalSchemas - passedSchemas;
+  const allValid = totalSchemas > 0 && failedSchemas === 0;
   
   return (
     <Layout>
       <Helmet>
         <title>Structured Data Debug | TheDealCalc (Internal)</title>
-        <meta name="robots" content="noindex, nofollow" />
-        <meta name="description" content="Internal structured data validation tool" />
+        <meta name="robots" content="noindex,nofollow" />
+        <meta name="description" content="Internal tool for validating JSON-LD structured data" />
       </Helmet>
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -457,16 +566,20 @@ export default function StructuredDataDebug() {
         
         {/* Overall Status */}
         <Card className={`mb-6 ${
-          allValid 
-            ? 'border-green-500' 
-            : totalSchemas === 0 
-              ? 'border-yellow-500' 
-              : 'border-red-500'
+          state.error 
+            ? 'border-red-500'
+            : allValid 
+              ? 'border-green-500' 
+              : totalSchemas === 0 
+                ? 'border-yellow-500' 
+                : 'border-red-500'
         }`}>
           <CardContent className="py-4">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
-                {allValid ? (
+                {state.error ? (
+                  <XCircle className="h-8 w-8 text-red-600" />
+                ) : allValid ? (
                   <CheckCircle2 className="h-8 w-8 text-green-600" />
                 ) : totalSchemas === 0 ? (
                   <AlertTriangle className="h-8 w-8 text-yellow-600" />
@@ -475,34 +588,43 @@ export default function StructuredDataDebug() {
                 )}
                 <div>
                   <p className="font-semibold text-lg">
-                    {totalSchemas === 0 
-                      ? 'No Structured Data Found' 
-                      : allValid 
-                        ? 'All Schemas Valid' 
-                        : 'Schema Validation Errors'}
+                    {state.error 
+                      ? 'Fetch Error'
+                      : totalSchemas === 0 
+                        ? 'No Structured Data Found' 
+                        : allValid 
+                          ? 'All Schemas Valid' 
+                          : `${failedSchemas} Schema${failedSchemas > 1 ? 's' : ''} Failed`}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {passedSchemas} of {totalSchemas} schemas passed
+                    {state.error 
+                      ? state.error
+                      : `${passedSchemas} passed, ${failedSchemas} failed of ${totalSchemas} total`}
                   </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={runValidation}
-                disabled={isLoading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleValidateDOM}
+                  disabled={isLoading}
+                >
+                  <FileCode className="h-4 w-4 mr-2" />
+                  Validate DOM
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        {/* Test Another Route */}
+        {/* Test Route Input */}
         <Card className="mb-6">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Test Another Route</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Fetch &amp; Validate Route
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex gap-2">
@@ -512,39 +634,36 @@ export default function StructuredDataDebug() {
                 onChange={(e) => setTestRoute(e.target.value)}
                 onKeyDown={handleKeyDown}
               />
-              <Button onClick={handleTestRoute} disabled={!testRoute}>
-                <Search className="h-4 w-4 mr-2" />
-                Test
+              <Button 
+                onClick={handleTestRoute} 
+                disabled={!testRoute.trim() || isLoading}
+              >
+                {isLoading ? (
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4 mr-2" />
+                )}
+                Validate
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Enter a route path to navigate and validate its structured data.
-              This validates the client-rendered DOM (same as what React Helmet produces).
+              Fetches the route HTML and extracts JSON-LD blocks for validation.
+              Does not navigate away from this page.
             </p>
-            {targetRoute && (
-              <p className="text-xs text-primary mt-2">
-                Testing route: {targetRoute}
-              </p>
-            )}
           </CardContent>
         </Card>
         
-        {/* Current Route Results */}
+        {/* Validation Results */}
         <Card className="mb-6">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <span>Current Route:</span>
+              <span>Validating:</span>
               <code className="text-sm font-mono bg-muted px-2 py-0.5 rounded">
-                {currentPath}
+                {state.route}
               </code>
-              <a 
-                href={currentPath} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </a>
+              <Badge variant="secondary" className="ml-2">
+                {state.source === 'dom' ? 'DOM' : 'Fetched'}
+              </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -553,7 +672,13 @@ export default function StructuredDataDebug() {
                 <RefreshCw className="h-8 w-8 mx-auto mb-3 animate-spin" />
                 <p>Extracting structured data...</p>
               </div>
-            ) : validations.length === 0 ? (
+            ) : state.error ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <XCircle className="h-12 w-12 mx-auto mb-3 text-red-500" />
+                <p className="font-medium text-red-600">Failed to fetch route</p>
+                <p className="text-sm mt-1">{state.error}</p>
+              </div>
+            ) : state.validations.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <AlertTriangle className="h-12 w-12 mx-auto mb-3 text-yellow-500" />
                 <p className="font-medium">No JSON-LD structured data found</p>
@@ -563,7 +688,7 @@ export default function StructuredDataDebug() {
               </div>
             ) : (
               <div className="space-y-4">
-                {validations.map((validation, i) => (
+                {state.validations.map((validation, i) => (
                   <SchemaCard key={i} validation={validation} index={i} />
                 ))}
               </div>
@@ -582,7 +707,7 @@ export default function StructuredDataDebug() {
               <ul className="list-disc list-inside text-muted-foreground ml-2 space-y-0.5">
                 <li>@type = BreadcrumbList</li>
                 <li>itemListElement is array</li>
-                <li>Positions are sequential (1, 2, 3...)</li>
+                <li>Positions sequential starting at 1</li>
                 <li>Each item has name and item URL</li>
               </ul>
             </div>

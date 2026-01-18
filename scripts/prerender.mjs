@@ -22,6 +22,9 @@ import { ROUTES_TO_PRERENDER, validateRoutes } from './prerender.routes.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distDir = join(__dirname, '..', 'dist');
 
+const CANONICAL_BASE = 'https://thedealcalc.com';
+const META_WAIT_TIMEOUT = 20000; // 20 seconds
+
 /**
  * MIME types for static file serving
  */
@@ -114,16 +117,74 @@ function createStaticServer(port) {
 }
 
 /**
- * Wait for a selector to appear with content
+ * Wait for canonical URL to contain the expected path
  */
-async function waitForMeta(page, selector, timeout = 10000) {
+async function waitForCanonical(page, route, timeout) {
+  const expectedPath = route === '/' ? CANONICAL_BASE : `${CANONICAL_BASE}${route}`;
   const start = Date.now();
+  
   while (Date.now() - start < timeout) {
-    const value = await page.evaluate((sel) => {
-      const el = document.querySelector(sel);
-      return el ? el.getAttribute('content') || el.getAttribute('href') || el.textContent : null;
-    }, selector);
-    if (value && value.length > 0) return value;
+    const canonical = await page.evaluate(() => {
+      const el = document.querySelector('link[rel="canonical"]');
+      return el ? el.getAttribute('href') : null;
+    });
+    
+    if (canonical && canonical.startsWith(CANONICAL_BASE)) {
+      // For root, just check base URL; for other routes, check path is included
+      if (route === '/') {
+        if (canonical === CANONICAL_BASE || canonical === `${CANONICAL_BASE}/`) {
+          return canonical;
+        }
+      } else if (canonical.includes(route)) {
+        return canonical;
+      }
+    }
+    await page.waitForTimeout(100);
+  }
+  return null;
+}
+
+/**
+ * Wait for og:url to be properly set
+ */
+async function waitForOgUrl(page, route, timeout) {
+  const start = Date.now();
+  
+  while (Date.now() - start < timeout) {
+    const ogUrl = await page.evaluate(() => {
+      const el = document.querySelector('meta[property="og:url"]');
+      return el ? el.getAttribute('content') : null;
+    });
+    
+    if (ogUrl && ogUrl.startsWith(CANONICAL_BASE)) {
+      if (route === '/') {
+        if (ogUrl === CANONICAL_BASE || ogUrl === `${CANONICAL_BASE}/`) {
+          return ogUrl;
+        }
+      } else if (ogUrl.includes(route)) {
+        return ogUrl;
+      }
+    }
+    await page.waitForTimeout(100);
+  }
+  return null;
+}
+
+/**
+ * Wait for og:title to be present
+ */
+async function waitForOgTitle(page, timeout) {
+  const start = Date.now();
+  
+  while (Date.now() - start < timeout) {
+    const ogTitle = await page.evaluate(() => {
+      const el = document.querySelector('meta[property="og:title"]');
+      return el ? el.getAttribute('content') : null;
+    });
+    
+    if (ogTitle && ogTitle.length > 0) {
+      return ogTitle;
+    }
     await page.waitForTimeout(100);
   }
   return null;
@@ -139,19 +200,36 @@ async function prerenderRoute(page, route, baseUrl) {
   try {
     await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
     
-    // Wait for critical SEO elements to be present
-    const ogTitle = await waitForMeta(page, 'meta[property="og:title"]', 15000);
-    const canonical = await waitForMeta(page, 'link[rel="canonical"]', 15000);
+    // Wait for critical SEO elements with strict validation
+    const [canonical, ogUrl, ogTitle] = await Promise.all([
+      waitForCanonical(page, route, META_WAIT_TIMEOUT),
+      waitForOgUrl(page, route, META_WAIT_TIMEOUT),
+      waitForOgTitle(page, META_WAIT_TIMEOUT),
+    ]);
+    
+    // Fail if critical meta tags are missing or invalid
+    const errors = [];
+    
+    if (!canonical) {
+      errors.push(`canonical missing or invalid (expected to include ${route === '/' ? CANONICAL_BASE : route})`);
+    }
+    
+    if (!ogUrl) {
+      errors.push(`og:url missing or invalid (expected to include ${route === '/' ? CANONICAL_BASE : route})`);
+    }
     
     if (!ogTitle) {
-      console.warn(`    ⚠️  Warning: og:title not found for ${route}`);
-    }
-    if (!canonical) {
-      console.warn(`    ⚠️  Warning: canonical not found for ${route}`);
+      errors.push('og:title missing');
     }
     
-    // Extra wait to ensure all meta tags are rendered
-    await page.waitForTimeout(500);
+    if (errors.length > 0) {
+      console.error(`  ❌ Failed: ${route}`);
+      errors.forEach(err => console.error(`     └─ ${err}`));
+      return { route, success: false, error: errors.join('; ') };
+    }
+    
+    // Small extra wait for any remaining meta tags
+    await page.waitForTimeout(200);
     
     // Get the full HTML
     const html = await page.content();
@@ -200,6 +278,7 @@ async function prerender() {
   }
   
   console.log(`\n📋 Routes to prerender: ${ROUTES_TO_PRERENDER.length}`);
+  console.log(`⏱️  Meta tag wait timeout: ${META_WAIT_TIMEOUT / 1000}s`);
   
   const port = 4173;
   let server;
@@ -245,6 +324,7 @@ async function prerender() {
     if (failed.length > 0) {
       console.log('\nFailed routes:');
       failed.forEach(r => console.log(`  - ${r.route}: ${r.error}`));
+      console.log('\n❌ Prerendering FAILED - fix the above errors.\n');
       process.exit(1);
     }
     
