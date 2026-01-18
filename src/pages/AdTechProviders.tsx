@@ -219,12 +219,14 @@ export default function AdTechProviders() {
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/ad-tech-providers" />
         <meta property="og:title" content="Ad Technology Providers | TheDealCalc" />
-        <meta
-          property="og:description"
-          content="View the list of ad technology providers used by TheDealCalc and their privacy policies."
-        />
+        <meta property="og:description" content="View the list of ad technology providers used by TheDealCalc and their privacy policies." />
         <meta property="og:url" content="https://thedealcalc.com/ad-tech-providers" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-default.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Ad Technology Providers | TheDealCalc" />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-default.png" />
         <script type="application/ld+json">
           {JSON.stringify(breadcrumbSchema)}
         </script>

@@ -57,7 +57,17 @@ export default function BlogCategory() {
       <Helmet>
         <title>{category?.name || 'Category'} | TheDealCalc Blog</title>
         <meta name="description" content={category?.description || `Browse articles in ${category?.name || 'this category'}`} />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href={`https://thedealcalc.com/blog/category/${slug}`} />
+        <meta property="og:title" content={`${category?.name || 'Category'} | TheDealCalc Blog`} />
+        <meta property="og:description" content={category?.description || `Browse articles in ${category?.name || 'this category'}`} />
+        <meta property="og:url" content={`https://thedealcalc.com/blog/category/${slug}`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-blog.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${category?.name || 'Category'} | TheDealCalc Blog`} />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-blog.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
       <div className="min-h-screen bg-background">

@@ -183,6 +183,12 @@ function BRRRRContent() {
         <meta property="og:description" content="Free BRRRR calculator for real estate investors. Analyze rehab-to-rental deals with cash-out projections." />
         <meta property="og:url" content="https://thedealcalc.com/brrrr" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-brrrr.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="BRRRR Calculator (Free) — TheDealCalc" />
+        <meta name="twitter:description" content="Free BRRRR calculator for Buy-Rehab-Rent-Refinance-Repeat deals." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-brrrr.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 

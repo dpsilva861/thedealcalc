@@ -33,6 +33,12 @@ export default function Disclaimer() {
         <meta property="og:description" content="Important disclaimers for using TheDealCalc calculators." />
         <meta property="og:url" content="https://thedealcalc.com/disclaimer" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-default.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Disclaimer | TheDealCalc" />
+        <meta name="twitter:description" content="Important disclaimers for using TheDealCalc calculators." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-default.png" />
         <script type="application/ld+json">
           {JSON.stringify(breadcrumbSchema)}
         </script>

@@ -96,7 +96,17 @@ export default function BlogTag() {
           name="description" 
           content={`Browse ${totalCount} articles about ${decodedTag} on TheDealCalc. Real estate investing insights and analysis.`} 
         />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href={`https://thedealcalc.com/blog/tag/${encodeURIComponent(decodedTag)}`} />
+        <meta property="og:title" content={`Posts tagged "${decodedTag}" | TheDealCalc Blog`} />
+        <meta property="og:description" content={`Browse articles about ${decodedTag} on TheDealCalc.`} />
+        <meta property="og:url" content={`https://thedealcalc.com/blog/tag/${encodeURIComponent(decodedTag)}`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-blog.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`Posts tagged "${decodedTag}" | TheDealCalc Blog`} />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-blog.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 

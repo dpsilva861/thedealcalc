@@ -34,6 +34,12 @@ export default function TermsOfService() {
         <meta property="og:description" content="Terms of service for TheDealCalc free real estate calculators." />
         <meta property="og:url" content="https://thedealcalc.com/terms" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-default.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Terms of Service | TheDealCalc" />
+        <meta name="twitter:description" content="Terms of service for TheDealCalc free real estate calculators." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-default.png" />
         <script type="application/ld+json">
           {JSON.stringify(breadcrumbSchema)}
         </script>
