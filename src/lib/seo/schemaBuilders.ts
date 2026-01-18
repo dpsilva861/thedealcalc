@@ -3,13 +3,26 @@
  * 
  * Utility functions for generating structured data schemas
  * compliant with Google Rich Results requirements.
+ * 
+ * ARCHITECTURE:
+ * - Global schemas (Organization, WebSite) are emitted ONCE at Layout level
+ * - Page-specific schemas (SoftwareApplication, FAQPage, BreadcrumbList) are emitted per-page
+ * - This prevents duplicate JSON-LD across the site
  */
 
 import { FAQ, buildFAQPageSchema } from './faqs';
+import {
+  BRAND_NAME,
+  BRAND_URL,
+  BRAND_LOGO_URL,
+  BRAND_DESCRIPTION,
+  BRAND_SAME_AS,
+  BRAND_LOGO_WIDTH,
+  BRAND_LOGO_HEIGHT,
+} from './brand';
 
-const BASE_URL = "https://thedealcalc.com";
-const SITE_NAME = "TheDealCalc";
-const LOGO_URL = `${BASE_URL}/og-image.png`;
+// Re-export brand constants for convenience
+export { BRAND_URL, BRAND_NAME };
 
 // ============================================
 // TYPES
@@ -34,51 +47,83 @@ export interface SoftwareApplicationMetadata {
 }
 
 // ============================================
-// GLOBAL SCHEMAS (inject once site-wide)
+// GLOBAL SCHEMAS (inject ONCE at Layout level)
 // ============================================
 
 /**
  * Organization schema - identifies TheDealCalc as a legal entity
- * Should be injected once at app root level
+ * Should be injected ONCE at Layout level, NOT on individual pages
  */
 export function buildOrganizationSchema() {
-  return {
+  const schema: Record<string, unknown> = {
     "@type": "Organization",
-    "@id": `${BASE_URL}/#organization`,
-    "name": SITE_NAME,
-    "url": BASE_URL,
-    "logo": {
-      "@type": "ImageObject",
-      "url": LOGO_URL,
-      "width": 1200,
-      "height": 630
-    },
-    "sameAs": []
+    "@id": `${BRAND_URL}/#organization`,
+    "name": BRAND_NAME,
+    "url": BRAND_URL,
   };
+
+  // Only include logo if we have a valid URL
+  if (BRAND_LOGO_URL) {
+    schema.logo = {
+      "@type": "ImageObject",
+      "url": BRAND_LOGO_URL,
+      "width": BRAND_LOGO_WIDTH,
+      "height": BRAND_LOGO_HEIGHT,
+    };
+  }
+
+  // Only include description if provided
+  if (BRAND_DESCRIPTION) {
+    schema.description = BRAND_DESCRIPTION;
+  }
+
+  // Only include sameAs if there are actual social profiles
+  if (BRAND_SAME_AS && BRAND_SAME_AS.length > 0) {
+    schema.sameAs = BRAND_SAME_AS;
+  }
+
+  return schema;
 }
 
 /**
- * WebSite schema with SearchAction for sitelinks search box
- * Should be injected once at app root level
+ * WebSite schema with SearchAction for blog search
+ * Should be injected ONCE at Layout level, NOT on individual pages
+ * 
+ * Note: SearchAction points to /blog?search= since that's the only
+ * site-wide search feature available (verified in codebase)
  */
 export function buildWebSiteSchema() {
   return {
     "@type": "WebSite",
-    "@id": `${BASE_URL}/#website`,
-    "url": BASE_URL,
-    "name": SITE_NAME,
-    "description": "Free real estate investment calculators for analyzing rental properties, BRRRR deals, syndications, and NPV.",
+    "@id": `${BRAND_URL}/#website`,
+    "url": BRAND_URL,
+    "name": BRAND_NAME,
+    "description": BRAND_DESCRIPTION,
     "publisher": {
-      "@id": `${BASE_URL}/#organization`
+      "@id": `${BRAND_URL}/#organization`
     },
     "potentialAction": {
       "@type": "SearchAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": `${BASE_URL}/blog?search={search_term_string}`
+        "urlTemplate": `${BRAND_URL}/blog?search={search_term_string}`
       },
       "query-input": "required name=search_term_string"
     }
+  };
+}
+
+/**
+ * Build the global JSON-LD graph for Organization + WebSite
+ * This should be rendered ONCE in the Layout component
+ */
+export function buildGlobalSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      buildOrganizationSchema(),
+      buildWebSiteSchema(),
+    ]
   };
 }
 
@@ -91,7 +136,7 @@ export function buildWebSiteSchema() {
  * Classifies the page as a free financial tool
  */
 export function buildSoftwareApplicationSchema(metadata: SoftwareApplicationMetadata) {
-  const canonicalUrl = `${BASE_URL}${metadata.canonicalPath}`;
+  const canonicalUrl = `${BRAND_URL}${metadata.canonicalPath}`;
   
   return {
     "@type": "SoftwareApplication",
@@ -106,7 +151,7 @@ export function buildSoftwareApplicationSchema(metadata: SoftwareApplicationMeta
       "priceCurrency": "USD"
     },
     "provider": {
-      "@id": `${BASE_URL}/#organization`
+      "@id": `${BRAND_URL}/#organization`
     }
   };
 }
@@ -126,7 +171,7 @@ export function buildFAQSchema(faqItems: FAQ[]) {
  * Used for calculator landing pages with substantial content
  */
 export function buildArticleSchema(metadata: ArticleMetadata) {
-  const canonicalUrl = `${BASE_URL}${metadata.canonicalPath}`;
+  const canonicalUrl = `${BRAND_URL}${metadata.canonicalPath}`;
   
   const schema: Record<string, unknown> = {
     "@type": "Article",
@@ -137,10 +182,10 @@ export function buildArticleSchema(metadata: ArticleMetadata) {
       "@id": canonicalUrl
     },
     "author": {
-      "@id": `${BASE_URL}/#organization`
+      "@id": `${BRAND_URL}/#organization`
     },
     "publisher": {
-      "@id": `${BASE_URL}/#organization`
+      "@id": `${BRAND_URL}/#organization`
     }
   };
 
@@ -163,7 +208,7 @@ export function buildArticleSchema(metadata: ArticleMetadata) {
  * WebPage schema for generic pages
  */
 export function buildWebPageSchema(name: string, canonicalPath: string, description?: string) {
-  const canonicalUrl = `${BASE_URL}${canonicalPath}`;
+  const canonicalUrl = `${BRAND_URL}${canonicalPath}`;
   
   return {
     "@type": "WebPage",
@@ -172,7 +217,7 @@ export function buildWebPageSchema(name: string, canonicalPath: string, descript
     "name": name,
     "description": description,
     "isPartOf": {
-      "@id": `${BASE_URL}/#website`
+      "@id": `${BRAND_URL}/#website`
     }
   };
 }
@@ -194,7 +239,7 @@ export function buildHomePageSchema() {
       buildWebPageSchema(
         "TheDealCalc - Real Estate Investment Calculators",
         "/",
-        "Free real estate investment calculators for analyzing rental properties, BRRRR deals, syndications, and NPV."
+        BRAND_DESCRIPTION
       ),
       {
         "@type": "BreadcrumbList",
@@ -203,7 +248,7 @@ export function buildHomePageSchema() {
             "@type": "ListItem",
             "position": 1,
             "name": "Home",
-            "item": `${BASE_URL}/`
+            "item": `${BRAND_URL}/`
           }
         ]
       }
@@ -221,8 +266,6 @@ export function buildCalculatorPageSchema(
   faqItems?: FAQItem[]
 ) {
   const graph: object[] = [
-    buildOrganizationSchema(),
-    buildWebSiteSchema(),
     buildSoftwareApplicationSchema(metadata),
     buildArticleSchema({
       headline: metadata.name,
@@ -235,7 +278,7 @@ export function buildCalculatorPageSchema(
         "@type": "ListItem",
         "position": index + 1,
         "name": item.name,
-        "item": `${BASE_URL}${item.path}`
+        "item": `${BRAND_URL}${item.path}`
       }))
     }
   ];
@@ -264,8 +307,6 @@ export function buildContentPageSchema(
   return {
     "@context": "https://schema.org",
     "@graph": [
-      buildOrganizationSchema(),
-      buildWebSiteSchema(),
       buildWebPageSchema(pageName, canonicalPath, description),
       {
         "@type": "BreadcrumbList",
@@ -273,7 +314,7 @@ export function buildContentPageSchema(
           "@type": "ListItem",
           "position": index + 1,
           "name": item.name,
-          "item": `${BASE_URL}${item.path}`
+          "item": `${BRAND_URL}${item.path}`
         }))
       }
     ]

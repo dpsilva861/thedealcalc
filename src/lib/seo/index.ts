@@ -4,6 +4,7 @@
  * Central export for all SEO-related utilities
  */
 
+export * from './brand';
 export * from './breadcrumbs';
 export * from './faqs';
 export * from './schemaBuilders';
