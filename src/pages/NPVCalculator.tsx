@@ -59,7 +59,6 @@ import { trackEvent } from '@/lib/analytics';
 import { devLog } from '@/lib/devLogger';
 import { useNPVScenarios, SavedNPVScenario } from '@/hooks/useNPVScenarios';
 import { toast } from 'sonner';
-import { toast } from 'sonner';
 import {
   Calculator,
   Play,
@@ -185,15 +184,6 @@ function NPVCalculatorContent() {
     runAnalysis();
   };
 
-  const handleShare = async () => {
-    const result = await copyShareableLink();
-    if (result.success) {
-      toast.success('Link copied to clipboard!');
-      trackEvent('share_link', { calculator: 'npv' });
-    } else {
-      toast.error('Failed to copy link');
-    }
-  };
 
   const handleSaveScenario = () => {
     const name = scenarioName.trim() || undefined;
@@ -344,14 +334,6 @@ function NPVCalculatorContent() {
                     <div>
                       <ExportDropdown
                         calculatorType="underwriting"
-                        onExportExcel={handleExportExcel}
-                        onExportCSV={handleExportCSV}
-                        onExportPDF={handleExportPDF}
-                        onExportDocx={handleExportDocx}
-                        onExportPptx={handleExportPptx}
-                      />
-                    </div>
-                  </TooltipTrigger>
                         onExportExcel={handleExportExcel}
                         onExportCSV={handleExportCSV}
                         onExportPDF={handleExportPDF}
