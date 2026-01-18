@@ -9,6 +9,7 @@ import { UnderwritingProvider } from "@/contexts/UnderwritingContext";
 import { BRRRRProvider } from "@/contexts/BRRRRContext";
 import { AdSenseLoader } from "@/components/ads/AdSenseLoader";
 import { ConsentProvider } from "@/components/cmp";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Critical path - loaded eagerly for fast initial render
 import Index from "./pages/Index";
@@ -63,63 +64,65 @@ const PageLoader = () => (
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <ConsentProvider>
-          <AdSenseLoader>
-            <UnderwritingProvider>
-              <BRRRRProvider>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/how-it-works" element={<HowItWorks />} />
-                    <Route path="/underwrite" element={<Underwrite />} />
-                    <Route path="/results" element={<Results />} />
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/brrrr" element={<BRRRR />} />
-                    <Route path="/brrrr/results" element={<BRRRRResults />} />
-                    <Route path="/syndication" element={<Syndication />} />
-                    <Route path="/syndication/results" element={<SyndicationResults />} />
-                    {/* SEO Landing Pages */}
-                    <Route path="/rental-property-calculator" element={<RentalPropertyCalculator />} />
-                    <Route path="/brrrr-calculator" element={<BRRRRCalculatorLanding />} />
-                    <Route path="/syndication-calculator" element={<SyndicationCalculatorLanding />} />
-                    <Route path="/fix-and-flip-calculator" element={<FixAndFlipCalculator />} />
-                    <Route path="/cap-rate-calculator" element={<CapRateCalculator />} />
-                    <Route path="/cash-on-cash-calculator" element={<CashOnCashCalculator />} />
-                    <Route path="/real-estate-investment-calculator" element={<RealEstateInvestmentCalculator />} />
-                    <Route path="/disclaimer" element={<Disclaimer />} />
-                    <Route path="/cookies" element={<CookiePolicy />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/ad-tech-providers" element={<AdTechProviders />} />
-                    {/* Blog */}
-                    <Route path="/blog" element={<Blog />} />
-                    <Route path="/blog/category/:slug" element={<BlogCategory />} />
-                    <Route path="/blog/series/:slug" element={<BlogSeries />} />
-                    <Route path="/blog/tags" element={<BlogTags />} />
-                    <Route path="/blog/tag/:tag" element={<BlogTag />} />
-                    <Route path="/blog/:slug" element={<BlogPost />} />
-                    {/* Admin */}
-                    <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin/reset-password" element={<ResetPassword />} />
-                    <Route path="/admin/blog" element={<AdminBlog />} />
-                    <Route path="/admin/blog/taxonomy" element={<AdminTaxonomy />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </BRRRRProvider>
-            </UnderwritingProvider>
-          </AdSenseLoader>
-        </ConsentProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <ConsentProvider>
+            <AdSenseLoader>
+              <UnderwritingProvider>
+                <BRRRRProvider>
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/how-it-works" element={<HowItWorks />} />
+                      <Route path="/underwrite" element={<Underwrite />} />
+                      <Route path="/results" element={<Results />} />
+                      <Route path="/privacy" element={<PrivacyPolicy />} />
+                      <Route path="/terms" element={<TermsOfService />} />
+                      <Route path="/brrrr" element={<BRRRR />} />
+                      <Route path="/brrrr/results" element={<BRRRRResults />} />
+                      <Route path="/syndication" element={<Syndication />} />
+                      <Route path="/syndication/results" element={<SyndicationResults />} />
+                      {/* SEO Landing Pages */}
+                      <Route path="/rental-property-calculator" element={<RentalPropertyCalculator />} />
+                      <Route path="/brrrr-calculator" element={<BRRRRCalculatorLanding />} />
+                      <Route path="/syndication-calculator" element={<SyndicationCalculatorLanding />} />
+                      <Route path="/fix-and-flip-calculator" element={<FixAndFlipCalculator />} />
+                      <Route path="/cap-rate-calculator" element={<CapRateCalculator />} />
+                      <Route path="/cash-on-cash-calculator" element={<CashOnCashCalculator />} />
+                      <Route path="/real-estate-investment-calculator" element={<RealEstateInvestmentCalculator />} />
+                      <Route path="/disclaimer" element={<Disclaimer />} />
+                      <Route path="/cookies" element={<CookiePolicy />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/ad-tech-providers" element={<AdTechProviders />} />
+                      {/* Blog */}
+                      <Route path="/blog" element={<Blog />} />
+                      <Route path="/blog/category/:slug" element={<BlogCategory />} />
+                      <Route path="/blog/series/:slug" element={<BlogSeries />} />
+                      <Route path="/blog/tags" element={<BlogTags />} />
+                      <Route path="/blog/tag/:tag" element={<BlogTag />} />
+                      <Route path="/blog/:slug" element={<BlogPost />} />
+                      {/* Admin */}
+                      <Route path="/admin/login" element={<AdminLogin />} />
+                      <Route path="/admin/reset-password" element={<ResetPassword />} />
+                      <Route path="/admin/blog" element={<AdminBlog />} />
+                      <Route path="/admin/blog/taxonomy" element={<AdminTaxonomy />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                </BRRRRProvider>
+              </UnderwritingProvider>
+            </AdSenseLoader>
+          </ConsentProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
