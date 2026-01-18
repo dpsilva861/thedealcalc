@@ -180,14 +180,25 @@ function NPVCalculatorContent() {
         <div className="flex items-center gap-3 flex-wrap">
           <CalculatorSelector />
           {results && (
-            <ExportDropdown
-              calculatorType="underwriting"
-              onExportExcel={handleExportExcel}
-              onExportCSV={handleExportCSV}
-              onExportPDF={handleExportPDF}
-              onExportDocx={handleExportDocx}
-              onExportPptx={handleExportPptx}
-            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <ExportDropdown
+                      calculatorType="underwriting"
+                      onExportExcel={handleExportExcel}
+                      onExportCSV={handleExportCSV}
+                      onExportPDF={handleExportPDF}
+                      onExportDocx={handleExportDocx}
+                      onExportPptx={handleExportPptx}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p>Export inputs, results, and breakdown table to Excel, CSV, PDF, Word, or PowerPoint.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>
@@ -299,61 +310,110 @@ function NPVCalculatorContent() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Mode Tabs */}
-              <Tabs
-                value={inputs.cashFlowMode}
-                onValueChange={(v) => updateInputs({ cashFlowMode: v as typeof inputs.cashFlowMode })}
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="single_recurring">Single + Recurring</TabsTrigger>
-                  <TabsTrigger value="custom_series">Custom Series</TabsTrigger>
-                </TabsList>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label>Cash Flow Entry Mode</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Single + Recurring: one initial outlay plus repeating cash flows. Custom Series: enter each period's cash flow individually.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Tabs
+                  value={inputs.cashFlowMode}
+                  onValueChange={(v) => updateInputs({ cashFlowMode: v as typeof inputs.cashFlowMode })}
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="single_recurring">Single + Recurring</TabsTrigger>
+                    <TabsTrigger value="custom_series">Custom Series</TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="single_recurring" className="space-y-4 mt-4">
-                  {/* Initial Investment */}
-                  <div className="space-y-2">
-                    <Label htmlFor="initialInvestment">Initial Investment (CF₀)</Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <TabsContent value="single_recurring" className="space-y-4 mt-4">
+                    {/* Initial Investment */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="initialInvestment">Initial Investment (CF₀)</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>CF₀ is the upfront cost at period 0. Enter negative for money spent (e.g., -100000).</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <Input
+                          id="initialInvestment"
+                          type="number"
+                          value={inputs.initialInvestment}
+                          onChange={(e) => handleNumberChange('initialInvestment', e.target.value)}
+                          className="pl-8"
+                          placeholder="-100000"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Periodic Cash Flow */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="periodicCashFlow">Periodic Cash Flow</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>The recurring cash flow received (positive) or paid (negative) each period starting at CF₁.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <Input
+                          id="periodicCashFlow"
+                          type="number"
+                          value={inputs.periodicCashFlow}
+                          onChange={(e) => handleNumberChange('periodicCashFlow', e.target.value)}
+                          className="pl-8"
+                          placeholder="25000"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Number of Periods */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="numberOfPeriods">Number of Periods</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>How many periods (years/quarters/months) the cash flows occur. Must be at least 1.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <Input
-                        id="initialInvestment"
+                        id="numberOfPeriods"
                         type="number"
-                        value={inputs.initialInvestment}
-                        onChange={(e) => handleNumberChange('initialInvestment', e.target.value)}
-                        className="pl-8"
-                        placeholder="-100000"
+                        value={inputs.numberOfPeriods}
+                        onChange={(e) => updateInputs({ numberOfPeriods: parseInt(e.target.value) || 1 })}
+                        min={1}
+                        step={1}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">Typically negative for outgoing investment</p>
-                  </div>
-
-                  {/* Periodic Cash Flow */}
-                  <div className="space-y-2">
-                    <Label htmlFor="periodicCashFlow">Periodic Cash Flow</Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                      <Input
-                        id="periodicCashFlow"
-                        type="number"
-                        value={inputs.periodicCashFlow}
-                        onChange={(e) => handleNumberChange('periodicCashFlow', e.target.value)}
-                        className="pl-8"
-                        placeholder="25000"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Number of Periods */}
-                  <div className="space-y-2">
-                    <Label htmlFor="numberOfPeriods">Number of Periods</Label>
-                    <Input
-                      id="numberOfPeriods"
-                      type="number"
-                      value={inputs.numberOfPeriods}
-                      onChange={(e) => updateInputs({ numberOfPeriods: parseInt(e.target.value) || 1 })}
-                      min={1}
-                      step={1}
-                    />
-                  </div>
 
                   {/* Growth Rate */}
                   <div className="space-y-2">
@@ -382,63 +442,123 @@ function NPVCalculatorContent() {
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
                     </div>
                   </div>
-                </TabsContent>
+                  </TabsContent>
 
-                <TabsContent value="custom_series" className="space-y-4 mt-4">
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-20">{getFrequencyLabel(inputs.periodFrequency)}</TableHead>
-                          <TableHead>Cash Flow</TableHead>
-                          <TableHead className="w-16"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {inputs.customCashFlows.map((cf, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell className="font-medium">
-                              {idx === 0 ? 'CF₀' : `CF${idx}`}
-                            </TableCell>
-                            <TableCell>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                <Input
-                                  type="number"
-                                  value={cf}
-                                  onChange={(e) => updateCustomCashFlow(idx, parseFloat(e.target.value) || 0)}
-                                  className="pl-8 h-8"
-                                />
+                  <TabsContent value="custom_series" className="space-y-4 mt-4">
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-20">
+                              <div className="flex items-center gap-1">
+                                {getFrequencyLabel(inputs.periodFrequency)}
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <p>CF₀ = initial investment (period 0). CF₁, CF₂, etc. = future period cash flows.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              {idx > 0 && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => removeCustomCashFlow(idx)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-muted-foreground" />
-                                </Button>
-                              )}
-                            </TableCell>
+                            </TableHead>
+                            <TableHead>
+                              <div className="flex items-center gap-1">
+                                Cash Flow
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <p>Enter each period's cash flow. Negative = outflow, positive = inflow.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </TableHead>
+                            <TableHead className="w-16"></TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addCustomCashFlow(0)}
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Period
-                  </Button>
-                </TabsContent>
-              </Tabs>
+                        </TableHeader>
+                        <TableBody>
+                          {inputs.customCashFlows.map((cf, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell className="font-medium">
+                                {idx === 0 ? 'CF₀' : `CF${idx}`}
+                              </TableCell>
+                              <TableCell>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                  <Input
+                                    type="number"
+                                    value={cf}
+                                    onChange={(e) => updateCustomCashFlow(idx, parseFloat(e.target.value) || 0)}
+                                    className="pl-8 h-8"
+                                  />
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {idx > 0 ? (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8"
+                                          onClick={() => removeCustomCashFlow(idx)}
+                                        >
+                                          <Trash2 className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Remove this period</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                ) : (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 cursor-not-allowed">
+                                          <Trash2 className="h-4 w-4" />
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>CF₀ cannot be removed</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addCustomCashFlow(0)}
+                            className="w-full"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Period
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Add a new cash flow period to the series</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </CardContent>
           </Card>
 
@@ -550,13 +670,23 @@ function NPVCalculatorContent() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="text-lg">Period Breakdown</CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowDiscountFactors(!showDiscountFactors)}
-                  >
-                    {showDiscountFactors ? 'Hide' : 'Show'} Discount Factors
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowDiscountFactors(!showDiscountFactors)}
+                        >
+                          {showDiscountFactors ? 'Hide' : 'Show'} Discount Factors
+                          <HelpCircle className="h-3 w-3 ml-1 text-muted-foreground" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Discount factor = 1/(1+r)^t for end-of-period, or 1/(1+r)^(t-1) for beginning-of-period.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </CardHeader>
                 <CardContent>
                   <div className="border rounded-lg overflow-hidden max-h-80 overflow-y-auto">
