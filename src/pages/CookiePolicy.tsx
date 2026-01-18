@@ -33,6 +33,12 @@ export default function CookiePolicy() {
         <meta property="og:description" content="Learn how TheDealCalc uses cookies and tracking technologies." />
         <meta property="og:url" content="https://thedealcalc.com/cookies" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-default.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Cookie Policy | TheDealCalc" />
+        <meta name="twitter:description" content="Learn how TheDealCalc uses cookies and tracking technologies." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-default.png" />
         <script type="application/ld+json">
           {JSON.stringify(breadcrumbSchema)}
         </script>

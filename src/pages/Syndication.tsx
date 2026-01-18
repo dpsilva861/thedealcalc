@@ -190,6 +190,12 @@ function SyndicationContent() {
         <meta property="og:description" content="Free syndication analyzer for real estate sponsors. Model complex waterfall structures and investor returns." />
         <meta property="og:url" content="https://thedealcalc.com/syndication" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-syndication.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Syndication Calculator (Free) — TheDealCalc" />
+        <meta name="twitter:description" content="Free LP/GP waterfall analyzer for real estate sponsors." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-syndication.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 

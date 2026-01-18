@@ -109,6 +109,12 @@ export default function RealEstateInvestmentCalculator() {
         <meta property="og:description" content="Complete suite of free real estate investment calculators. Analyze any deal with professional accuracy." />
         <meta property="og:url" content="https://thedealcalc.com/real-estate-investment-calculator" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-calculators.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Real Estate Investment Calculator (Free) — TheDealCalc" />
+        <meta name="twitter:description" content="Complete suite of free real estate investment calculators." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-calculators.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
         </script>

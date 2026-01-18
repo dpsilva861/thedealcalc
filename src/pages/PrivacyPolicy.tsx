@@ -34,6 +34,12 @@ export default function PrivacyPolicy() {
         <meta property="og:description" content="Learn how TheDealCalc protects your privacy. All calculations run locally—we never see your deal data." />
         <meta property="og:url" content="https://thedealcalc.com/privacy" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-default.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Privacy Policy | TheDealCalc" />
+        <meta name="twitter:description" content="Learn how TheDealCalc protects your privacy." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-default.png" />
         <script type="application/ld+json">
           {JSON.stringify(breadcrumbSchema)}
         </script>

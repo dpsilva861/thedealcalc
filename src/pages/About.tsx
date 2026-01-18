@@ -46,6 +46,12 @@ export default function About() {
         <meta property="og:description" content="Learn about TheDealCalc - the free real estate investment calculator built by investors for investors." />
         <meta property="og:url" content="https://thedealcalc.com/about" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-default.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About TheDealCalc" />
+        <meta name="twitter:description" content="Free real estate investment calculator built by investors for investors." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-default.png" />
         <script type="application/ld+json">
           {JSON.stringify(breadcrumbSchema)}
         </script>

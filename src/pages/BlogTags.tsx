@@ -60,7 +60,17 @@ export default function BlogTags() {
       <Helmet>
         <title>Blog Tags | TheDealCalc</title>
         <meta name="description" content="Browse all blog topics and tags on TheDealCalc. Find articles on real estate investing, BRRRR, syndication, analysis, and more." />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/blog/tags" />
+        <meta property="og:title" content="Blog Tags | TheDealCalc" />
+        <meta property="og:description" content="Browse all blog topics and tags on TheDealCalc." />
+        <meta property="og:url" content="https://thedealcalc.com/blog/tags" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-blog.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Blog Tags | TheDealCalc" />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-blog.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 

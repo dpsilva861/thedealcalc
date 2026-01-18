@@ -238,6 +238,12 @@ function UnderwriteContent() {
         <meta property="og:description" content="Free rental property analysis tool. Calculate IRR, cash-on-cash return, and DSCR with professional exports." />
         <meta property="og:url" content="https://thedealcalc.com/underwrite" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-rental.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Rental Property Calculator (Free) — TheDealCalc" />
+        <meta name="twitter:description" content="Free rental property analysis with IRR, cash-on-cash, and DSCR." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-rental.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 

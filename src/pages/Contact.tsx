@@ -45,6 +45,12 @@ export default function Contact() {
         <meta property="og:description" content="Get in touch with the TheDealCalc team for questions or feedback." />
         <meta property="og:url" content="https://thedealcalc.com/contact" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-default.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Contact Us | TheDealCalc" />
+        <meta name="twitter:description" content="Get in touch with the TheDealCalc team." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-default.png" />
         <script type="application/ld+json">
           {JSON.stringify(breadcrumbSchema)}
         </script>
