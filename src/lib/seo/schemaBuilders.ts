@@ -228,14 +228,15 @@ export function buildWebPageSchema(name: string, canonicalPath: string, descript
 
 /**
  * Build complete JSON-LD graph for homepage
- * Includes: Organization, WebSite, WebPage, BreadcrumbList
+ * Includes: WebPage, BreadcrumbList
+ * 
+ * NOTE: Organization and WebSite are emitted globally by Layout,
+ * so they are NOT included here to avoid duplication.
  */
 export function buildHomePageSchema() {
   return {
     "@context": "https://schema.org",
     "@graph": [
-      buildOrganizationSchema(),
-      buildWebSiteSchema(),
       buildWebPageSchema(
         "TheDealCalc - Real Estate Investment Calculators",
         "/",
@@ -258,7 +259,10 @@ export function buildHomePageSchema() {
 
 /**
  * Build complete JSON-LD graph for calculator pages
- * Includes: Organization, WebSite, SoftwareApplication, Article, FAQPage (if FAQs exist), BreadcrumbList
+ * Includes: SoftwareApplication, Article, FAQPage (if FAQs exist), BreadcrumbList
+ * 
+ * NOTE: Organization and WebSite are emitted globally by Layout,
+ * so they are NOT included here to avoid duplication.
  */
 export function buildCalculatorPageSchema(
   metadata: SoftwareApplicationMetadata,
@@ -296,7 +300,10 @@ export function buildCalculatorPageSchema(
 
 /**
  * Build complete JSON-LD graph for generic content pages
- * Includes: Organization, WebSite, WebPage, BreadcrumbList
+ * Includes: WebPage, BreadcrumbList
+ * 
+ * NOTE: Organization and WebSite are emitted globally by Layout,
+ * so they are NOT included here to avoid duplication.
  */
 export function buildContentPageSchema(
   pageName: string,
