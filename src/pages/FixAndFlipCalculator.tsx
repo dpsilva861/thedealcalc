@@ -232,6 +232,61 @@ export default function FixAndFlipCalculator() {
         </div>
       </section>
 
+      {/* Educational Content Section */}
+      <section className="py-16 bg-cream-dark">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto prose prose-slate dark:prose-invert">
+            <h2 className="font-display text-2xl font-bold text-foreground mb-6">
+              What is Fix and Flip Real Estate Investing?
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Fix and flip is a short-term real estate investment strategy where you purchase a property below market value (often distressed or outdated), renovate it to increase its value, and then sell it quickly for profit. Unlike buy-and-hold strategies like BRRRR or traditional rentals, the goal is to exit the deal within months—typically 3 to 12 months—rather than hold for long-term appreciation and rental income.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              Successful house flipping requires accurate estimation of repair costs, realistic After Repair Value (ARV) projections, and careful management of holding costs during the renovation and sale process. Many experienced flippers follow the "70% rule" as a guideline: don't pay more than 70% of ARV minus repair costs for any property.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Why Fix and Flip Analysis Matters
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Prevents costly mistakes:</strong> Accurate deal analysis helps you avoid overpaying for properties or underestimating renovation costs</li>
+              <li><strong>Projects realistic profit:</strong> Know your expected profit and Return on Investment (ROI) before committing capital</li>
+              <li><strong>Accounts for all costs:</strong> Holding costs (loan interest, taxes, insurance, utilities) and selling costs (agent commissions, closing costs) can easily consume 10-15% of sale price</li>
+              <li><strong>Validates the deal:</strong> If numbers don't work with conservative assumptions, walk away and find a better opportunity</li>
+            </ul>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              How to Calculate Fix and Flip Profit
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Net profit on a flip equals your sale price minus all costs: purchase price, closing costs (buying), renovation costs, holding costs during rehab and sale period, and selling costs (agent commissions plus seller closing costs). Your ROI is then your net profit divided by your total investment (all cash put into the deal), expressed as a percentage.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              How to Interpret Your Fix and Flip Results
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Most experienced flippers target 15-25% ROI on their total investment. If you invest $200,000 total (purchase, rehab, holding, selling), you'd want $30,000 to $50,000 in profit to justify the effort and risk. Deals with lower ROI may not adequately compensate for unexpected cost overruns, market shifts, or the time and effort involved.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              Always calculate your "break-even sale price"—the minimum you need to sell for to get your money back. This creates a safety margin and helps you understand your downside risk.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Common Fix and Flip Mistakes
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Overestimating ARV:</strong> Use comparable sales from the last 3-6 months, not optimistic future projections. This is the most common mistake that turns flips into losses.</li>
+              <li><strong>Underestimating rehab costs:</strong> Add a 10-20% contingency to your renovation budget. Unexpected issues are the rule, not the exception.</li>
+              <li><strong>Ignoring holding costs:</strong> Each month of delays costs money—loan interest, taxes, insurance, utilities. A 6-month flip at $2,500/month holding costs is $15,000 off your profit.</li>
+              <li><strong>Underestimating selling costs:</strong> Budget 8-10% of sale price for agent commissions, seller closing costs, staging, and contingencies.</li>
+              <li><strong>Using too much leverage:</strong> Hard money loans at 12-15% annual interest rates can quickly erode profits if the project takes longer than expected.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 gradient-sage">
         <div className="container mx-auto px-4 text-center">

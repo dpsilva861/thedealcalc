@@ -261,6 +261,70 @@ export default function RentalPropertyCalculator() {
         </div>
       </section>
 
+      {/* Educational Content Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto prose prose-slate dark:prose-invert">
+            <h2 className="font-display text-2xl font-bold text-foreground mb-6">
+              What is a Rental Property Calculator?
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              A rental property calculator is a financial analysis tool that helps real estate investors evaluate potential buy-and-hold rental investments. By inputting key variables like purchase price, rental income, operating expenses, and financing terms, you can quickly determine whether a property will generate positive cash flow and meet your investment return requirements.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              The goal of rental property investing is to generate passive income through monthly rent while building long-term wealth through property appreciation and mortgage paydown. A good rental property calculator shows you all three components: immediate cash flow, equity building over time, and total return metrics like Internal Rate of Return (IRR) and equity multiple.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Why Rental Property Analysis Matters
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Prevents buying negative cash flow properties:</strong> Not all rental properties make money. Analysis reveals whether your income exceeds expenses after debt service.</li>
+              <li><strong>Compares investment opportunities:</strong> Use consistent metrics (cap rate, cash-on-cash return, IRR) to compare properties across different markets and price points.</li>
+              <li><strong>Sets realistic expectations:</strong> See projected returns over 5, 10, or 30 years with assumptions for rent growth, expense growth, and appreciation.</li>
+              <li><strong>Identifies financing optimization:</strong> Test different down payment amounts and loan terms to find the leverage that maximizes returns without excessive risk.</li>
+            </ul>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Key Metrics Explained
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              <strong>Net Operating Income (NOI):</strong> Your gross rental income minus all operating expenses (taxes, insurance, maintenance, property management, vacancy)—but before mortgage payments. NOI is the foundation for cap rate calculations.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              <strong>Cap Rate (Capitalization Rate):</strong> NOI divided by property value. Measures unlevered return, useful for comparing properties regardless of financing.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              <strong>Cash-on-Cash Return:</strong> Annual cash flow after debt service, divided by your total cash invested. Shows your actual return on the dollars you put in.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              <strong>Internal Rate of Return (IRR):</strong> The annualized total return accounting for the timing of all cash flows over your hold period, including the eventual sale. IRR is the most comprehensive single metric for comparing investments.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              <strong>Debt Service Coverage Ratio (DSCR):</strong> NOI divided by annual debt payments. A DSCR above 1.0 means the property covers its mortgage. Most lenders require 1.20-1.25 minimum.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              How to Interpret Your Results
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              There's no single "correct" return target—it depends on your goals, risk tolerance, and market. However, common benchmarks include: 8-12% cash-on-cash return for rental properties, 5-8% cap rate for stable multifamily, and 12-20% IRR for value-add projects. Always compare results against alternative investments like index funds, bonds, or other real estate opportunities.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Common Rental Property Analysis Mistakes
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Underestimating expenses:</strong> Budget at least 5-10% of rent for vacancy, 5-10% for maintenance/repairs, and 8-10% for property management even if self-managing (your time has value).</li>
+              <li><strong>Ignoring capital expenditures:</strong> Roofs, HVAC systems, and major repairs are inevitable. Set aside reserves or factor into your analysis.</li>
+              <li><strong>Using gross rent as income:</strong> Never assume 100% occupancy and rent collection. Real-world vacancy and collection losses matter.</li>
+              <li><strong>Forgetting transaction costs:</strong> Include buying closing costs (2-5%) and selling costs (6-8%) in your total return calculations.</li>
+              <li><strong>Over-optimistic appreciation:</strong> Property values don't always go up. Stress test your analysis with flat or declining values.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 gradient-sage">
         <div className="container mx-auto px-4 text-center">

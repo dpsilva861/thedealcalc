@@ -250,6 +250,60 @@ export default function CapRateCalculator() {
         </div>
       </section>
 
+      {/* Educational Content Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto prose prose-slate dark:prose-invert">
+            <h2 className="font-display text-2xl font-bold text-foreground mb-6">
+              What is Capitalization Rate (Cap Rate)?
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Capitalization rate, commonly known as cap rate, is one of the most fundamental metrics in real estate investing. It measures the annual return you would expect from a property if you purchased it entirely with cash—no mortgage or financing involved. This makes cap rate an "unlevered" return metric, allowing investors to compare properties objectively without the complications of different financing structures.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              Think of cap rate as the property's earning power relative to its price. A property generating $50,000 in annual Net Operating Income (NOI) that sells for $500,000 has a 10% cap rate. That means you'd earn 10% annually on your investment before any mortgage payments or income taxes.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Why Cap Rate Matters for Real Estate Investors
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Compare properties objectively:</strong> Cap rate removes financing from the equation, so you can compare a fully-financed property to an all-cash purchase on equal terms</li>
+              <li><strong>Assess risk levels:</strong> Higher cap rates typically indicate higher risk and/or lower demand markets, while lower cap rates suggest more stable, desirable locations</li>
+              <li><strong>Estimate property value:</strong> If you know the NOI and prevailing cap rates in an area, you can estimate what a property should be worth (Value = NOI ÷ Cap Rate)</li>
+              <li><strong>Screen deals quickly:</strong> Cap rate is often the first metric investors check to see if a deal warrants deeper analysis</li>
+            </ul>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              How to Calculate Cap Rate
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              The cap rate formula is straightforward: divide the property's Net Operating Income by its current market value or purchase price, then multiply by 100 to express it as a percentage. NOI equals gross rental income minus all operating expenses—including property taxes, insurance, maintenance, property management fees, and vacancy allowance. Importantly, NOI does <em>not</em> include mortgage payments, capital expenditures, or depreciation.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              How to Interpret Cap Rate Results
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Cap rates vary significantly by location, property type, and market conditions. In major metropolitan areas like New York or San Francisco, Class A apartment buildings might trade at 3-5% cap rates because they're considered safe, stable investments with strong appreciation potential. In secondary or tertiary markets, cap rates of 7-10% or higher are common, reflecting higher perceived risk but also higher potential cash returns.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              Remember: a "good" cap rate depends entirely on your investment goals. Income-focused investors might prefer higher cap rates for better cash flow, while appreciation-focused investors might accept lower cap rates in markets with strong growth potential.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Common Cap Rate Mistakes to Avoid
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Using gross income instead of NOI:</strong> Always subtract operating expenses. Using gross rent dramatically overstates cap rate.</li>
+              <li><strong>Including mortgage payments in expenses:</strong> Cap rate measures unlevered returns. Debt service should never be in your NOI calculation.</li>
+              <li><strong>Ignoring vacancy and reserves:</strong> Pro forma NOI should include realistic vacancy allowances (typically 5-10%) and maintenance reserves.</li>
+              <li><strong>Comparing across property types:</strong> Retail, multifamily, industrial, and office properties have different risk profiles and typical cap rates. Compare apples to apples.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 gradient-sage">
         <div className="container mx-auto px-4 text-center">

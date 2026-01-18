@@ -251,6 +251,61 @@ export default function CashOnCashCalculator() {
         </div>
       </section>
 
+      {/* Educational Content Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto prose prose-slate dark:prose-invert">
+            <h2 className="font-display text-2xl font-bold text-foreground mb-6">
+              What is Cash-on-Cash Return?
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Cash-on-cash return (often abbreviated as CoC or CCR) measures the annual pre-tax cash flow you receive relative to the actual cash you invested in a property. Unlike cap rate, which ignores financing, cash-on-cash return accounts for leverage—your mortgage payments, down payment, and closing costs all factor into this metric.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              This makes cash-on-cash return one of the most practical metrics for investors because it answers a simple question: "For every dollar I put into this deal, how many cents am I getting back each year in cash flow?" If you invested $100,000 in a rental property and it generates $10,000 in annual cash flow after all expenses and debt service, your cash-on-cash return is 10%.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Why Cash-on-Cash Return Matters
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Measures your actual return:</strong> While cap rate is theoretical, cash-on-cash shows what you're really earning on the money you invested</li>
+              <li><strong>Reveals the power of leverage:</strong> Smart use of debt can dramatically increase cash-on-cash returns above cap rate—sometimes doubling or tripling it</li>
+              <li><strong>Helps compare investment opportunities:</strong> You can compare real estate cash-on-cash to stock dividends, bond yields, or other investment returns</li>
+              <li><strong>Sets investment criteria:</strong> Many investors have minimum cash-on-cash thresholds (e.g., "I only buy properties with 8%+ CoC")</li>
+            </ul>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              How to Calculate Cash-on-Cash Return
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Cash-on-cash return equals your annual pre-tax cash flow divided by your total cash invested, multiplied by 100. Annual cash flow is your Net Operating Income (NOI) minus your annual mortgage payments (principal and interest). Total cash invested includes your down payment, closing costs, and any initial renovation or capital expenditure costs.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              How to Interpret Your Results
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Most rental property investors target cash-on-cash returns between 8% and 12%, though this varies based on market conditions, property type, and individual investment goals. In high-appreciation markets like coastal cities, investors might accept 4-6% cash-on-cash in exchange for expected property value gains. In cash-flow-focused markets in the Midwest or South, 10-15%+ cash-on-cash is achievable.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              Be aware that very high cash-on-cash returns (20%+) may indicate either exceptional opportunity or hidden risks—perhaps the property is in a declining area, has deferred maintenance, or the projections are overly optimistic.
+            </p>
+
+            <h3 className="font-display text-xl font-semibold text-foreground mt-8 mb-4">
+              Common Mistakes When Calculating Cash-on-Cash Return
+            </h3>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+              <li><strong>Forgetting closing costs:</strong> Always include buyer closing costs (typically 2-5% of purchase price) in your total cash invested</li>
+              <li><strong>Using NOI instead of cash flow:</strong> Cash-on-cash must subtract mortgage payments. NOI is before debt service; cash flow is after.</li>
+              <li><strong>Ignoring initial repairs:</strong> If you spend $20,000 on repairs before renting, that's part of your cash invested</li>
+              <li><strong>Confusing with cap rate:</strong> Cap rate ignores financing entirely. Cash-on-cash is a levered return metric. They answer different questions.</li>
+              <li><strong>Not accounting for vacancy:</strong> Use realistic vacancy rates (5-10% typically) in your cash flow projections</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 gradient-sage">
         <div className="container mx-auto px-4 text-center">
