@@ -10,8 +10,10 @@ import {
   ExportMetric,
   ExportSection,
   ExportWarning,
+  SensitivityTable,
 } from './types';
 import { NPVInputs, NPVResults, PeriodFrequency } from '@/lib/calculators/npv/types';
+import { npvSensitivityToCanonical } from '@/lib/calculators/npv/sensitivity';
 import { formatCurrency, formatPercent } from '@/lib/calculators/types';
 
 const DEFAULT_DISCLAIMER = 'For educational purposes only. Not investment, legal, or tax advice. DealCalc.com';
@@ -24,11 +26,18 @@ function getFrequencyLabel(freq: PeriodFrequency): string {
   }
 }
 
+export interface TransformNPVOptions {
+  includeSensitivity?: boolean;
+  notes?: string;
+}
+
 export function transformNPVToCanonical(
   inputs: NPVInputs,
   results: NPVResults,
-  notes?: string
+  options: TransformNPVOptions = {}
 ): CanonicalExportData {
+  const { includeSensitivity = true, notes } = options;
+  
   // Key Metrics
   const keyMetrics: ExportMetric[] = [
     { 
@@ -107,8 +116,14 @@ export function transformNPVToCanonical(
     })),
   };
 
+  // Sensitivity Tables (using canonical pattern)
+  let sensitivityTables: SensitivityTable[] = [];
+  if (includeSensitivity) {
+    sensitivityTables = npvSensitivityToCanonical(inputs);
+  }
+
   return {
-    calculatorType: 'underwriting', // Using underwriting for compatibility
+    calculatorType: 'npv',
     reportTitle: 'NPV Analysis Report',
     exportDate: new Date().toLocaleString(),
     address: undefined,
@@ -120,7 +135,7 @@ export function transformNPVToCanonical(
     keyMetrics,
     assumptions,
     cashFlowTable,
-    sensitivityTables: [],
+    sensitivityTables,
     warnings,
     notes,
     disclaimer: DEFAULT_DISCLAIMER,

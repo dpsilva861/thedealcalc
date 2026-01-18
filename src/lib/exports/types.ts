@@ -5,7 +5,7 @@
  * All export formats use these types as the source of truth.
  */
 
-export type CalculatorType = 'underwriting' | 'brrrr' | 'syndication';
+export type CalculatorType = 'underwriting' | 'brrrr' | 'syndication' | 'npv';
 export type ExportFormat = 'xlsx' | 'csv' | 'pdf' | 'docx' | 'pptx' | 'google-docs' | 'google-sheets' | 'google-slides';
 
 /**
