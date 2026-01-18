@@ -14,52 +14,39 @@
 
 import { chromium } from 'playwright';
 import { createServer } from 'http';
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
+import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
+import { ROUTES_TO_PRERENDER, validateRoutes } from './prerender.routes.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distDir = join(__dirname, '..', 'dist');
 
-// ============================================================================
-// ROUTES TO PRERENDER
-// ============================================================================
-// Add new routes here. These are the ONLY routes that will be prerendered.
-// Do NOT add: /results, /brrrr/results, /syndication/results, /admin/*
-// ============================================================================
-
-const ROUTES_TO_PRERENDER = [
-  '/',
-  '/calculators',
-  '/npv-calculator',
-  '/rental-property-calculator',
-  '/brrrr-calculator',
-  '/syndication-calculator',
-  '/cap-rate-calculator',
-  '/cash-on-cash-calculator',
-  '/fix-and-flip-calculator',
-  '/real-estate-investment-calculator',
-  '/blog',
-  '/how-it-works',
-  '/about',
-  '/contact',
-  '/privacy',
-  '/terms',
-  '/cookies',
-  '/disclaimer',
-  '/ad-tech-providers',
-];
-
-// Routes that should NEVER be prerendered
-const EXCLUDED_ROUTES = [
-  '/results',
-  '/brrrr/results',
-  '/syndication/results',
-  '/admin',
-  '/seo-debug',
-  '/sitemap-debug',
-  '/structured-data-debug',
-];
+/**
+ * MIME types for static file serving
+ */
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.mjs': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.eot': 'application/vnd.ms-fontobject',
+  '.webp': 'image/webp',
+  '.webm': 'video/webm',
+  '.mp4': 'video/mp4',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+};
 
 /**
  * Simple static file server for the dist directory
@@ -67,40 +54,79 @@ const EXCLUDED_ROUTES = [
 function createStaticServer(port) {
   return new Promise((resolve, reject) => {
     const server = createServer((req, res) => {
-      let filePath = join(distDir, req.url === '/' ? 'index.html' : req.url);
+      // Parse URL, strip query string and hash
+      let urlPath = req.url || '/';
+      urlPath = urlPath.split('?')[0].split('#')[0];
       
-      // For SPA routing, serve index.html for any non-file request
-      if (!existsSync(filePath) || !filePath.includes('.')) {
-        filePath = join(distDir, 'index.html');
+      // Normalize: ensure leading slash, remove trailing slash (except root)
+      if (!urlPath.startsWith('/')) urlPath = '/' + urlPath;
+      if (urlPath !== '/' && urlPath.endsWith('/')) urlPath = urlPath.slice(0, -1);
+      
+      // Determine file path
+      let filePath = join(distDir, urlPath);
+      const ext = extname(urlPath);
+      
+      // If it's a file request (has extension)
+      if (ext && ext.length > 0) {
+        if (existsSync(filePath) && statSync(filePath).isFile()) {
+          try {
+            const content = readFileSync(filePath);
+            const mimeType = MIME_TYPES[ext.toLowerCase()] || 'application/octet-stream';
+            res.writeHead(200, { 'Content-Type': mimeType });
+            res.end(content);
+            return;
+          } catch (e) {
+            res.writeHead(500);
+            res.end('Internal server error');
+            return;
+          }
+        } else {
+          res.writeHead(404);
+          res.end('Not found');
+          return;
+        }
       }
       
-      try {
-        const content = readFileSync(filePath);
-        const ext = filePath.split('.').pop();
-        const mimeTypes = {
-          html: 'text/html',
-          js: 'application/javascript',
-          css: 'text/css',
-          png: 'image/png',
-          jpg: 'image/jpeg',
-          svg: 'image/svg+xml',
-          json: 'application/json',
-        };
-        res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
-        res.end(content);
-      } catch (e) {
+      // For routes without extension (SPA routes), serve index.html
+      const indexPath = join(distDir, 'index.html');
+      if (existsSync(indexPath)) {
+        try {
+          const content = readFileSync(indexPath);
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(content);
+        } catch (e) {
+          res.writeHead(500);
+          res.end('Internal server error');
+        }
+      } else {
         res.writeHead(404);
-        res.end('Not found');
+        res.end('index.html not found');
       }
     });
     
-    server.listen(port, () => {
-      console.log(`📦 Static server running on http://localhost:${port}`);
+    server.listen(port, '127.0.0.1', () => {
+      console.log(`📦 Static server running on http://127.0.0.1:${port}`);
       resolve(server);
     });
     
     server.on('error', reject);
   });
+}
+
+/**
+ * Wait for a selector to appear with content
+ */
+async function waitForMeta(page, selector, timeout = 10000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const value = await page.evaluate((sel) => {
+      const el = document.querySelector(sel);
+      return el ? el.getAttribute('content') || el.getAttribute('href') || el.textContent : null;
+    }, selector);
+    if (value && value.length > 0) return value;
+    await page.waitForTimeout(100);
+  }
+  return null;
 }
 
 /**
@@ -111,10 +137,21 @@ async function prerenderRoute(page, route, baseUrl) {
   console.log(`  🔄 Rendering: ${route}`);
   
   try {
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
     
-    // Wait for React to hydrate and Helmet to update the head
-    await page.waitForTimeout(2000);
+    // Wait for critical SEO elements to be present
+    const ogTitle = await waitForMeta(page, 'meta[property="og:title"]', 15000);
+    const canonical = await waitForMeta(page, 'link[rel="canonical"]', 15000);
+    
+    if (!ogTitle) {
+      console.warn(`    ⚠️  Warning: og:title not found for ${route}`);
+    }
+    if (!canonical) {
+      console.warn(`    ⚠️  Warning: canonical not found for ${route}`);
+    }
+    
+    // Extra wait to ensure all meta tags are rendered
+    await page.waitForTimeout(500);
     
     // Get the full HTML
     const html = await page.content();
@@ -131,7 +168,7 @@ async function prerenderRoute(page, route, baseUrl) {
     }
     
     // Write the prerendered HTML
-    writeFileSync(outputPath, html);
+    writeFileSync(outputPath, html, 'utf-8');
     console.log(`  ✅ Saved: ${outputPath.replace(distDir, 'dist')}`);
     
     return { route, success: true };
@@ -146,7 +183,7 @@ async function prerenderRoute(page, route, baseUrl) {
  */
 async function prerender() {
   console.log('\n🚀 TheDealCalc Prerender Script\n');
-  console.log('=' .repeat(60));
+  console.log('='.repeat(60));
   
   // Validate dist exists
   if (!existsSync(distDir)) {
@@ -154,15 +191,15 @@ async function prerender() {
     process.exit(1);
   }
   
-  // Validate excluded routes are not in prerender list
-  for (const route of ROUTES_TO_PRERENDER) {
-    for (const excluded of EXCLUDED_ROUTES) {
-      if (route === excluded || route.startsWith(excluded)) {
-        console.error(`❌ Error: Route "${route}" is in the exclusion list and should not be prerendered.`);
-        process.exit(1);
-      }
-    }
+  // Validate route list
+  try {
+    validateRoutes();
+  } catch (error) {
+    console.error(`❌ Route validation error: ${error.message}`);
+    process.exit(1);
   }
+  
+  console.log(`\n📋 Routes to prerender: ${ROUTES_TO_PRERENDER.length}`);
   
   const port = 4173;
   let server;
@@ -171,19 +208,23 @@ async function prerender() {
   try {
     // Start static server
     server = await createStaticServer(port);
-    const baseUrl = `http://localhost:${port}`;
+    const baseUrl = `http://127.0.0.1:${port}`;
     
     // Launch browser
     console.log('\n🌐 Launching browser...');
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
       viewport: { width: 1280, height: 720 },
-      userAgent: 'Mozilla/5.0 (compatible; Prerender/1.0; +https://thedealcalc.com)',
+      userAgent: 'Mozilla/5.0 (compatible; TheDealCalcPrerender/1.0)',
     });
     const page = await context.newPage();
     
+    // Suppress console noise from the page
+    page.on('console', () => {});
+    page.on('pageerror', () => {});
+    
     // Prerender all routes
-    console.log(`\n📄 Prerendering ${ROUTES_TO_PRERENDER.length} routes:\n`);
+    console.log(`\n📄 Prerendering routes:\n`);
     
     const results = [];
     for (const route of ROUTES_TO_PRERENDER) {
