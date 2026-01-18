@@ -101,6 +101,12 @@ export default function RentalPropertyCalculator() {
         <meta property="og:description" content="Free rental property calculator with cash flow, NOI, cap rate, cash-on-cash return, and IRR analysis. Export to PDF, CSV, Excel." />
         <meta property="og:url" content="https://thedealcalc.com/rental-property-calculator" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-rental.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Rental Property Calculator (Free) | Cash Flow, Cap Rate, IRR — TheDealCalc" />
+        <meta name="twitter:description" content="Free rental property calculator with professional-grade accuracy." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-rental.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
         </script>

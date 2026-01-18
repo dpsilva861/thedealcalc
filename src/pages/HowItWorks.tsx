@@ -166,6 +166,12 @@ export default function HowItWorks() {
         <meta property="og:description" content="Learn how TheDealCalc analyzes real estate investments with deterministic modeling and professional accuracy. Free forever." />
         <meta property="og:url" content="https://thedealcalc.com/how-it-works" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-default.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="How It Works | Free Real Estate Investment Calculator — TheDealCalc" />
+        <meta name="twitter:description" content="Learn how TheDealCalc analyzes real estate investments with professional accuracy." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-default.png" />
         <script type="application/ld+json">
           {JSON.stringify(breadcrumbSchema)}
         </script>

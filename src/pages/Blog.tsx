@@ -165,6 +165,12 @@ export default function Blog() {
         <meta property="og:description" content="Expert insights, strategies, and analysis for real estate investors." />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-blog.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Blog | TheDealCalc - Real Estate Investment Insights" />
+        <meta name="twitter:description" content="Expert insights, strategies, and analysis for real estate investors." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-blog.png" />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",

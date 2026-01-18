@@ -151,6 +151,12 @@ export default function SyndicationCalculatorLanding() {
         <meta property="og:description" content="Free syndication calculator with GP/LP waterfall, IRR, equity multiple, and preferred return modeling. No signup required." />
         <meta property="og:url" content="https://thedealcalc.com/syndication-calculator" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-syndication.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Syndication Calculator (Free) | GP/LP Waterfall & IRR Analysis — TheDealCalc" />
+        <meta name="twitter:description" content="Free syndication calculator with GP/LP waterfall and IRR modeling." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-syndication.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
         </script>

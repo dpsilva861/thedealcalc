@@ -101,6 +101,12 @@ export default function CashOnCashCalculator() {
         <meta property="og:description" content="Free cash-on-cash return calculator with leverage analysis. Calculate your actual return on invested capital." />
         <meta property="og:url" content="https://thedealcalc.com/cash-on-cash-calculator" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-coc.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Cash-on-Cash Return Calculator (Free) | CoC Analysis — TheDealCalc" />
+        <meta name="twitter:description" content="Free cash-on-cash return calculator with leverage analysis." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-coc.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
         </script>

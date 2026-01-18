@@ -295,6 +295,12 @@ function NPVCalculatorContent() {
         <meta property="og:description" content="Free Net Present Value calculator with sensitivity analysis, multiple export formats, and shareable links." />
         <meta property="og:url" content="https://thedealcalc.com/npv-calculator" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-npv.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="NPV Calculator (Free) | Net Present Value — TheDealCalc" />
+        <meta name="twitter:description" content="Free Net Present Value calculator with sensitivity analysis and export options." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-npv.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
         </script>

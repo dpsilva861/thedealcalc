@@ -125,6 +125,12 @@ export default function Calculators() {
         <meta property="og:description" content="Free real estate calculators for rental properties, BRRRR deals, syndications, and more. Export to PDF, Excel." />
         <meta property="og:url" content="https://thedealcalc.com/calculators" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-calculators.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Real Estate Investment Calculators (Free) — TheDealCalc" />
+        <meta name="twitter:description" content="Free real estate calculators for rental properties, BRRRR deals, syndications, and more." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-calculators.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
         </script>

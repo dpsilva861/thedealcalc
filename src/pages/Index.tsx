@@ -147,6 +147,12 @@ export default function Index() {
         <meta property="og:description" content="Professional real estate underwriting tools—completely free. Analyze deals with IRR, cash-on-cash, and DSCR calculations." />
         <meta property="og:url" content="https://thedealcalc.com/" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://thedealcalc.com/og/og-home.png" />
+        <meta property="og:site_name" content="TheDealCalc" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Free Real Estate Investment Calculator | TheDealCalc" />
+        <meta name="twitter:description" content="Professional real estate underwriting tools—completely free. Analyze deals with IRR, cash-on-cash, and DSCR calculations." />
+        <meta name="twitter:image" content="https://thedealcalc.com/og/og-home.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
         </script>
