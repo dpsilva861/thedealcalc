@@ -288,19 +288,19 @@ function NPVCalculatorContent() {
   return (
     <>
       <Helmet>
-        <title>NPV Calculator (Free) | Net Present Value — TheDealCalc</title>
-        <meta name="description" content="Free NPV calculator: calculate Net Present Value with multiple period frequencies, timing conventions, and custom cash flows. Export to PDF, Excel. No signup." />
+        <title>Net Present Value (NPV) Calculator | TheDealCalc</title>
+        <meta name="description" content="Calculate NPV instantly. Includes formula breakdowns, real estate examples, sensitivity analysis, and investor guidance. Free, no signup required." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/npv-calculator" />
-        <meta property="og:title" content="NPV Calculator (Free) | Net Present Value — TheDealCalc" />
-        <meta property="og:description" content="Free Net Present Value calculator with sensitivity analysis, multiple export formats, and shareable links." />
+        <meta property="og:title" content="Net Present Value (NPV) Calculator | TheDealCalc" />
+        <meta property="og:description" content="Free NPV calculator with sensitivity analysis, multiple export formats, and shareable links for real estate investors." />
         <meta property="og:url" content="https://thedealcalc.com/npv-calculator" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://thedealcalc.com/og/og-npv.png" />
         <meta property="og:site_name" content="TheDealCalc" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="NPV Calculator (Free) | Net Present Value — TheDealCalc" />
-        <meta name="twitter:description" content="Free Net Present Value calculator with sensitivity analysis and export options." />
+        <meta name="twitter:title" content="Net Present Value (NPV) Calculator | TheDealCalc" />
+        <meta name="twitter:description" content="Free NPV calculator with sensitivity analysis and export options for real estate investors." />
         <meta name="twitter:image" content="https://thedealcalc.com/og/og-npv.png" />
         <script type="application/ld+json">
           {JSON.stringify(jsonLd)}
@@ -1033,89 +1033,125 @@ function NPVCalculatorContent() {
           </div>
         </div>
 
-        {/* SEO Content - Simplified explanation */}
-        <section className="mt-16 max-w-4xl mx-auto">
+        {/* SEO Content - Comprehensive educational content for SEO */}
+        <section className="mt-16 max-w-4xl mx-auto prose prose-slate dark:prose-invert max-w-none">
           <h2 className="text-2xl font-display font-bold text-foreground mb-6">
             What is Net Present Value (NPV)?
           </h2>
-          <div className="prose prose-slate dark:prose-invert max-w-none mb-8">
-            <p className="text-lg">
-              Net Present Value (NPV) tells you how much value an investment creates <strong>today</strong>, 
-              after converting future cash flows into today's dollars using your required return (discount rate).
-            </p>
-            
-            <div className="my-6 p-4 bg-muted rounded-lg not-prose">
-              <h4 className="font-semibold mb-3">How to interpret your results:</h4>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                  <span><strong>NPV &gt; 0:</strong> Creates value above your required return — generally a good investment</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
-                  <span><strong>NPV &lt; 0:</strong> Returns less than your required return — may not be worth pursuing</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="h-5 w-5 flex items-center justify-center text-muted-foreground mt-0.5 shrink-0">=</span>
-                  <span><strong>NPV = 0:</strong> Exactly meets your required return — a break-even investment</span>
-                </li>
-              </ul>
-            </div>
-
-            <h3 className="text-xl font-display font-semibold text-foreground mb-3">
-              Why future dollars are worth less
-            </h3>
-            <p>
-              A dollar today is worth more than a dollar tomorrow because you could invest it and earn a return. 
-              NPV accounts for this by "discounting" each future cash flow back to today's value, then adding them up. 
-              The discount rate represents your required return — the minimum return you'd accept given the investment's risk.
-            </p>
+          <p className="text-lg text-muted-foreground mb-4">
+            Net Present Value (NPV) is a financial metric that tells you how much value an investment creates <strong>today</strong> after converting all future cash flows into today's dollars using your required return, known as the discount rate. NPV is considered one of the most reliable methods for evaluating investment opportunities because it accounts for the time value of money.
+          </p>
+          <p className="text-muted-foreground mb-6">
+            In real estate investing, NPV helps you compare different properties, determine whether a deal meets your return requirements, and make data-driven decisions about where to allocate capital. A positive NPV means the investment creates value beyond your required return; a negative NPV suggests the investment falls short.
+          </p>
+          
+          <div className="my-6 p-4 bg-muted rounded-lg not-prose">
+            <h4 className="font-semibold mb-3">How to interpret your results:</h4>
+            <ul className="space-y-2">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <span><strong>NPV &gt; 0:</strong> Creates value above your required return — generally a good investment</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                <span><strong>NPV &lt; 0:</strong> Returns less than your required return — may not be worth pursuing</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="h-5 w-5 flex items-center justify-center text-muted-foreground mt-0.5 shrink-0">=</span>
+                <span><strong>NPV = 0:</strong> Exactly meets your required return — a break-even investment</span>
+              </li>
+            </ul>
           </div>
 
-          {/* Formula in Accordion */}
-          <Accordion type="single" collapsible className="mb-8">
-            <AccordionItem value="formula">
-              <AccordionTrigger className="text-left font-semibold">
-                Show the NPV formula
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="p-4 bg-muted rounded-lg font-mono text-sm mb-4">
-                  NPV = CF₀ + CF₁/(1+r)¹ + CF₂/(1+r)² + ... + CFₙ/(1+r)ⁿ
-                </div>
-                <dl className="space-y-2 text-sm text-muted-foreground">
-                  <div className="flex gap-2">
-                    <dt className="font-mono font-semibold text-foreground">CFₜ</dt>
-                    <dd>Cash flow at time period t (CF₀ is today, usually negative for your initial investment)</dd>
-                  </div>
-                  <div className="flex gap-2">
-                    <dt className="font-mono font-semibold text-foreground">r</dt>
-                    <dd>Discount rate per period (your required return)</dd>
-                  </div>
-                  <div className="flex gap-2">
-                    <dt className="font-mono font-semibold text-foreground">n</dt>
-                    <dd>Total number of periods</dd>
-                  </div>
-                </dl>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          <h3 className="text-xl font-display font-semibold text-foreground mb-4">
-            How to Use This NPV Calculator
-          </h3>
-          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
-            <li>Enter your discount rate (your required annual return on investment)</li>
-            <li>Choose how often cash flows occur: yearly, quarterly, or monthly</li>
-            <li>Select when cash flows happen: end of period (standard) or beginning</li>
-            <li>Enter your initial investment (negative) and future cash flows (usually positive)</li>
-            <li>Click "Calculate NPV" to see your results, period-by-period breakdown, and sensitivity analysis</li>
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4 mt-8">
+            Why Net Present Value Matters in Real Estate Investing
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Real estate investors use NPV to make smarter decisions about where to invest their capital. Here's why NPV is essential:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+            <li><strong>Time Value of Money:</strong> A dollar today is worth more than a dollar tomorrow because you can invest it and earn returns. NPV accounts for this fundamental financial principle.</li>
+            <li><strong>Compare Different Investments:</strong> NPV lets you compare properties with different cash flow patterns on an apples-to-apples basis.</li>
+            <li><strong>Risk-Adjusted Returns:</strong> By setting your discount rate based on risk, NPV helps you evaluate whether an investment adequately compensates you.</li>
+            <li><strong>Capital Allocation:</strong> When you have limited capital, NPV helps you prioritize investments that create the most value.</li>
           </ul>
 
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            The NPV Formula Explained in Plain English
+          </h2>
+          <div className="p-4 bg-muted rounded-lg font-mono text-sm mb-4 not-prose">
+            NPV = CF₀ + CF₁/(1+r)¹ + CF₂/(1+r)² + ... + CFₙ/(1+r)ⁿ
+          </div>
+          <p className="text-muted-foreground mb-4">
+            Here's what each part means:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+            <li><strong>CF₀ (Initial Investment):</strong> The cash you invest today, typically shown as a negative number (money going out).</li>
+            <li><strong>CF₁, CF₂, ... CFₙ (Future Cash Flows):</strong> The cash the investment produces in each period—rent income, sale proceeds, etc.</li>
+            <li><strong>r (Discount Rate):</strong> Your required annual return, also called the "required rate of return" or "hurdle rate."</li>
+            <li><strong>n (Number of Periods):</strong> How many time periods you're analyzing.</li>
+          </ul>
+          <p className="text-muted-foreground mb-6">
+            Each future cash flow is divided by (1+r) raised to the power of its period number. This "discounts" future cash back to today's value. Then you sum everything up—if the total is positive, the investment exceeds your required return.
+          </p>
+
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            How to Use This NPV Calculator
+          </h2>
+          <ol className="list-decimal list-inside space-y-2 text-muted-foreground mb-6">
+            <li><strong>Set Your Discount Rate:</strong> Enter your required annual return. Common rates are 8-12% for real estate, 15-25% for higher-risk investments.</li>
+            <li><strong>Choose Cash Flow Frequency:</strong> Select annual, quarterly, or monthly depending on how often you receive cash flows.</li>
+            <li><strong>Select Timing Convention:</strong> "End of period" (most common) or "beginning of period" for rent received in advance.</li>
+            <li><strong>Enter Your Cash Flows:</strong> Use "single recurring" for equal payments or "custom series" for varying amounts.</li>
+            <li><strong>Click Calculate:</strong> Review your NPV, period-by-period breakdown, and sensitivity analysis.</li>
+          </ol>
+
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            Example NPV Calculation
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Let's say you're considering a rental property investment:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
+            <li><strong>Initial Investment:</strong> $100,000 down payment</li>
+            <li><strong>Annual Cash Flow:</strong> $12,000 net rental income for 5 years</li>
+            <li><strong>Sale Proceeds:</strong> $130,000 net (after selling in year 5)</li>
+            <li><strong>Discount Rate:</strong> 10%</li>
+          </ul>
+          <p className="text-muted-foreground mb-6">
+            Using this calculator, you'd find an NPV of approximately <strong>$6,800</strong>. This positive NPV means the investment exceeds your 10% required return—it creates an additional $6,800 in value today above what you'd need to meet your hurdle rate.
+          </p>
+
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            Common Mistakes Investors Make with NPV
+          </h2>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+            <li><strong>Using the Wrong Discount Rate:</strong> Your discount rate should reflect the risk of the investment, not just your borrowing cost or savings rate.</li>
+            <li><strong>Forgetting to Include All Cash Flows:</strong> Include closing costs, repairs, property management fees, and the eventual sale price.</li>
+            <li><strong>Ignoring Timing:</strong> When cash flows occur matters. Rent received monthly compounds differently than annual payments.</li>
+            <li><strong>Being Too Optimistic:</strong> Conservative estimates lead to better decisions. Don't assume 100% occupancy or zero maintenance costs.</li>
+            <li><strong>Comparing NPV in Isolation:</strong> Consider NPV alongside other metrics like IRR, cash-on-cash return, and payback period.</li>
+          </ul>
+
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            NPV vs IRR: What's the Difference?
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Both Net Present Value (NPV) and Internal Rate of Return (IRR) are discounted cash flow methods, but they answer different questions:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+            <li><strong>NPV</strong> tells you the dollar amount of value created above your required return.</li>
+            <li><strong>IRR</strong> tells you the effective annual return rate the investment produces.</li>
+          </ul>
+          <p className="text-muted-foreground mb-6">
+            Most finance professionals prefer NPV for comparing investments because it accounts for investment size. An investment with a lower IRR but higher NPV often creates more wealth. However, IRR is useful for comparing returns on a percentage basis when investments require similar capital.
+          </p>
+
           {/* FAQ Accordion */}
-          <h3 className="text-xl font-display font-semibold text-foreground mb-4">
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
             Frequently Asked Questions
-          </h3>
-          <Accordion type="single" collapsible className="mb-8">
+          </h2>
+          <Accordion type="single" collapsible className="mb-8 not-prose">
             {faqs.map((faq, idx) => (
               <AccordionItem key={idx} value={`faq-${idx}`}>
                 <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>

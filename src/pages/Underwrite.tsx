@@ -230,19 +230,19 @@ function UnderwriteContent() {
   return (
     <>
       <Helmet>
-        <title>Rental Property Calculator (Free) | Real Estate Underwriting — TheDealCalc</title>
-        <meta name="description" content="Free rental property calculator with 30-year projections. Analyze cash flow, cap rate, IRR, and DSCR for single-family and small multifamily. No signup required." />
+        <title>Rental Property Calculator | Cash Flow Analysis | TheDealCalc</title>
+        <meta name="description" content="Calculate rental property returns instantly. Analyze cash flow, cap rate, IRR, and DSCR with 30-year projections. Free, no signup required." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/underwrite" />
-        <meta property="og:title" content="Rental Property Calculator (Free) | Real Estate Underwriting — TheDealCalc" />
+        <meta property="og:title" content="Rental Property Calculator | Cash Flow Analysis | TheDealCalc" />
         <meta property="og:description" content="Free rental property analysis tool. Calculate IRR, cash-on-cash return, and DSCR with professional exports." />
         <meta property="og:url" content="https://thedealcalc.com/underwrite" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://thedealcalc.com/og/og-rental.png" />
         <meta property="og:site_name" content="TheDealCalc" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Rental Property Calculator (Free) — TheDealCalc" />
-        <meta name="twitter:description" content="Free rental property analysis with IRR, cash-on-cash, and DSCR." />
+        <meta name="twitter:title" content="Rental Property Calculator | Cash Flow Analysis | TheDealCalc" />
+        <meta name="twitter:description" content="Free rental property analysis with IRR, cash-on-cash, and DSCR projections." />
         <meta name="twitter:image" content="https://thedealcalc.com/og/og-rental.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
@@ -329,7 +329,7 @@ function UnderwriteContent() {
               onDelete={deleteScenario}
             />
 
-            {/* SEO Content */}
+            {/* SEO Content - Comprehensive educational content */}
             <section className="mt-12 prose prose-neutral dark:prose-invert max-w-none">
               <h2 className="text-2xl font-display font-bold text-foreground mb-4">
                 What is Real Estate Underwriting?
@@ -337,38 +337,110 @@ function UnderwriteContent() {
               <p className="text-muted-foreground mb-4">
                 Real estate underwriting is the process of analyzing a property's income potential, 
                 expenses, and financing to determine whether it meets your investment criteria. 
-                This calculator helps you project cash flows, returns, and risks over your intended 
-                hold period.
+                This rental property calculator helps you project cash flows, calculate key return metrics, 
+                and assess risks over your intended hold period.
               </p>
               <p className="text-muted-foreground mb-8">
-                Whether you're analyzing a single-family rental or a small multifamily property, 
-                proper underwriting ensures you make data-driven decisions and avoid costly mistakes.
+                Whether you're analyzing a single-family rental, duplex, or small multifamily property, 
+                proper underwriting ensures you make data-driven decisions based on real numbers rather than 
+                intuition. This is the foundation of successful real estate investing.
               </p>
 
-              <h3 className="text-xl font-display font-semibold text-foreground mb-4">
-                How to Use This Rental Calculator
-              </h3>
+              <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+                Why Rental Property Analysis Matters
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                Thorough underwriting is essential because it helps you:
+              </p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
-                <li>Enter the property address for your records</li>
-                <li>Input purchase price, closing costs, and hold period assumptions</li>
-                <li>Add rental income: units, rent per unit, vacancy, and growth rates</li>
-                <li>Enter operating expenses: taxes, insurance, maintenance, management</li>
-                <li>Configure financing terms if using leverage</li>
+                <li><strong>Avoid Overpaying:</strong> Calculate the maximum purchase price that meets your return requirements.</li>
+                <li><strong>Project Cash Flow:</strong> Understand monthly and annual cash flow after all expenses and debt service.</li>
+                <li><strong>Assess Risk:</strong> Identify potential issues like negative cash flow, high vacancy risk, or insufficient DSCR.</li>
+                <li><strong>Compare Opportunities:</strong> Evaluate multiple properties using consistent metrics to find the best investment.</li>
+                <li><strong>Plan for Exit:</strong> Model appreciation and equity buildup over your hold period.</li>
               </ul>
 
-              <h3 className="text-xl font-display font-semibold text-foreground mb-4">
-                Key Outputs
-              </h3>
+              <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+                Key Metrics This Calculator Provides
+              </h2>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
-                <li><strong>Cash-on-Cash Return:</strong> Annual cash flow divided by total cash invested</li>
-                <li><strong>Cap Rate:</strong> NOI divided by purchase price (measures unlevered yield)</li>
-                <li><strong>IRR:</strong> Internal rate of return accounting for all cash flows and sale proceeds</li>
-                <li><strong>DSCR:</strong> Debt Service Coverage Ratio (NOI / annual debt payments)</li>
+                <li><strong>Cash-on-Cash Return (CoC):</strong> Annual cash flow divided by total cash invested. Shows the immediate return on your investment.</li>
+                <li><strong>Cap Rate (Capitalization Rate):</strong> Net Operating Income (NOI) divided by purchase price. Measures unlevered yield independent of financing.</li>
+                <li><strong>IRR (Internal Rate of Return):</strong> The annualized return accounting for all cash flows including sale proceeds. The true measure of investment performance.</li>
+                <li><strong>DSCR (Debt Service Coverage Ratio):</strong> NOI divided by annual debt payments. Lenders typically require 1.2-1.25x minimum.</li>
+                <li><strong>NOI (Net Operating Income):</strong> Gross income minus operating expenses, before debt service.</li>
               </ul>
 
-              <h3 className="text-xl font-display font-semibold text-foreground mb-4">
+              <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+                How to Use This Rental Property Calculator
+              </h2>
+              <ol className="list-decimal list-inside space-y-2 text-muted-foreground mb-8">
+                <li><strong>Enter Property Address:</strong> Record the location for your analysis files and market reference.</li>
+                <li><strong>Input Acquisition Details:</strong> Purchase price, closing costs, and hold period assumptions.</li>
+                <li><strong>Add Rental Income:</strong> Number of units, rent per unit, vacancy rate, and annual rent growth.</li>
+                <li><strong>Enter Operating Expenses:</strong> Property taxes, insurance, maintenance, property management, and utilities.</li>
+                <li><strong>Configure Financing:</strong> Loan amount or LTV, interest rate, and amortization period.</li>
+                <li><strong>Run Analysis:</strong> Review key metrics, 30-year projections, and sensitivity analysis.</li>
+              </ol>
+
+              <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+                Example Rental Property Analysis
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                Here's a typical rental property analysis:
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
+                <li><strong>Purchase Price:</strong> $250,000</li>
+                <li><strong>Down Payment (25%):</strong> $62,500</li>
+                <li><strong>Closing Costs:</strong> $5,000</li>
+                <li><strong>Monthly Rent:</strong> $2,000</li>
+                <li><strong>Vacancy (8%):</strong> -$1,920/year</li>
+                <li><strong>Gross Annual Income:</strong> $22,080</li>
+              </ul>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
+                <li><strong>Property Taxes:</strong> $3,000/year</li>
+                <li><strong>Insurance:</strong> $1,500/year</li>
+                <li><strong>Maintenance (5%):</strong> $1,104/year</li>
+                <li><strong>Management (8%):</strong> $1,766/year</li>
+                <li><strong>Total Expenses:</strong> $7,370/year</li>
+                <li><strong>NOI:</strong> $14,710/year</li>
+              </ul>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
+                <li><strong>Mortgage Payment:</strong> $11,160/year (on $187,500 loan at 7%)</li>
+                <li><strong>Annual Cash Flow:</strong> $3,550</li>
+                <li><strong>Cash-on-Cash Return:</strong> 5.3%</li>
+                <li><strong>Cap Rate:</strong> 5.9%</li>
+                <li><strong>DSCR:</strong> 1.32x</li>
+              </ul>
+
+              <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+                Common Mistakes in Rental Property Analysis
+              </h2>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
+                <li><strong>Underestimating Vacancy:</strong> Don't assume 100% occupancy. Use 5-10% vacancy for residential rentals.</li>
+                <li><strong>Ignoring CapEx Reserves:</strong> Set aside funds for roof, HVAC, appliances, and other major repairs.</li>
+                <li><strong>Forgetting Management Costs:</strong> Even if self-managing, account for the value of your time (8-10% of rent).</li>
+                <li><strong>Using Optimistic Rent Estimates:</strong> Verify market rents with actual comparables, not listing prices.</li>
+                <li><strong>Not Stress-Testing:</strong> Model what happens if vacancy increases or interest rates rise at refinance.</li>
+                <li><strong>Overlooking Hidden Costs:</strong> Include HOA fees, lawn care, pest control, and other recurring expenses.</li>
+              </ul>
+
+              <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+                Cash-on-Cash Return vs Cap Rate: Understanding the Difference
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                These two metrics are often confused but measure different things:
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
+                <li><strong>Cap Rate</strong> measures the property's unlevered yield—NOI divided by purchase price. It ignores financing and shows what return you'd earn if you paid all cash.</li>
+                <li><strong>Cash-on-Cash Return</strong> measures your actual cash return—annual cash flow divided by cash invested. It reflects the impact of leverage on your returns.</li>
+                <li><strong>When to Use Cap Rate:</strong> Comparing properties, determining market values, analyzing without financing complexity.</li>
+                <li><strong>When to Use Cash-on-Cash:</strong> Evaluating your actual expected returns, comparing leveraged investments.</li>
+              </ul>
+
+              <h2 className="text-xl font-display font-semibold text-foreground mb-4">
                 Frequently Asked Questions
-              </h3>
+              </h2>
               <Accordion type="single" collapsible className="mb-8">
                 {faqs.map((faq, idx) => (
                   <AccordionItem key={idx} value={`faq-${idx}`}>

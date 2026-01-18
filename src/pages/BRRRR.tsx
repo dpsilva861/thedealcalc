@@ -175,19 +175,19 @@ function BRRRRContent() {
   return (
     <>
       <Helmet>
-        <title>BRRRR Calculator (Free) | Buy Rehab Rent Refinance Repeat — TheDealCalc</title>
-        <meta name="description" content="Free BRRRR calculator: analyze Buy, Rehab, Rent, Refinance, Repeat deals. Calculate cash-out, ROI, and monthly cash flow. No signup required." />
+        <title>BRRRR Calculator | Real Estate Strategy | TheDealCalc</title>
+        <meta name="description" content="Calculate BRRRR deals instantly. Analyze Buy, Rehab, Rent, Refinance, Repeat with cash-out projections and ROI analysis. Free, no signup required." />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://thedealcalc.com/brrrr" />
-        <meta property="og:title" content="BRRRR Calculator (Free) | Buy Rehab Rent Refinance Repeat — TheDealCalc" />
-        <meta property="og:description" content="Free BRRRR calculator for real estate investors. Analyze rehab-to-rental deals with cash-out projections." />
+        <meta property="og:title" content="BRRRR Calculator | Real Estate Strategy | TheDealCalc" />
+        <meta property="og:description" content="Free BRRRR calculator for real estate investors. Analyze rehab-to-rental deals with cash-out projections and risk analysis." />
         <meta property="og:url" content="https://thedealcalc.com/brrrr" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://thedealcalc.com/og/og-brrrr.png" />
         <meta property="og:site_name" content="TheDealCalc" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="BRRRR Calculator (Free) — TheDealCalc" />
-        <meta name="twitter:description" content="Free BRRRR calculator for Buy-Rehab-Rent-Refinance-Repeat deals." />
+        <meta name="twitter:title" content="BRRRR Calculator | Real Estate Strategy | TheDealCalc" />
+        <meta name="twitter:description" content="Free BRRRR calculator for Buy-Rehab-Rent-Refinance-Repeat deals. Analyze cash-out and ROI." />
         <meta name="twitter:image" content="https://thedealcalc.com/og/og-brrrr.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
@@ -267,7 +267,7 @@ function BRRRRContent() {
           />
         </div>
 
-        {/* SEO Content */}
+        {/* SEO Content - Comprehensive educational content */}
         <section className="mt-12 prose prose-neutral dark:prose-invert max-w-none">
           <h2 className="text-2xl font-display font-bold text-foreground mb-4">
             What is the BRRRR Strategy?
@@ -276,38 +276,111 @@ function BRRRRContent() {
             BRRRR stands for Buy, Rehab, Rent, Refinance, Repeat—a powerful real estate investment 
             strategy that allows investors to recycle capital across multiple properties. The goal is 
             to purchase undervalued properties, add value through renovation, stabilize with tenants, 
-            then refinance to pull out your initial investment.
+            then refinance to pull out your initial investment and use it for the next deal.
           </p>
           <p className="text-muted-foreground mb-8">
-            When executed correctly, BRRRR can enable investors to acquire rental properties with 
-            little to no money left in each deal, accelerating portfolio growth while building 
-            long-term wealth through equity and cash flow.
+            When executed correctly, BRRRR enables investors to acquire rental properties with 
+            little to no cash left in each deal, dramatically accelerating portfolio growth while 
+            building long-term wealth through equity appreciation and passive cash flow.
           </p>
 
-          <h3 className="text-xl font-display font-semibold text-foreground mb-4">
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            Why the BRRRR Method Matters for Real Estate Investors
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Traditional real estate investing requires significant capital for each property. BRRRR changes this by allowing you to:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
+            <li><strong>Recycle Capital:</strong> Pull out your initial investment to buy the next property, building a portfolio faster.</li>
+            <li><strong>Force Appreciation:</strong> Create equity through strategic renovations rather than waiting for market appreciation.</li>
+            <li><strong>Build Cash Flow:</strong> Each property generates passive income from rental operations.</li>
+            <li><strong>Minimize Risk:</strong> After refinancing, you have minimal capital at risk while owning a performing asset.</li>
+          </ul>
+
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            How the BRRRR Strategy Works: Step by Step
+          </h2>
+          <ol className="list-decimal list-inside space-y-2 text-muted-foreground mb-8">
+            <li><strong>Buy:</strong> Purchase a distressed or undervalued property below market value, typically using hard money or private financing.</li>
+            <li><strong>Rehab:</strong> Renovate the property to increase its value and make it rent-ready. Focus on improvements that increase After Repair Value (ARV).</li>
+            <li><strong>Rent:</strong> Find quality tenants and stabilize the property with consistent rental income. Most lenders require 6-12 months of seasoning.</li>
+            <li><strong>Refinance:</strong> Replace your short-term financing with a conventional mortgage based on the new, higher ARV. Cash-out up to 75-80% of the appraised value.</li>
+            <li><strong>Repeat:</strong> Use the recovered capital to fund your next BRRRR deal, scaling your portfolio over time.</li>
+          </ol>
+
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
             How to Use This BRRRR Calculator
-          </h3>
+          </h2>
           <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
             <li>Enter purchase price, closing costs, and rehab budget in the Acquisition step</li>
-            <li>Set your expected After Repair Value (ARV) and refinance terms</li>
+            <li>Set your expected After Repair Value (ARV) and refinance terms (LTV, rate, seasoning period)</li>
             <li>Input projected rental income and operating expenses</li>
-            <li>Review the analysis to see cash-out, monthly cash flow, and ROI</li>
-            <li>Save scenarios to compare different deal structures</li>
+            <li>Review the analysis to see cash-out amount, monthly cash flow, and cash-on-cash return</li>
+            <li>Save scenarios to compare different deal structures and exit strategies</li>
           </ul>
 
-          <h3 className="text-xl font-display font-semibold text-foreground mb-4">
-            Key Outputs
-          </h3>
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            Example BRRRR Deal Analysis
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Here's a typical BRRRR deal to illustrate the strategy:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
+            <li><strong>Purchase Price:</strong> $80,000</li>
+            <li><strong>Closing Costs:</strong> $3,000</li>
+            <li><strong>Rehab Budget:</strong> $25,000</li>
+            <li><strong>Holding Costs:</strong> $4,000 (4 months at $1,000/month)</li>
+            <li><strong>Total Cash In:</strong> $112,000</li>
+          </ul>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
+            <li><strong>After Repair Value (ARV):</strong> $150,000</li>
+            <li><strong>Refinance at 75% LTV:</strong> $112,500 loan</li>
+            <li><strong>Refinance Closing Costs:</strong> $3,000</li>
+            <li><strong>Cash Out:</strong> $112,500 - $3,000 = $109,500</li>
+            <li><strong>Cash Left in Deal:</strong> $112,000 - $109,500 = $2,500</li>
+          </ul>
+          <p className="text-muted-foreground mb-8">
+            With $2,500 left in the deal generating $300/month in cash flow, your cash-on-cash return is 144%—and you've recovered most of your capital to invest in the next property.
+          </p>
+
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            Key Outputs This Calculator Provides
+          </h2>
           <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
-            <li><strong>Cash-Out:</strong> Money returned to you after refinance (goal: recover 100%+ of invested capital)</li>
-            <li><strong>Cash Left in Deal:</strong> Capital still tied up in the property after refinance</li>
-            <li><strong>Monthly Cash Flow:</strong> Net income after all expenses and debt service</li>
-            <li><strong>Cash-on-Cash Return:</strong> Annual cash flow divided by cash left in deal</li>
+            <li><strong>Cash-Out Amount:</strong> Money returned to you after refinancing—goal is to recover 100%+ of invested capital.</li>
+            <li><strong>Cash Left in Deal:</strong> Capital still tied up after refinance. Lower is better for BRRRR.</li>
+            <li><strong>Monthly Cash Flow:</strong> Net operating income after all expenses and debt service.</li>
+            <li><strong>Cash-on-Cash Return:</strong> Annual cash flow divided by cash left in deal—the true return on your remaining investment.</li>
+            <li><strong>DSCR:</strong> Debt Service Coverage Ratio—measures ability to cover mortgage payments from rental income.</li>
           </ul>
 
-          <h3 className="text-xl font-display font-semibold text-foreground mb-4">
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            Common Mistakes in BRRRR Investing
+          </h2>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
+            <li><strong>Overestimating ARV:</strong> Be conservative with your after-repair value. Get multiple comps and verify with local agents.</li>
+            <li><strong>Underestimating Rehab Costs:</strong> Add 15-20% contingency to your rehab budget for unexpected issues.</li>
+            <li><strong>Ignoring Holding Costs:</strong> Include insurance, utilities, property taxes, and loan interest during the rehab period.</li>
+            <li><strong>Not Accounting for Seasoning:</strong> Many lenders require 6-12 months before refinancing. Factor this into your timeline and costs.</li>
+            <li><strong>Buying at Too High a Price:</strong> The deal is made at purchase. Don't pay more than 70% of ARV minus repair costs.</li>
+          </ul>
+
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
+            BRRRR vs Traditional Buy-and-Hold
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            The BRRRR method differs from traditional buy-and-hold investing in several important ways:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-8">
+            <li><strong>Capital Efficiency:</strong> BRRRR allows you to recycle capital; buy-and-hold keeps capital locked in each property.</li>
+            <li><strong>Speed of Growth:</strong> With BRRRR, you can acquire multiple properties with the same initial capital.</li>
+            <li><strong>Effort Required:</strong> BRRRR requires finding distressed properties and managing renovations; buy-and-hold is more passive.</li>
+            <li><strong>Risk Profile:</strong> BRRRR has higher execution risk but potentially higher returns; buy-and-hold is lower risk but slower growth.</li>
+          </ul>
+
+          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
             Frequently Asked Questions
-          </h3>
+          </h2>
           <Accordion type="single" collapsible className="mb-8">
             {faqs.map((faq, idx) => (
               <AccordionItem key={idx} value={`faq-${idx}`}>
