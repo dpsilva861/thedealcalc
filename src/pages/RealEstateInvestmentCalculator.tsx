@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { InlineAd } from "@/components/ads";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import {
   Calculator,
   Home,
@@ -71,32 +72,18 @@ const metrics = [
 ];
 
 export default function RealEstateInvestmentCalculator() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
-          { "@type": "ListItem", "position": 3, "name": "Investment Calculator", "item": "https://thedealcalc.com/real-estate-investment-calculator" }
-        ]
-      },
-      {
-        "@type": "SoftwareApplication",
-        "name": "Real Estate Investment Calculator Suite",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Any",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Complete suite of free real estate investment calculators including rental property, BRRRR, fix & flip, cap rate, and cash-on-cash analysis.",
-        "url": "https://thedealcalc.com/real-estate-investment-calculator"
-      }
+  const jsonLd = buildCalculatorPageSchema(
+    {
+      name: "Real Estate Investment Calculator Suite",
+      description: "Complete suite of free real estate investment calculators including rental property, BRRRR, fix & flip, cap rate, and cash-on-cash analysis.",
+      canonicalPath: "/real-estate-investment-calculator"
+    },
+    [
+      { name: "Home", path: "/" },
+      { name: "Calculators", path: "/calculators" },
+      { name: "Investment Calculator", path: "/real-estate-investment-calculator" }
     ]
-  };
+  );
 
   return (
     <Layout>
