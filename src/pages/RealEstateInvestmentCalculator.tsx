@@ -1,9 +1,16 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { InlineAd } from "@/components/ads";
 import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Calculator,
   Home,
@@ -13,6 +20,7 @@ import {
   TrendingUp,
   ArrowRight,
   CheckCircle2,
+  HelpCircle,
 } from "lucide-react";
 
 const calculators = [
@@ -71,6 +79,42 @@ const metrics = [
   "Break-even Occupancy",
 ];
 
+// FAQs - these are the single source of truth for both UI and JSON-LD
+const faqs = [
+  {
+    question: "What is a real estate investment calculator?",
+    answer: "A real estate investment calculator is a financial analysis tool that helps investors evaluate potential property investments. By inputting purchase price, rental income, operating expenses, and financing terms, you can calculate key metrics like cash flow, cap rate, cash-on-cash return, and IRR to determine if a deal makes financial sense."
+  },
+  {
+    question: "What is cash flow in real estate investing?",
+    answer: "Cash flow is the money left over after paying all property expenses and mortgage payments. Positive cash flow means your rental income exceeds your costs, generating monthly income. Negative cash flow means you're paying out of pocket each month. Our calculators show both monthly and annual cash flow projections."
+  },
+  {
+    question: "What is Net Operating Income (NOI)?",
+    answer: "Net Operating Income (NOI) is your gross rental income minus all operating expenses like property taxes, insurance, maintenance, and property management—but before mortgage payments. NOI is used to calculate cap rate and is a key metric for comparing properties regardless of financing."
+  },
+  {
+    question: "What is cap rate and how is it calculated?",
+    answer: "Cap rate (capitalization rate) equals NOI divided by property value, expressed as a percentage. For example, $50,000 NOI on a $500,000 property = 10% cap rate. Cap rate measures unlevered return and helps compare properties across different markets and price points."
+  },
+  {
+    question: "What is IRR in simple terms?",
+    answer: "Internal Rate of Return (IRR) is your annualized total return accounting for all cash flows over time, including monthly income and eventual sale proceeds. Unlike simple return metrics, IRR considers when you receive money—getting returns sooner is better. IRR is the gold standard for comparing different investment opportunities."
+  },
+  {
+    question: "What does discount rate mean in real estate analysis?",
+    answer: "The discount rate is the required return you use to evaluate whether an investment is worthwhile. It represents your opportunity cost—what you could earn elsewhere. A higher discount rate means you require higher returns to justify the investment. Common discount rates for real estate range from 8-15% depending on risk."
+  },
+  {
+    question: "What is NPV and when is it useful?",
+    answer: "Net Present Value (NPV) calculates whether an investment creates or destroys value by discounting all future cash flows to today's dollars using your required return rate. NPV > 0 means the investment exceeds your required return; NPV < 0 means it falls short. NPV is useful for comparing investments with different timelines and cash flow patterns."
+  },
+  {
+    question: "Are these calculators really free?",
+    answer: "Yes, TheDealCalc is 100% free with no signup required. You can run unlimited analyses, export to PDF/CSV/Excel, and share results—all without creating an account or paying fees. We never store your deal data, so your information stays private."
+  },
+];
+
 export default function RealEstateInvestmentCalculator() {
   const jsonLd = buildCalculatorPageSchema(
     {
@@ -82,8 +126,17 @@ export default function RealEstateInvestmentCalculator() {
       { name: "Home", path: "/" },
       { name: "Calculators", path: "/calculators" },
       { name: "Investment Calculator", path: "/real-estate-investment-calculator" }
-    ]
+    ],
+    faqs
   );
+
+  // Dev-only logging of schema types being rendered
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      const schemaTypes = jsonLd["@graph"]?.map((item: { "@type"?: string }) => item["@type"]) || [];
+      console.log("Rendering JSON-LD schemas:", schemaTypes);
+    }
+  }, [jsonLd]);
 
   return (
     <Layout>
@@ -245,8 +298,39 @@ export default function RealEstateInvestmentCalculator() {
         </div>
       </section>
 
-      {/* Why TheDealCalc */}
+      {/* FAQ Section */}
       <section className="py-16 bg-cream-dark">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-8">
+              <HelpCircle className="h-6 w-6 text-primary" />
+              <h2 className="font-display text-3xl font-bold text-foreground">
+                Frequently Asked Questions
+              </h2>
+            </div>
+            
+            <Accordion type="single" collapsible className="space-y-4">
+              {faqs.map((faq, index) => (
+                <AccordionItem 
+                  key={index} 
+                  value={`item-${index}`}
+                  className="bg-card border border-border rounded-xl px-6"
+                >
+                  <AccordionTrigger className="text-left font-semibold text-foreground hover:no-underline">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </div>
+      </section>
+
+      {/* Why TheDealCalc */}
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="font-display text-3xl font-bold text-foreground mb-8">
