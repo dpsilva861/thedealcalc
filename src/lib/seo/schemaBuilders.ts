@@ -5,6 +5,8 @@
  * compliant with Google Rich Results requirements.
  */
 
+import { FAQ, buildFAQPageSchema } from './faqs';
+
 const BASE_URL = "https://thedealcalc.com";
 const SITE_NAME = "TheDealCalc";
 const LOGO_URL = `${BASE_URL}/og-image.png`;
@@ -13,10 +15,9 @@ const LOGO_URL = `${BASE_URL}/og-image.png`;
 // TYPES
 // ============================================
 
-export interface FAQItem {
-  question: string;
-  answer: string;
-}
+// Re-export FAQ type for convenience
+export type { FAQ };
+export type FAQItem = FAQ; // Backward compatibility alias
 
 export interface ArticleMetadata {
   headline: string;
@@ -113,23 +114,11 @@ export function buildSoftwareApplicationSchema(metadata: SoftwareApplicationMeta
 /**
  * FAQPage schema for pages with FAQ sections
  * Only generate if FAQs actually exist on the page
+ * 
+ * @deprecated Use buildFAQPageSchema from './faqs' instead
  */
-export function buildFAQSchema(faqItems: FAQItem[]) {
-  if (!faqItems || faqItems.length === 0) {
-    return null;
-  }
-
-  return {
-    "@type": "FAQPage",
-    "mainEntity": faqItems.map(faq => ({
-      "@type": "Question",
-      "name": faq.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": faq.answer
-      }
-    }))
-  };
+export function buildFAQSchema(faqItems: FAQ[]) {
+  return buildFAQPageSchema(faqItems);
 }
 
 /**

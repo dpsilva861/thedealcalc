@@ -84,27 +84,27 @@ import { cn } from '@/lib/utils';
 const faqs = [
   {
     question: "What is Net Present Value (NPV)?",
-    answer: "NPV tells you how much value an investment creates today by converting all future cash flows into today's dollars using your required return (discount rate). A positive NPV means the investment creates value above your required return."
+    answer: "NPV converts all future cash flows into today's dollars using a discount rate, then subtracts your initial investment. A positive NPV means the investment creates value above your required return; negative NPV means it falls short."
   },
   {
     question: "How do I interpret NPV results?",
-    answer: "NPV > 0 means the investment exceeds your required return and creates value. NPV < 0 means it falls short of your required return. NPV = 0 means it exactly meets your required return. Generally, accept investments with NPV > 0."
+    answer: "NPV > 0: accept the investment (exceeds required return). NPV < 0: reject (falls short of required return). NPV = 0: exactly meets required return. When comparing mutually exclusive projects, choose the higher NPV."
   },
   {
     question: "What discount rate should I use?",
-    answer: "Use your required rate of return or cost of capital. Common rates: 8-12% for real estate, 10-15% for corporate projects, 20-30% for venture investments. The higher the risk, the higher the discount rate."
+    answer: "Use your required rate of return or weighted cost of capital. The discount rate reflects the risk of the investment and the opportunity cost of capital. Higher risk investments warrant higher discount rates."
   },
   {
     question: "NPV vs IRR: what's the difference?",
-    answer: "NPV gives a dollar value of wealth created. IRR gives the effective return rate. NPV is generally preferred for comparing projects because it accounts for investment size and timing differences."
+    answer: "NPV gives a dollar value of wealth created. IRR gives the annualized return rate. NPV is generally preferred because it accounts for investment size and reinvestment rate assumptions. IRR can give misleading results for non-conventional cash flows."
   },
   {
-    question: "Why are future dollars worth less than today's dollars?",
-    answer: "Money you have today can be invested to earn returns. $100 today earning 10% becomes $110 next year. So $110 next year is only worth $100 today. NPV uses this principle to compare cash flows from different time periods."
+    question: "What is the time value of money?",
+    answer: "Money today is worth more than the same amount in the future because it can be invested to earn returns. NPV uses this principle to convert future cash flows into their present value equivalents for comparison."
   },
   {
-    question: "Is this NPV calculator free?",
-    answer: "Yes! TheDealCalc is 100% free with no signup required. Calculate NPV, compare scenarios, and export to PDF or Excel."
+    question: "What is beginning vs end of period timing?",
+    answer: "End of period (ordinary annuity) assumes cash flows occur at period end—standard for most investments. Beginning of period (annuity due) assumes cash flows at period start—used for rent, lease payments, or immediate receipts."
   },
 ];
 

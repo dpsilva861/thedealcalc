@@ -14,6 +14,8 @@ import {
 import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
 import { RelatedCalculators } from "@/components/calculators/RelatedCalculators";
 import { SavedScenariosPanel } from "@/components/calculators/SavedScenariosPanel";
+import { CalculatorFaqs } from "@/components/seo/CalculatorFaqs";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -21,12 +23,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { validateBRRRRInputs } from "@/lib/calculators/brrrr/validation";
 import { getDefaultBRRRRInputs } from "@/lib/calculators/brrrr";
 import { useBRRRRScenarios } from "@/hooks/useBRRRRScenarios";
@@ -46,51 +42,43 @@ const STEPS = [
 const faqs = [
   {
     question: "What is the BRRRR strategy?",
-    answer: "BRRRR stands for Buy, Rehab, Rent, Refinance, Repeat. It's a real estate investment strategy where you purchase undervalued properties, renovate them, rent them out, refinance to pull out equity, and repeat the process."
+    answer: "BRRRR stands for Buy, Rehab, Rent, Refinance, Repeat. It's a real estate investment strategy where you purchase undervalued properties, renovate them to increase value, rent them out for cash flow, refinance to pull out your invested capital, and repeat the process with the recovered funds."
   },
   {
-    question: "How do I calculate cash-out on a BRRRR deal?",
-    answer: "Cash-out = Refinance loan amount - Bridge loan payoff - Closing costs. This calculator automatically computes your cash-out based on the ARV, LTV, and total invested capital."
+    question: "What is ARV (After-Repair Value)?",
+    answer: "ARV is the estimated market value of a property after all renovations are complete. It's determined by comparing the subject property to similar recently sold properties (comps) in the area. Accurate ARV estimation is critical for BRRRR deals."
+  },
+  {
+    question: "How do I calculate cash left in a BRRRR deal?",
+    answer: "Cash left in deal = Total invested capital - Cash-out at refinance. Total invested capital includes purchase price, closing costs, rehab costs, and holding costs. Cash-out depends on the new appraised value and LTV offered by the lender."
   },
   {
     question: "What LTV can I expect on a BRRRR refinance?",
-    answer: "Most lenders offer 70-80% LTV on cash-out refinances. This calculator lets you model different LTV scenarios to see how they affect your returns."
+    answer: "Most conventional and DSCR lenders offer 70-80% LTV on cash-out refinances. Some lenders may require a seasoning period (typically 6-12 months) before allowing a cash-out refinance based on the new appraised value."
   },
   {
-    question: "Is this BRRRR calculator free?",
-    answer: "Yes! TheDealCalc BRRRR calculator is 100% free with no signup required. Analyze deals, compare scenarios, and export to PDF or Excel."
+    question: "What is a seasoning period?",
+    answer: "A seasoning period is the time a lender requires you to own a property before they allow a cash-out refinance based on current market value. Common seasoning requirements are 6 months for some DSCR lenders and 12 months for conventional loans."
+  },
+  {
+    question: "What is DSCR in BRRRR investing?",
+    answer: "DSCR (Debt Service Coverage Ratio) measures the property's ability to cover its debt payments. DSCR = NOI / Annual Debt Service. Most DSCR lenders require 1.0-1.25x minimum. A DSCR of 1.25 means the property generates 25% more income than needed for debt payments."
   },
 ];
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-        { "@type": "ListItem", "position": 2, "name": "BRRRR Calculator", "item": "https://thedealcalc.com/brrrr" }
-      ]
-    },
-    {
-      "@type": "SoftwareApplication",
-      "name": "BRRRR Calculator",
-      "applicationCategory": "FinanceApplication",
-      "operatingSystem": "Any",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-      "description": "Free BRRRR calculator for real estate investors. Analyze Buy, Rehab, Rent, Refinance, Repeat deals with cash-out projections and risk analysis.",
-      "url": "https://thedealcalc.com/brrrr"
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": faqs.map(faq => ({
-        "@type": "Question",
-        "name": faq.question,
-        "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
-      }))
-    }
-  ]
-};
+const jsonLd = buildCalculatorPageSchema(
+  {
+    name: "BRRRR Calculator",
+    description: "BRRRR calculator for real estate investors. Analyze Buy, Rehab, Rent, Refinance, Repeat deals with cash-out projections and risk analysis.",
+    canonicalPath: "/brrrr"
+  },
+  [
+    { name: "Home", path: "/" },
+    { name: "Calculators", path: "/calculators" },
+    { name: "BRRRR Calculator", path: "/brrrr" }
+  ],
+  faqs
+);
 
 function BRRRRContent() {
   const navigate = useNavigate();
@@ -378,19 +366,7 @@ function BRRRRContent() {
             <li><strong>Risk Profile:</strong> BRRRR has higher execution risk but potentially higher returns; buy-and-hold is lower risk but slower growth.</li>
           </ul>
 
-          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
-            Frequently Asked Questions
-          </h2>
-          <Accordion type="single" collapsible className="mb-8">
-            {faqs.map((faq, idx) => (
-              <AccordionItem key={idx} value={`faq-${idx}`}>
-                <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <CalculatorFaqs faqs={faqs} />
         </section>
 
         <p className="text-xs text-muted-foreground text-center mt-8">
