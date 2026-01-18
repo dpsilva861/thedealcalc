@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { InlineAd, AdSlot, adConfig } from "@/components/ads";
+import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import {
   DollarSign,
   Calculator,
@@ -55,40 +56,19 @@ const faqs = [
 ];
 
 export default function CashOnCashCalculator() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
-          { "@type": "ListItem", "position": 3, "name": "Cash-on-Cash Calculator", "item": "https://thedealcalc.com/cash-on-cash-calculator" }
-        ]
-      },
-      {
-        "@type": "SoftwareApplication",
-        "name": "Cash-on-Cash Return Calculator",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "Any",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "description": "Free cash-on-cash return calculator for real estate investors. Analyze your actual return on invested capital with leverage scenarios.",
-        "url": "https://thedealcalc.com/cash-on-cash-calculator"
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": faqs.map(faq => ({
-          "@type": "Question",
-          "name": faq.question,
-          "acceptedAnswer": { "@type": "Answer", "text": faq.answer }
-        }))
-      }
-    ]
-  };
+  const jsonLd = buildCalculatorPageSchema(
+    {
+      name: "Cash-on-Cash Return Calculator",
+      description: "Free cash-on-cash return calculator for real estate investors. Analyze your actual return on invested capital with leverage scenarios.",
+      canonicalPath: "/cash-on-cash-calculator"
+    },
+    [
+      { name: "Home", path: "/" },
+      { name: "Calculators", path: "/calculators" },
+      { name: "Cash-on-Cash Calculator", path: "/cash-on-cash-calculator" }
+    ],
+    faqs
+  );
 
   return (
     <Layout>
