@@ -1,5 +1,5 @@
-import { useEffect, useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { useBRRRR } from "@/contexts/BRRRRContext";
@@ -16,15 +16,23 @@ import { RelatedCalculators } from "@/components/calculators/RelatedCalculators"
 import { SavedScenariosPanel } from "@/components/calculators/SavedScenariosPanel";
 import { Button } from "@/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { validateBRRRRInputs } from "@/lib/calculators/brrrr/validation";
+import { getDefaultBRRRRInputs } from "@/lib/calculators/brrrr";
 import { useBRRRRScenarios } from "@/hooks/useBRRRRScenarios";
+import { copyShareLink, decodeBRRRRParams } from "@/hooks/useShareLink";
 import { trackEvent } from "@/lib/analytics";
-import { ArrowLeft, ArrowRight, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Play, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useStepScrollToTop } from "@/hooks/useStepScrollToTop";
 
@@ -86,6 +94,7 @@ const jsonLd = {
 
 function BRRRRContent() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { currentStep, setCurrentStep, runAnalysis, inputs, updateInputs, setHasAttemptedRun } =
     useBRRRR();
 
@@ -95,14 +104,33 @@ function BRRRRContent() {
   const { scenarios, saveScenario, loadScenario, deleteScenario } = useBRRRRScenarios(
     inputs,
     useCallback((loaded) => {
-      // Update all input sections
       updateInputs(loaded);
     }, [updateInputs])
   );
 
+  // Load share params on mount
+  useEffect(() => {
+    const decoded = decodeBRRRRParams(searchParams);
+    if (decoded) {
+      const defaults = getDefaultBRRRRInputs();
+      const merged = {
+        ...defaults,
+        acquisition: { ...defaults.acquisition, ...decoded.acquisition },
+        afterRepairValue: { ...defaults.afterRepairValue, ...decoded.afterRepairValue },
+        refinance: { ...defaults.refinance, ...decoded.refinance },
+        rentalOperations: { ...defaults.rentalOperations, ...decoded.rentalOperations },
+      };
+      updateInputs(merged);
+      toast.info('Inputs loaded from shared link');
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
+
   useEffect(() => {
     trackEvent("page_view", { page: "/brrrr" });
   }, []);
+
+  const handleShare = () => copyShareLink('brrrr', inputs);
 
   const CurrentStepComponent = STEPS[currentStep].component;
 
@@ -168,6 +196,19 @@ function BRRRRContent() {
               BRRRR Calculator
             </h1>
             <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" onClick={handleShare}>
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copies a link that restores these inputs. Does not auto-run analysis.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <CalculatorSelector />
               <BRRRRPresetSelector />
             </div>
