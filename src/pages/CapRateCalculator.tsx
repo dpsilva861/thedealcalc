@@ -61,8 +61,22 @@ export default function CapRateCalculator() {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Cap Rate Calculator", "item": "https://thedealcalc.com/cap-rate-calculator" }
+          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
+          { "@type": "ListItem", "position": 3, "name": "Cap Rate Calculator", "item": "https://thedealcalc.com/cap-rate-calculator" }
         ]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Cap Rate Calculator",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Free cap rate calculator for real estate investors. Calculate capitalization rate, NOI, and property value instantly.",
+        "url": "https://thedealcalc.com/cap-rate-calculator"
       },
       {
         "@type": "FAQPage",

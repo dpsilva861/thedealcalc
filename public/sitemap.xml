@@ -60,7 +60,16 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  
+  <url>
+    <loc>https://thedealcalc.com/npv-calculator</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://thedealcalc.com/calculators</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
   <!-- Results Pages (lower priority - user-specific) -->
   <url>
     <loc>https://thedealcalc.com/results</loc>
