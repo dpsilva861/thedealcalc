@@ -432,6 +432,7 @@ export default function StructuredDataDebug() {
   const [source, setSource] = useState<SourceKind>("dom");
   const [route, setRoute] = useState<string>(window.location.pathname);
   const [error, setError] = useState<string | null>(null);
+  const [lastDomCount, setLastDomCount] = useState<number | null>(null);
 
   const stats = useMemo(() => {
     const total = validations.length;
@@ -444,9 +445,13 @@ export default function StructuredDataDebug() {
     validations.forEach((v) => {
       typeCounts[v.type] = (typeCounts[v.type] || 0) + 1;
     });
+
+    // Check if fetch mode found fewer schemas than DOM mode
+    const isFetchMode = source === "fetch";
+    const fewerThanDom = isFetchMode && lastDomCount !== null && total < lastDomCount;
     
-    return { total, passed, failed, allValid, typeCounts };
-  }, [validations]);
+    return { total, passed, failed, allValid, typeCounts, isFetchMode, fewerThanDom, lastDomCount };
+  }, [validations, source, lastDomCount]);
 
   const validateCurrentDOM = useCallback(() => {
     setIsLoading(true);
@@ -458,6 +463,7 @@ export default function StructuredDataDebug() {
     setTimeout(() => {
       const extracted = extractSchemasFromDOM();
       setValidations(extracted);
+      setLastDomCount(extracted.length); // Store DOM count for comparison
       setIsLoading(false);
     }, 150);
   }, []);
@@ -609,6 +615,26 @@ export default function StructuredDataDebug() {
                 </div>
               </div>
             ) : null}
+
+            {/* SPA Warning Banner - shows when fetch mode finds fewer schemas than DOM */}
+            {stats.fewerThanDom && !error && (
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-yellow-800">Client-Side Only JSON-LD Detected</div>
+                    <div className="text-sm text-yellow-700 mt-1">
+                      Fetch mode found {stats.total} schema(s) vs {stats.lastDomCount} in DOM mode. 
+                      This indicates your JSON-LD is rendered client-side only. Some validators and search engine crawlers 
+                      may not see these schemas unless they execute JavaScript.
+                    </div>
+                    <div className="text-xs text-yellow-600 mt-2">
+                      For full crawler compatibility, consider SSR, prerendering, or edge-rendering your structured data.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
