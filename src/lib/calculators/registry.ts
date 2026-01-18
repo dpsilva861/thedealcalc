@@ -73,14 +73,35 @@ export const CALCULATORS: CalculatorMetadata[] = [
   },
 ];
 
-// Backwards-compatible exports
+// All available calculators (user-facing)
 export const CALCULATOR_REGISTRY: CalculatorMetadata[] = CALCULATORS.filter(
   (c) => c.status === "available"
 );
 
+// Coming soon calculators for display purposes
 export const COMING_SOON_CALCULATORS: Omit<CalculatorMetadata, "path" | "status">[] =
   CALCULATORS.filter((c) => c.status === "coming_soon").map(({ path, status, ...rest }) => rest);
 
+/**
+ * Get all public (available) calculators sorted by name
+ * Used for navigation menus, footers, etc.
+ */
+export const getPublicCalculators = (): CalculatorMetadata[] => {
+  return CALCULATOR_REGISTRY.filter((calc) => calc.status === "available")
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
+
+/**
+ * Get all calculators including coming soon, for footer display
+ */
+export const getAllCalculatorsForDisplay = (): CalculatorMetadata[] => {
+  return CALCULATORS.sort((a, b) => {
+    // Available calculators first, then coming soon
+    if (a.status === "available" && b.status !== "available") return -1;
+    if (a.status !== "available" && b.status === "available") return 1;
+    return a.name.localeCompare(b.name);
+  });
+};
 
 export const getCalculatorById = (id: string): CalculatorMetadata | undefined => {
   return CALCULATOR_REGISTRY.find((calc) => calc.id === id);
