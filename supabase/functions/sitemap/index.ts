@@ -38,23 +38,39 @@ serve(async (req) => {
     const now = new Date().toISOString();
 
     // Static pages - NO trailing slashes except homepage
+    // Comprehensive list of all indexable routes
     const staticPages = [
-      { url: '', priority: '1.0', changefreq: 'weekly' }, // Homepage gets trailing slash via siteUrl + /
-      { url: '/blog', priority: '0.9', changefreq: 'daily' },
-      { url: '/blog/tags', priority: '0.7', changefreq: 'weekly' },
-      { url: '/how-it-works', priority: '0.7', changefreq: 'monthly' },
-      { url: '/brrrr', priority: '0.8', changefreq: 'weekly' },
-      { url: '/brrrr-calculator', priority: '0.8', changefreq: 'weekly' },
-      { url: '/syndication', priority: '0.8', changefreq: 'weekly' },
-      { url: '/syndication-calculator', priority: '0.8', changefreq: 'weekly' },
-      { url: '/underwrite', priority: '0.8', changefreq: 'weekly' },
+      // Homepage
+      { url: '', priority: '1.0', changefreq: 'weekly' },
+      
+      // Calculator hub
+      { url: '/calculators', priority: '0.9', changefreq: 'weekly' },
+      
+      // Core calculator apps
+      { url: '/underwrite', priority: '0.9', changefreq: 'weekly' },
+      { url: '/brrrr', priority: '0.9', changefreq: 'weekly' },
+      { url: '/syndication', priority: '0.9', changefreq: 'weekly' },
+      { url: '/npv-calculator', priority: '0.8', changefreq: 'weekly' },
+      
+      // SEO landing pages
       { url: '/rental-property-calculator', priority: '0.8', changefreq: 'weekly' },
+      { url: '/brrrr-calculator', priority: '0.8', changefreq: 'weekly' },
+      { url: '/syndication-calculator', priority: '0.8', changefreq: 'weekly' },
       { url: '/fix-and-flip-calculator', priority: '0.8', changefreq: 'weekly' },
       { url: '/cap-rate-calculator', priority: '0.8', changefreq: 'weekly' },
       { url: '/cash-on-cash-calculator', priority: '0.8', changefreq: 'weekly' },
       { url: '/real-estate-investment-calculator', priority: '0.8', changefreq: 'weekly' },
+      
+      // Blog
+      { url: '/blog', priority: '0.9', changefreq: 'daily' },
+      { url: '/blog/tags', priority: '0.7', changefreq: 'weekly' },
+      
+      // Informational
+      { url: '/how-it-works', priority: '0.7', changefreq: 'monthly' },
       { url: '/about', priority: '0.5', changefreq: 'monthly' },
       { url: '/contact', priority: '0.5', changefreq: 'monthly' },
+      
+      // Legal
       { url: '/privacy', priority: '0.3', changefreq: 'yearly' },
       { url: '/terms', priority: '0.3', changefreq: 'yearly' },
       { url: '/cookies', priority: '0.3', changefreq: 'yearly' },
