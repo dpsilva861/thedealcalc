@@ -1,12 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { HelpCircle } from "lucide-react";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { cn } from "@/lib/utils";
 
 interface InputFieldProps {
@@ -63,16 +57,7 @@ export function InputField({
           {label}
         </Label>
         {tooltip && (
-          <TooltipProvider delayDuration={100}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs z-50 bg-popover text-popover-foreground shadow-md">
-                <p className="text-sm">{tooltip}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <HelpTooltip content={<p className="text-sm">{tooltip}</p>} />
         )}
       </div>
       <div className="relative">
