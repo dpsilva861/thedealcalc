@@ -62,8 +62,22 @@ export default function RentalPropertyCalculator() {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Rental Property Calculator", "item": "https://thedealcalc.com/rental-property-calculator" }
+          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
+          { "@type": "ListItem", "position": 3, "name": "Rental Property Calculator", "item": "https://thedealcalc.com/rental-property-calculator" }
         ]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Rental Property Calculator",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Free rental property calculator for real estate investors. Analyze cash flow, cap rate, cash-on-cash return, and IRR with 30-year projections.",
+        "url": "https://thedealcalc.com/rental-property-calculator"
       },
       {
         "@type": "FAQPage",

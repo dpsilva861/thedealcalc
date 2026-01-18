@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useUnderwriting, PropertyAddress } from "@/contexts/UnderwritingContext";
@@ -540,6 +541,12 @@ function ResultsContent() {
 export default function Results() {
   return (
     <Layout showFooter={false}>
+      <Helmet>
+        <title>Analysis Results | Rental Property Calculator — TheDealCalc</title>
+        <meta name="description" content="View your rental property analysis results including IRR, cash-on-cash return, DSCR, and 30-year projections." />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href="https://thedealcalc.com/underwrite" />
+      </Helmet>
       <ResultsContent />
     </Layout>
   );

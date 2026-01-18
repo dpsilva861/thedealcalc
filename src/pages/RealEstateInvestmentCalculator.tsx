@@ -71,12 +71,30 @@ const metrics = [
 ];
 
 export default function RealEstateInvestmentCalculator() {
-  const breadcrumbSchema = {
+  const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-      { "@type": "ListItem", "position": 2, "name": "Investment Calculator", "item": "https://thedealcalc.com/real-estate-investment-calculator" }
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
+          { "@type": "ListItem", "position": 3, "name": "Investment Calculator", "item": "https://thedealcalc.com/real-estate-investment-calculator" }
+        ]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Real Estate Investment Calculator Suite",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Complete suite of free real estate investment calculators including rental property, BRRRR, fix & flip, cap rate, and cash-on-cash analysis.",
+        "url": "https://thedealcalc.com/real-estate-investment-calculator"
+      }
     ]
   };
 
@@ -92,7 +110,7 @@ export default function RealEstateInvestmentCalculator() {
         <meta property="og:url" content="https://thedealcalc.com/real-estate-investment-calculator" />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
+          {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
 

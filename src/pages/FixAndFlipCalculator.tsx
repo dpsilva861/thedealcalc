@@ -63,8 +63,22 @@ export default function FixAndFlipCalculator() {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://thedealcalc.com/" },
-          { "@type": "ListItem", "position": 2, "name": "Fix and Flip Calculator", "item": "https://thedealcalc.com/fix-and-flip-calculator" }
+          { "@type": "ListItem", "position": 2, "name": "Calculators", "item": "https://thedealcalc.com/calculators" },
+          { "@type": "ListItem", "position": 3, "name": "Fix and Flip Calculator", "item": "https://thedealcalc.com/fix-and-flip-calculator" }
         ]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "Fix and Flip Calculator",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Free fix and flip calculator for house flippers. Analyze rehab costs, holding costs, profit, and ROI instantly.",
+        "url": "https://thedealcalc.com/fix-and-flip-calculator"
       },
       {
         "@type": "FAQPage",

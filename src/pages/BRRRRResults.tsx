@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { useBRRRR } from "@/contexts/BRRRRContext";
 import { BRRRRSelfTest } from "@/components/brrrr/BRRRRSelfTest";
@@ -283,6 +284,12 @@ function BRRRRResultsContent() {
 export default function BRRRRResults() {
   return (
     <Layout>
+      <Helmet>
+        <title>BRRRR Analysis Results | Buy Rehab Rent Refinance — TheDealCalc</title>
+        <meta name="description" content="View your BRRRR deal analysis results including cash-out potential, rental returns, and refinance metrics." />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href="https://thedealcalc.com/brrrr" />
+      </Helmet>
       <BRRRRResultsContent />
     </Layout>
   );

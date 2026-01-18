@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { SyndicationProvider, useSyndication } from "@/contexts/SyndicationContext";
 import SyndicationResultsPanel from "@/components/syndication/SyndicationResultsPanel";
@@ -147,6 +148,12 @@ function SyndicationResultsContent() {
 export default function SyndicationResults() {
   return (
     <Layout>
+      <Helmet>
+        <title>Syndication Analysis Results | GP/LP Waterfall — TheDealCalc</title>
+        <meta name="description" content="View your syndication deal analysis results including LP IRR, equity multiple, GP promote, and waterfall distributions." />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href="https://thedealcalc.com/syndication" />
+      </Helmet>
       <SyndicationProvider>
         <SyndicationResultsContent />
       </SyndicationProvider>

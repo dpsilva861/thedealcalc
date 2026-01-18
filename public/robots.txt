@@ -10,5 +10,9 @@ Allow: /*.css$
 # Block internal API routes
 Disallow: /api/
 
+# Block admin pages
+Disallow: /admin/
+Disallow: /admin
+
 # Sitemap
 Sitemap: https://thedealcalc.com/sitemap.xml
