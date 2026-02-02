@@ -90,6 +90,7 @@ const App = () => (
                       <Route path="/results" element={<Results />} />
                       <Route path="/privacy" element={<PrivacyPolicy />} />
                       <Route path="/terms" element={<TermsOfService />} />
+                      <Route path="/cookies" element={<CookiePolicy />} />
                       <Route path="/brrrr" element={<BRRRR />} />
                       <Route path="/brrrr/results" element={<BRRRRResults />} />
                       <Route path="/syndication" element={<Syndication />} />
