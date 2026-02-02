@@ -4,6 +4,7 @@ import { SyndicationProvider, useSyndication } from "@/contexts/SyndicationConte
 import SyndicationResultsPanel from "@/components/syndication/SyndicationResultsPanel";
 import SyndicationAuditPanel from "@/components/syndication/SyndicationAuditPanel";
 import SyndicationSelfTest from "@/components/syndication/SyndicationSelfTest";
+import { SidebarSkyscraper, MobileFixedBanner } from "@/components/ads";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useSearchParams } from "react-router-dom";
@@ -112,35 +113,46 @@ function SyndicationResultsContent() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Syndication Results</h1>
-          <p className="text-sm text-muted-foreground">{inputs?.deal_name || "Deal"} - LP/GP waterfall</p>
+      <div className="flex gap-6">
+        {/* Main Content */}
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Syndication Results</h1>
+              <p className="text-sm text-muted-foreground">{inputs?.deal_name || "Deal"} - LP/GP waterfall</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" asChild>
+                <Link to="/syndication"><ArrowLeft className="h-4 w-4 mr-2" />Edit Inputs</Link>
+              </Button>
+              <ExportDropdown
+                calculatorType="syndication"
+                onExportExcel={handleExportExcel}
+                onExportCSV={handleExportCSV}
+                onExportPDF={handleExportPDF}
+                onExportDocx={handleExportDocx}
+                onExportPptx={handleExportPptx}
+              />
+            </div>
+          </div>
+          {isDevMode && <div className="mb-6"><SyndicationSelfTest /></div>}
+          <Tabs defaultValue="results" className="w-full">
+            <TabsList>
+              <TabsTrigger value="results">Results</TabsTrigger>
+              <TabsTrigger value="audit">Audit Mode</TabsTrigger>
+            </TabsList>
+            <TabsContent value="results"><SyndicationResultsPanel /></TabsContent>
+            <TabsContent value="audit"><SyndicationAuditPanel /></TabsContent>
+          </Tabs>
+          <p className="text-xs text-muted-foreground mt-6 text-center">For educational purposes only. Not investment, legal, or tax advice.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link to="/syndication"><ArrowLeft className="h-4 w-4 mr-2" />Edit Inputs</Link>
-          </Button>
-          <ExportDropdown
-            calculatorType="syndication"
-            onExportExcel={handleExportExcel}
-            onExportCSV={handleExportCSV}
-            onExportPDF={handleExportPDF}
-            onExportDocx={handleExportDocx}
-            onExportPptx={handleExportPptx}
-          />
-        </div>
+
+        {/* Sidebar Ad - Desktop only */}
+        <SidebarSkyscraper />
       </div>
-      {isDevMode && <div className="mb-6"><SyndicationSelfTest /></div>}
-      <Tabs defaultValue="results" className="w-full">
-        <TabsList>
-          <TabsTrigger value="results">Results</TabsTrigger>
-          <TabsTrigger value="audit">Audit Mode</TabsTrigger>
-        </TabsList>
-        <TabsContent value="results"><SyndicationResultsPanel /></TabsContent>
-        <TabsContent value="audit"><SyndicationAuditPanel /></TabsContent>
-      </Tabs>
-      <p className="text-xs text-muted-foreground mt-6 text-center">For educational purposes only. Not investment, legal, or tax advice.</p>
+
+      {/* Mobile Fixed Banner Ad */}
+      <MobileFixedBanner />
     </div>
   );
 }

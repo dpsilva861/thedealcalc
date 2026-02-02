@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { SyndicationProvider, useSyndication } from "@/contexts/SyndicationContext";
+import { HeaderLeaderboard, MobileFixedBanner } from "@/components/ads";
 import { SyndicationStepIndicator } from "@/components/syndication/SyndicationStepIndicator";
 import { SyndicationPresetSelector } from "@/components/syndication/SyndicationPresetSelector";
 import {
@@ -194,6 +195,9 @@ function SyndicationContent() {
         <meta name="twitter:image" content="https://thedealcalc.com/og/og-syndication.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
+
+      {/* Header Leaderboard Ad - Desktop only */}
+      <HeaderLeaderboard />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div ref={topRef} className="h-0" tabIndex={-1} aria-hidden="true" />
@@ -388,6 +392,9 @@ function SyndicationContent() {
 
       {/* Related Calculators */}
       <RelatedCalculators currentPath="/syndication" />
+
+      {/* Mobile Fixed Banner Ad */}
+      <MobileFixedBanner />
     </>
   );
 }

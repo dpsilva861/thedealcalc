@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { useBRRRR } from "@/contexts/BRRRRContext";
 import { BRRRRSelfTest } from "@/components/brrrr/BRRRRSelfTest";
+import { SidebarSkyscraper, MobileFixedBanner } from "@/components/ads";
 import { formatCurrency, formatPercent } from "@/lib/calculators/types";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -121,7 +122,9 @@ function BRRRRResultsContent() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="w-full">
+      <div className="flex gap-6">
+        {/* Main Content */}
+        <div className="flex-1">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
@@ -276,7 +279,14 @@ function BRRRRResultsContent() {
         <p className="text-xs text-muted-foreground text-center mt-8">
           For educational purposes only. Not investment, legal, or tax advice.
         </p>
+        </div>
+
+        {/* Sidebar Ad - Desktop only */}
+        <SidebarSkyscraper />
       </div>
+
+      {/* Mobile Fixed Banner Ad */}
+      <MobileFixedBanner />
     </div>
   );
 }

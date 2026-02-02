@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import { HeaderLeaderboard, MobileFixedBanner } from "@/components/ads";
 import { StepIndicator } from "@/components/underwriting/StepIndicator";
 import { AddressStep } from "@/components/underwriting/steps/AddressStep";
 import { AcquisitionStep } from "@/components/underwriting/steps/AcquisitionStep";
@@ -235,6 +236,9 @@ function UnderwriteContent() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
+      {/* Header Leaderboard Ad - Desktop only */}
+      <HeaderLeaderboard />
+
       <div className="min-h-[calc(100vh-4rem)] bg-cream-dark overflow-x-hidden">
         <div ref={topRef} className="h-0" tabIndex={-1} aria-hidden="true" />
 
@@ -438,6 +442,9 @@ function UnderwriteContent() {
 
       {/* Related Calculators */}
       <RelatedCalculators currentPath="/underwrite" />
+
+      {/* Mobile Fixed Banner Ad */}
+      <MobileFixedBanner />
     </>
   );
 }

@@ -17,6 +17,7 @@ import { Helmet } from 'react-helmet-async';
 import { buildCalculatorPageSchema } from '@/lib/seo/schemaBuilders';
 import { Layout } from '@/components/layout/Layout';
 import { NPVProvider, useNPV } from '@/contexts/NPVContext';
+import { HeaderLeaderboard, MobileFixedBanner } from '@/components/ads';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -286,6 +287,9 @@ function NPVCalculatorContent() {
           {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
+
+      {/* Header Leaderboard Ad - Desktop only */}
+      <HeaderLeaderboard />
 
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Header */}
@@ -1151,6 +1155,9 @@ function NPVCalculatorContent() {
 
       {/* Related Calculators */}
       <RelatedCalculators currentPath="/npv-calculator" />
+
+      {/* Mobile Fixed Banner Ad */}
+      <MobileFixedBanner />
     </>
   );
 }
