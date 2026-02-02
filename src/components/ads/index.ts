@@ -13,6 +13,11 @@ export { AdRail } from "./AdRail";
 export { InlineAd } from "./InlineAd";
 export { MobileAd } from "./MobileAd";
 
+// Specialized Ad Placements (CLS-optimized with reserved heights)
+export { HeaderLeaderboard } from "./HeaderLeaderboard";
+export { SidebarSkyscraper } from "./SidebarSkyscraper";
+export { MobileFixedBanner } from "./MobileFixedBanner";
+
 // Consent-Gated AdSense Loader
 export { AdSenseLoader, useAdSense, useAdSenseReady } from "./AdSenseLoader";
 
