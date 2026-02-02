@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { useUnderwriting, PropertyAddress } from "@/contexts/UnderwritingContext";
+import { SidebarSkyscraper, MobileFixedBanner } from "@/components/ads";
 import {
   formatCurrency,
   formatPercent,
@@ -253,12 +254,15 @@ function ResultsContent() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Key Metrics */}
-        <section className="mb-8">
-          <h2 className="font-display text-xl font-bold text-foreground mb-4">
-            Key Metrics
-          </h2>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex gap-6">
+          {/* Main Content */}
+          <div className="flex-1 space-y-8">
+            {/* Key Metrics */}
+            <section className="mb-8">
+              <h2 className="font-display text-xl font-bold text-foreground mb-4">
+                Key Metrics
+              </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {keyMetrics.map((metric) => (
               <div 
@@ -533,7 +537,15 @@ function ResultsContent() {
         <p className="text-xs text-muted-foreground text-center">
           For educational purposes only. Not investment, legal, or tax advice.
         </p>
+          </div>
+
+          {/* Sidebar Ad - Desktop only */}
+          <SidebarSkyscraper />
+        </div>
       </div>
+
+      {/* Mobile Fixed Banner Ad */}
+      <MobileFixedBanner />
     </div>
   );
 }

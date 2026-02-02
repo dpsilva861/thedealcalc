@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { useBRRRR } from "@/contexts/BRRRRContext";
+import { HeaderLeaderboard, MobileFixedBanner } from "@/components/ads";
 import { BRRRRStepIndicator } from "@/components/brrrr/BRRRRStepIndicator";
 import { BRRRRPresetSelector } from "@/components/brrrr/BRRRRPresetSelector";
 import {
@@ -179,6 +180,9 @@ function BRRRRContent() {
         <meta name="twitter:image" content="https://thedealcalc.com/og/og-brrrr.png" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
+
+      {/* Header Leaderboard Ad - Desktop only */}
+      <HeaderLeaderboard />
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div ref={topRef} className="h-0" tabIndex={-1} aria-hidden="true" />
@@ -376,6 +380,9 @@ function BRRRRContent() {
 
       {/* Related Calculators */}
       <RelatedCalculators currentPath="/brrrr" />
+
+      {/* Mobile Fixed Banner Ad */}
+      <MobileFixedBanner />
     </>
   );
 }
