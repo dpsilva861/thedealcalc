@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { InlineAd, AdSlot, adConfig } from "@/components/ads";
+import { InlineAd, AdSlot, adConfig, HeaderLeaderboard, MobileFixedBanner } from "@/components/ads";
 import { buildCalculatorPageSchema } from "@/lib/seo/schemaBuilders";
 import {
   Hammer,
@@ -84,6 +84,9 @@ export default function FixAndFlipCalculator() {
           {JSON.stringify(jsonLd)}
         </script>
       </Helmet>
+
+      {/* Desktop Leaderboard Ad */}
+      <HeaderLeaderboard />
 
       {/* Hero Section */}
       <section className="py-16 md:py-24 bg-cream-dark">
@@ -276,6 +279,9 @@ export default function FixAndFlipCalculator() {
           </Button>
         </div>
       </section>
+
+      {/* Mobile Fixed Banner Ad */}
+      <MobileFixedBanner />
     </Layout>
   );
 }
