@@ -36,6 +36,12 @@ export interface AdConfig {
     mobileInContent: string;
     /** Mid-page ad on calculator landing pages */
     calculatorMid: string;
+    /** Header leaderboard (728x90) - desktop only */
+    headerLeaderboard: string;
+    /** Sidebar skyscraper (300x600) - desktop only */
+    sidebarSkyscraper: string;
+    /** Mobile fixed banner (320x50) - mobile only */
+    mobileFixedBanner: string;
   };
 }
 
@@ -45,6 +51,9 @@ const slotTop = import.meta.env.VITE_ADSENSE_SLOT_TOP || "";
 const slotInContent = import.meta.env.VITE_ADSENSE_SLOT_INCONTENT || "";
 const slotFooter = import.meta.env.VITE_ADSENSE_SLOT_FOOTER || "";
 const slotCalculatorMid = import.meta.env.VITE_ADSENSE_SLOT_CALCULATOR_MID || "";
+const slotHeaderLeaderboard = import.meta.env.VITE_ADSENSE_SLOT_HEADER_LEADERBOARD || "";
+const slotSidebarSkyscraper = import.meta.env.VITE_ADSENSE_SLOT_SIDEBAR_SKYSCRAPER || "";
+const slotMobileFixedBanner = import.meta.env.VITE_ADSENSE_SLOT_MOBILE_FIXED_BANNER || "";
 
 // Ads are only enabled if we have a valid client ID
 const hasValidConfig = clientId.startsWith("ca-pub-") && clientId.length > 10;
@@ -66,6 +75,9 @@ export const adConfig: AdConfig = {
     rightRailSecondary: slotFooter,
     mobileInContent: slotInContent,
     calculatorMid: slotCalculatorMid || slotInContent,
+    headerLeaderboard: slotHeaderLeaderboard || slotTop || slotInContent,
+    sidebarSkyscraper: slotSidebarSkyscraper || slotFooter || slotInContent,
+    mobileFixedBanner: slotMobileFixedBanner || slotInContent,
   },
 };
 
