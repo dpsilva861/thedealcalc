@@ -1077,40 +1077,59 @@ def _detect_subcategory(filename: str, extension: str, category: str) -> Optiona
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# BUSINESS / PERSONAL DETECTION (Silva Operations)
+# BRAND / COMPANY FOLDER DETECTION
 # ═══════════════════════════════════════════════════════════════════════════════
-
-# Business keywords — checked first (more specific)
-BUSINESS_KEYWORDS = [
-    "silva operations llc",
-    "silva operations",
+#
+# Each brand gets its own top-level folder with subfolders inside
+# (Tax, Financial, Legal, Contracts, etc.)
+#
+# HOW TO ADD A NEW BRAND:
+#   Just add a new line to BRAND_FOLDERS below. Format:
+#     ("Folder Name", ["keyword1", "keyword2", ...]),
+#
+#   - Multi-word keywords (e.g. "delta airlines") use substring matching
+#   - Single-word keywords (e.g. "uber") use word-boundary matching
+#     so "uber" won't accidentally match inside "ubermensch"
+#   - Order matters — first match wins, so put specific brands BEFORE
+#     general catch-alls like "Personal (Silva)"
+#   - Keywords are checked against BOTH the filename AND the text
+#     inside the document (PDFs, Word docs, Excel, etc.)
+#
+BRAND_FOLDERS = [
+    # Company / brand               Keywords to look for
+    ("Silva Operations",            ["silva operations llc", "silva operations"]),
+    ("Delta Airlines",              ["delta airlines", "delta air lines", "delta skymiles", "delta sky miles"]),
+    ("Uber",                        ["uber technologies", "uber eats", "uber trip", "uber receipt", "uber.com", "uber"]),
+    ("Aman",                        ["aman resorts", "aman hotels", "amanresorts", "aman.com", "aman"]),
+    ("Montage",                     ["montage hotels", "montage resorts", "montage international", "montagehotels", "montage"]),
+    # Personal catch-all — checked LAST (matches any "Silva" not caught above)
+    ("Personal (Silva)",            ["silva"]),
 ]
 
-# Personal keywords — checked after business (less specific)
-PERSONAL_KEYWORDS = [
-    "silva",
-]
 
+def _detect_brand(filename: str, text_content: str) -> Optional[str]:
+    """Classify a file into a brand/company folder.
 
-def _detect_business_personal(filename: str, text_content: str) -> Optional[str]:
-    """Classify a file as Business, Personal, or None based on Silva keywords.
-
-    Checks both the filename and the extracted document text content.
-    - "Silva Operations" or "Silva Operations LLC" -> "Business"
-    - "Silva" (without "Operations") -> "Personal"
-    - Neither -> None (use normal category routing)
+    Checks both the filename and extracted document text.
+    Multi-word keywords use substring matching.
+    Single-word keywords use word-boundary matching to avoid false positives.
+    Returns the folder name (e.g. "Silva Operations", "Uber") or None.
     """
     combined = (filename + " " + text_content).lower()
-    # Normalize separators so "silva_operations" and "silva-operations" also match
+    # Normalize separators so "silva_operations" and "silva-operations" match
     normalized = combined.replace("_", " ").replace("-", " ")
 
-    for kw in BUSINESS_KEYWORDS:
-        if kw in combined or kw in normalized:
-            return "Business"
-
-    for kw in PERSONAL_KEYWORDS:
-        if kw in combined or kw in normalized:
-            return "Personal"
+    for folder_name, keywords in BRAND_FOLDERS:
+        for kw in keywords:
+            if " " in kw or "." in kw:
+                # Multi-word or domain: substring match
+                if kw in combined or kw in normalized:
+                    return folder_name
+            else:
+                # Single word: word-boundary match to avoid false positives
+                # e.g. "aman" won't match inside "management"
+                if re.search(r'\b' + re.escape(kw) + r'\b', normalized):
+                    return folder_name
 
     return None
 
@@ -1134,8 +1153,7 @@ class MoveAction:
 class OrganizePlan:
     renames: list[RenameAction] = field(default_factory=list)
     moves: list[MoveAction] = field(default_factory=list)
-    business_count: int = 0
-    personal_count: int = 0
+    brand_counts: dict = field(default_factory=dict)
 
     @property
     def total_actions(self) -> int:
@@ -1143,12 +1161,10 @@ class OrganizePlan:
 
     def preview(self, max_lines: int = 50) -> str:
         lines = []
-        if self.business_count or self.personal_count:
-            lines.append("--- Silva Classification ---")
-            if self.business_count:
-                lines.append(f"  Business (Silva Operations): {self.business_count} files")
-            if self.personal_count:
-                lines.append(f"  Personal (Silva): {self.personal_count} files")
+        if self.brand_counts:
+            lines.append("--- Brand / Company Classification ---")
+            for brand, count in sorted(self.brand_counts.items(), key=lambda x: -x[1]):
+                lines.append(f"  {brand}: {count} files")
             lines.append("")
         if self.renames:
             lines.append(f"--- Renames ({len(self.renames)}) ---")
@@ -1191,29 +1207,20 @@ def plan_organization(files, target_root, rename_rules=None, organize_into_folde
         new_name = normalize_filename(name_stem, extension, rename_rules, filepath=entry.path, category=entry.category)
         category = entry.category
         if organize_into_folders:
-            # Check Business/Personal classification using filename + extracted text
-            biz_personal = _detect_business_personal(entry.name, entry.text_content)
+            # Check if file belongs to a known brand/company
+            brand = _detect_brand(entry.name, entry.text_content)
             subcategory = _detect_subcategory(entry.name, entry.extension, category)
 
-            if biz_personal == "Business":
-                plan.business_count += 1
-                folder_name = "Business (Silva Operations)"
+            if brand:
+                plan.brand_counts[brand] = plan.brand_counts.get(brand, 0) + 1
                 if subcategory:
-                    dest_dir = target_root / folder_name / subcategory
+                    dest_dir = target_root / brand / subcategory
                 else:
                     # Use cleaned category name (strip number prefix)
                     clean_cat = re.sub(r'^\d+_', '', category)
-                    dest_dir = target_root / folder_name / clean_cat
-            elif biz_personal == "Personal":
-                plan.personal_count += 1
-                folder_name = "Personal (Silva)"
-                if subcategory:
-                    dest_dir = target_root / folder_name / subcategory
-                else:
-                    clean_cat = re.sub(r'^\d+_', '', category)
-                    dest_dir = target_root / folder_name / clean_cat
+                    dest_dir = target_root / brand / clean_cat
             else:
-                # Normal category routing
+                # Normal category routing (no brand match)
                 if subcategory:
                     dest_dir = target_root / category / subcategory
                 else:
@@ -1417,8 +1424,8 @@ def cmd_organize(args):
     if not scan_result.files:
         print("No files to organize.")
         return
-    # Read document contents to detect Business (Silva Operations) vs Personal (Silva)
-    print("Reading document contents for Business/Personal classification...")
+    # Read document contents to detect brands (Silva Operations, Delta, Uber, etc.)
+    print("Reading document contents for brand/company classification...")
     docs_read = extract_texts_for_entries(scan_result.files)
     print(f"  Read text from {docs_read} documents.\n")
     plan = plan_organization(files=scan_result.files, target_root=target, rename_rules=config["naming_rules"], organize_into_folders=organize_into_folders)
@@ -1560,12 +1567,11 @@ def cmd_watch(args):
                     continue
 
                 # Show what's happening
-                biz_msg = ""
-                if plan.business_count:
-                    biz_msg += f" | Business: {plan.business_count}"
-                if plan.personal_count:
-                    biz_msg += f" | Personal: {plan.personal_count}"
-                print(f"    Organizing {plan.total_actions} files...{biz_msg}")
+                brand_msg = ""
+                if plan.brand_counts:
+                    parts = [f"{b}: {c}" for b, c in sorted(plan.brand_counts.items(), key=lambda x: -x[1])]
+                    brand_msg = " | " + ", ".join(parts)
+                print(f"    Organizing {plan.total_actions} files...{brand_msg}")
 
                 exec_result = execute_plan(plan, dry_run=False)
                 log_path = save_log(target, exec_result.log_entries, dry_run=False)
