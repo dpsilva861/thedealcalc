@@ -1077,23 +1077,22 @@ def _detect_subcategory(filename: str, extension: str, category: str) -> Optiona
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# BRAND / COMPANY FOLDER DETECTION
+# SMART BRAND / COMPANY DETECTION
 # ═══════════════════════════════════════════════════════════════════════════════
 #
-# Each brand gets its own top-level folder with subfolders inside
-# (Tax, Financial, Legal, Contracts, etc.)
+# The system detects companies/brands in TWO ways:
 #
-# HOW TO ADD A NEW BRAND:
-#   Just add a new line to BRAND_FOLDERS below. Format:
-#     ("Folder Name", ["keyword1", "keyword2", ...]),
+# 1. KNOWN BRANDS (checked first — guaranteed matches)
+#    Add a line to BRAND_FOLDERS for any company you always want matched.
 #
-#   - Multi-word keywords (e.g. "delta airlines") use substring matching
-#   - Single-word keywords (e.g. "uber") use word-boundary matching
-#     so "uber" won't accidentally match inside "ubermensch"
-#   - Order matters — first match wins, so put specific brands BEFORE
-#     general catch-alls like "Personal (Silva)"
-#   - Keywords are checked against BOTH the filename AND the text
-#     inside the document (PDFs, Word docs, Excel, etc.)
+# 2. AUTO-DETECTION (kicks in when no known brand matches)
+#    Reads document text and automatically finds company names by looking for:
+#    - Business entities: "Something LLC", "Something Inc", "Something Corp"
+#    - Sender patterns: "From: Company", "Issued by: Company"
+#    - Email domains: @companyname.com
+#    - Prominent capitalized names in the document header
+#
+# Each detected company gets its own folder with subfolders inside.
 #
 BRAND_FOLDERS = [
     # Company / brand               Keywords to look for
@@ -1106,30 +1105,149 @@ BRAND_FOLDERS = [
     ("Personal (Silva)",            ["silva"]),
 ]
 
+# Common English words to filter out of entity extraction
+_COMMON_WORDS = {
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "as", "is", "was", "are", "were", "be",
+    "been", "have", "has", "had", "do", "does", "did", "will", "would",
+    "shall", "should", "may", "might", "can", "could", "must", "not", "no",
+    "this", "that", "these", "those", "it", "its", "my", "your", "our",
+    "their", "his", "her", "all", "each", "every", "any", "some", "new",
+    "dear", "sincerely", "regards", "thank", "thanks", "please", "hello",
+    "hi", "note", "notes", "untitled", "document", "file", "page", "copy",
+    "draft", "final", "subject", "date", "total", "amount", "balance",
+    "scan", "scanned", "signed", "unsigned", "attached", "enclosed",
+}
+
+# Generic email domains to ignore
+_GENERIC_DOMAINS = {
+    "gmail", "yahoo", "outlook", "hotmail", "aol", "icloud", "protonmail",
+    "mail", "email", "live", "msn", "me", "ymail", "inbox", "zoho",
+    "fastmail", "tutanota", "pm", "hey",
+}
+
+# Pattern: "Company Name LLC/Inc/Corp/etc."
+_ENTITY_SUFFIX_RE = re.compile(
+    r'\b([A-Z][A-Za-z0-9\s&\'\-\.]{1,45}?)\s+'
+    r'(LLC|L\.?L\.?C\.?|Inc\.?|Incorporated|Corp\.?|Corporation|'
+    r'Ltd\.?|Limited|Co\.?|Company|Associates|Group|Partners|'
+    r'LLP|L\.?L\.?P\.?|LP|L\.?P\.?|PC|P\.?C\.?|PLLC|P\.?L\.?L\.?C\.?)\b'
+)
+
+# Pattern: "From: / Issued by: / Billed by: Company Name"
+# Uses [A-Za-z0-9 &'-] (space, not \s) so it stops at newlines
+_SENDER_RE = re.compile(
+    r'(?:from|issued\s+by|billed\s+by|prepared\s+by|sent\s+by|'
+    r"provided\s+by|prepared\s+for|bill\s+from|invoice\s+from)\s*"
+    r":?\s*([A-Z][A-Za-z0-9 &'\-.]{2,45}?)(?:\s*[,;\n]|\s+for\s|\s+regarding|\s*$)",
+    re.IGNORECASE
+)
+
+# Pattern: email domain
+_EMAIL_DOMAIN_RE = re.compile(r'@([a-zA-Z0-9\-]+)\.(com|org|net|io|co|us|biz)')
+
+
+def _clean_entity_name(name: str) -> str:
+    """Clean up an extracted entity name for use as a folder name."""
+    # Strip common leading words that got accidentally captured
+    _leading = (r'^(?:the|a|an|and|or|but|in|on|at|to|for|of|with|by|from|as|'
+                r'is|was|invoice|receipt|bill|statement|prepared|billed|issued|'
+                r'sent|provided|dear|re|subject|your|our|this|that)\s+')
+    name = re.sub(_leading, '', name, flags=re.IGNORECASE)
+    name = re.sub(_leading, '', name, flags=re.IGNORECASE)  # repeat for chains
+    name = re.sub(r'\s+', ' ', name).strip()
+    name = name.strip('.,;:-')
+    # Title case
+    name = name.title()
+    # Fix common capitalizations
+    for fix_from, fix_to in [("Llc", "LLC"), ("Llp", "LLP"), ("Pc", "PC"),
+                              ("'S", "'s"), ("Jpmorgan", "JPMorgan")]:
+        name = name.replace(fix_from, fix_to)
+    return name
+
+
+def _is_valid_entity(name: str) -> bool:
+    """Check if an extracted name is a real entity, not just common words."""
+    if not name or len(name) < 2 or len(name) > 50:
+        return False
+    words = name.lower().split()
+    meaningful = [w for w in words if w not in _COMMON_WORDS and len(w) > 1]
+    return len(meaningful) > 0
+
+
+def _auto_detect_entity(text_content: str) -> Optional[str]:
+    """Auto-detect the primary company/entity a document is FROM.
+
+    Reads the document text and looks for:
+    1. Sender patterns ("From:", "Billed by:", etc.)
+    2. Business entity suffixes (LLC, Inc, Corp, etc.)
+    3. Email domains (@companyname.com)
+
+    Prioritizes the document header (first ~2000 chars) since the
+    issuing company usually appears at the top.
+    """
+    if not text_content or len(text_content) < 20:
+        return None
+
+    header = text_content[:2000]
+
+    # 1. Look for "Company LLC/Inc/Corp" in header (most reliable signal)
+    m = _ENTITY_SUFFIX_RE.search(header)
+    if m:
+        name = _clean_entity_name(m.group(1))
+        if _is_valid_entity(name):
+            return name
+
+    # 2. Look for "From: Company" or "Billed by: Company" in header
+    m = _SENDER_RE.search(header)
+    if m:
+        name = _clean_entity_name(m.group(1))
+        if _is_valid_entity(name):
+            return name
+
+    # 3. Check full text for entity suffixes — take the most common
+    entities: dict[str, int] = {}
+    for m in _ENTITY_SUFFIX_RE.finditer(text_content):
+        name = _clean_entity_name(m.group(1))
+        if _is_valid_entity(name):
+            entities[name] = entities.get(name, 0) + 1
+
+    if entities:
+        return max(entities, key=entities.get)
+
+    # 4. Check email domains (last resort)
+    for m in _EMAIL_DOMAIN_RE.finditer(text_content.lower()):
+        domain = m.group(1)
+        if domain not in _GENERIC_DOMAINS and len(domain) > 2:
+            return domain.replace('-', ' ').title()
+
+    return None
+
 
 def _detect_brand(filename: str, text_content: str) -> Optional[str]:
-    """Classify a file into a brand/company folder.
+    """Classify a file into a company/brand folder.
 
-    Checks both the filename and extracted document text.
-    Multi-word keywords use substring matching.
-    Single-word keywords use word-boundary matching to avoid false positives.
-    Returns the folder name (e.g. "Silva Operations", "Uber") or None.
+    Step 1: Check known brands from BRAND_FOLDERS (guaranteed matches).
+    Step 2: Auto-detect entity from document text (LLC, Inc, sender, email).
+    Returns the folder name or None.
     """
     combined = (filename + " " + text_content).lower()
-    # Normalize separators so "silva_operations" and "silva-operations" match
     normalized = combined.replace("_", " ").replace("-", " ")
 
+    # Step 1: Known brands (priority — always checked first)
     for folder_name, keywords in BRAND_FOLDERS:
         for kw in keywords:
             if " " in kw or "." in kw:
-                # Multi-word or domain: substring match
                 if kw in combined or kw in normalized:
                     return folder_name
             else:
-                # Single word: word-boundary match to avoid false positives
-                # e.g. "aman" won't match inside "management"
                 if re.search(r'\b' + re.escape(kw) + r'\b', normalized):
                     return folder_name
+
+    # Step 2: Auto-detect from document text
+    entity = _auto_detect_entity(text_content)
+    if entity:
+        return entity
 
     return None
 
