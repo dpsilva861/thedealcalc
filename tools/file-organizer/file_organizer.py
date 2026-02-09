@@ -1096,12 +1096,26 @@ def _detect_subcategory(filename: str, extension: str, category: str) -> Optiona
 #
 BRAND_FOLDERS = [
     # Company / brand               Keywords to look for
-    ("Silva Operations",            ["silva operations llc", "silva operations"]),
+    #
+    # ORDER MATTERS — more specific brands must come BEFORE general ones.
+    # e.g. "SpringHill Suites" before "Marriott", "Silva Operations" before "Silva"
+    #
+    # --- Silva ---
+    ("Silva Operations",            ["silva operations llc", "silva operations", "silva ops"]),
+    # --- Airlines ---
     ("Delta Airlines",              ["delta airlines", "delta air lines", "delta skymiles", "delta sky miles"]),
+    # --- Ride share ---
     ("Uber",                        ["uber technologies", "uber eats", "uber trip", "uber receipt", "uber.com", "uber"]),
+    # --- Hotels & Resorts (specific sub-brands BEFORE parent brand) ---
     ("Aman",                        ["aman resorts", "aman hotels", "amanresorts", "aman.com", "aman"]),
     ("Montage",                     ["montage hotels", "montage resorts", "montage international", "montagehotels", "montage"]),
-    # Personal catch-all — checked LAST (matches any "Silva" not caught above)
+    ("SpringHill Suites",           ["springhill suites by marriott", "springhill suites"]),
+    ("Residence Inn",               ["residence inn by marriott", "residence inn"]),
+    ("Courtyard",                   ["courtyard by marriott", "courtyard marriott", "courtyard"]),
+    ("Marriott",                    ["marriott international", "marriott bonvoy", "marriott.com", "marriott"]),
+    # --- Car Rental ---
+    ("Hertz",                       ["hertz corporation", "hertz rental", "hertz.com", "hertz"]),
+    # --- Personal catch-all — checked LAST (matches any "Silva" not caught above) ---
     ("Personal (Silva)",            ["silva"]),
 ]
 
