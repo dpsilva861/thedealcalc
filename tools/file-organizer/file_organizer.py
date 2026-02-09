@@ -800,6 +800,77 @@ def normalize_filename(name, extension, rules=None, filepath=None, category=None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SUBCATEGORY DETECTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Keywords mapped to subfolder names within each major category.
+# Checked against the ORIGINAL filename (case-insensitive).
+DOCUMENT_SUBCATEGORIES = [
+    ("Tax", ["w2", "w-2", "1095", "1099", "k-1", "k1", "tax return", "taxreturn", "tax_return", "irs", "1040", "w4", "w-4", "1098"]),
+    ("Contracts", ["contract", "agreement", "scope of work", "sow", "engagement letter", "msa", "nda", "confidentiality"]),
+    ("Leases", ["lease", "sublease", "tenant", "landlord", "rent roll", "rental", "occupancy"]),
+    ("Financial", ["financial", "financials", "ledger", "aging", "invoice", "receipt", "payment", "budget", "p&l", "profit", "loss", "balance sheet", "income statement", "bank statement", "statement of", "accounts payable", "accounts receivable", "journal entry"]),
+    ("Investment", ["investment", "investor", "k-1", "k1", "capital call", "distribution", "offering memo", "ppm", "subscription"]),
+    ("Insurance", ["insurance", "policy", "certificate of", "coi", "coverage", "claim", "liability"]),
+    ("Legal", ["amendment", "addendum", "resolution", "articles of", "operating agreement", "bylaws", "litigation", "complaint", "settlement", "notice of", "lien", "title report", "escrow"]),
+    ("Correspondence", ["letter", "communication", "memo", "notice", "announcement"]),
+    ("Reports", ["report", "summary", "analysis", "appraisal", "inspection", "assessment", "review", "audit"]),
+    ("Presentations", ["presentation", "pitch", "deck", "proposal"]),
+    ("Spreadsheets", [".xlsx", ".xls", ".csv"]),
+]
+
+IMAGE_SUBCATEGORIES = [
+    ("Screenshots", ["screenshot", "screen shot", "snip", "capture"]),
+    ("Photos", ["photo", "img_", "dsc_", "dscn", "pic_", "camera"]),
+]
+
+ARCHIVE_SUBCATEGORIES = [
+    ("Backups", ["backup", "bak", "archive"]),
+]
+
+
+def _detect_subcategory(filename: str, extension: str, category: str) -> Optional[str]:
+    """Determine a subfolder within the main category based on filename keywords."""
+    name_lower = filename.lower()
+    ext_lower = extension.lower()
+
+    if category == "01_Documents":
+        for subfolder, keywords in DOCUMENT_SUBCATEGORIES:
+            for kw in keywords:
+                if kw.startswith("."):
+                    if ext_lower == kw:
+                        return subfolder
+                elif kw in name_lower:
+                    return subfolder
+        return "General"
+
+    elif category == "02_Images":
+        for subfolder, keywords in IMAGE_SUBCATEGORIES:
+            for kw in keywords:
+                if kw in name_lower:
+                    return subfolder
+        return "Photos"
+
+    elif category == "03_Audio":
+        return "Music"
+
+    elif category == "04_Video":
+        return "Clips"
+
+    elif category == "05_Archives":
+        for subfolder, keywords in ARCHIVE_SUBCATEGORIES:
+            for kw in keywords:
+                if kw in name_lower:
+                    return subfolder
+        return "Downloads"
+
+    elif category == "07_Executables":
+        return "Installers"
+
+    return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # ORGANIZER
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -836,7 +907,10 @@ class OrganizePlan:
             lines.append(f"\n--- Moves ({len(self.moves)}) ---")
             for action in self.moves[:max_lines]:
                 rel_orig = action.original.name
-                rel_dest = action.destination.relative_to(action.destination.parent.parent)
+                try:
+                    rel_dest = action.destination.relative_to(action.destination.parent.parent.parent)
+                except ValueError:
+                    rel_dest = action.destination.relative_to(action.destination.parent.parent)
                 lines.append(f"  {rel_orig}  ->  {rel_dest}")
             if len(self.moves) > max_lines:
                 lines.append(f"  ... and {len(self.moves) - max_lines} more")
@@ -860,7 +934,11 @@ def plan_organization(files, target_root, rename_rules=None, organize_into_folde
         new_name = normalize_filename(name_stem, extension, rename_rules, filepath=entry.path, category=entry.category)
         category = entry.category
         if organize_into_folders:
-            dest_dir = target_root / category
+            subcategory = _detect_subcategory(entry.name, entry.extension, category)
+            if subcategory:
+                dest_dir = target_root / category / subcategory
+            else:
+                dest_dir = target_root / category
         else:
             dest_dir = entry.parent
         if dest_dir not in used_names:
