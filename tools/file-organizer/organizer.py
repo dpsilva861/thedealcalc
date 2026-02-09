@@ -96,7 +96,10 @@ def plan_organization(
             extension = entry.extension
 
         # Step 3: Normalize the filename
-        new_name = normalize_filename(name_stem, extension, rename_rules)
+        new_name = normalize_filename(
+            name_stem, extension, rename_rules,
+            filepath=entry.path, category=entry.category,
+        )
 
         # Step 4: Use the content-detected category if available
         category = entry.category  # Already overridden by deep_scan
@@ -147,7 +150,7 @@ def plan_organization(
 
 
 def _deduplicate(name: str, existing: set[str]) -> str:
-    """Append a numeric suffix if name already exists in the set."""
+    """Append a zero-padded numeric suffix if name already exists."""
     if name.lower() not in existing:
         return name
 
@@ -155,7 +158,7 @@ def _deduplicate(name: str, existing: set[str]) -> str:
     ext = Path(name).suffix
     counter = 1
     while True:
-        candidate = f"{stem}-{counter}{ext}"
+        candidate = f"{stem}_{counter:02d}{ext}"
         if candidate.lower() not in existing:
             return candidate
         counter += 1

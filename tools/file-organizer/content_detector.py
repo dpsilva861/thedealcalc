@@ -31,57 +31,57 @@ class FileSignature:
 # Ordered by specificity — more specific signatures first
 SIGNATURES: list[FileSignature] = [
     # Images
-    FileSignature(b"\x89PNG\r\n\x1a\n", 0, "image/png", "Images", ".png", "PNG image"),
-    FileSignature(b"\xff\xd8\xff\xe0", 0, "image/jpeg", "Images", ".jpg", "JPEG image (JFIF)"),
-    FileSignature(b"\xff\xd8\xff\xe1", 0, "image/jpeg", "Images", ".jpg", "JPEG image (EXIF)"),
-    FileSignature(b"\xff\xd8\xff\xdb", 0, "image/jpeg", "Images", ".jpg", "JPEG image"),
-    FileSignature(b"\xff\xd8\xff\xee", 0, "image/jpeg", "Images", ".jpg", "JPEG image (Adobe)"),
-    FileSignature(b"\xff\xd8\xff", 0, "image/jpeg", "Images", ".jpg", "JPEG image"),
-    FileSignature(b"GIF89a", 0, "image/gif", "Images", ".gif", "GIF image (89a)"),
-    FileSignature(b"GIF87a", 0, "image/gif", "Images", ".gif", "GIF image (87a)"),
-    FileSignature(b"RIFF", 0, "image/webp", "Images", ".webp", "WebP image"),  # Also AVI/WAV — refined later
-    FileSignature(b"BM", 0, "image/bmp", "Images", ".bmp", "BMP image"),
-    FileSignature(b"\x00\x00\x01\x00", 0, "image/x-icon", "Images", ".ico", "ICO icon"),
-    FileSignature(b"II\x2a\x00", 0, "image/tiff", "Images", ".tiff", "TIFF image (little-endian)"),
-    FileSignature(b"MM\x00\x2a", 0, "image/tiff", "Images", ".tiff", "TIFF image (big-endian)"),
+    FileSignature(b"\x89PNG\r\n\x1a\n", 0, "image/png", "02_Images", ".png", "PNG image"),
+    FileSignature(b"\xff\xd8\xff\xe0", 0, "image/jpeg", "02_Images", ".jpg", "JPEG image (JFIF)"),
+    FileSignature(b"\xff\xd8\xff\xe1", 0, "image/jpeg", "02_Images", ".jpg", "JPEG image (EXIF)"),
+    FileSignature(b"\xff\xd8\xff\xdb", 0, "image/jpeg", "02_Images", ".jpg", "JPEG image"),
+    FileSignature(b"\xff\xd8\xff\xee", 0, "image/jpeg", "02_Images", ".jpg", "JPEG image (Adobe)"),
+    FileSignature(b"\xff\xd8\xff", 0, "image/jpeg", "02_Images", ".jpg", "JPEG image"),
+    FileSignature(b"GIF89a", 0, "image/gif", "02_Images", ".gif", "GIF image (89a)"),
+    FileSignature(b"GIF87a", 0, "image/gif", "02_Images", ".gif", "GIF image (87a)"),
+    FileSignature(b"RIFF", 0, "image/webp", "02_Images", ".webp", "WebP image"),  # Also AVI/WAV — refined later
+    FileSignature(b"BM", 0, "image/bmp", "02_Images", ".bmp", "BMP image"),
+    FileSignature(b"\x00\x00\x01\x00", 0, "image/x-icon", "02_Images", ".ico", "ICO icon"),
+    FileSignature(b"II\x2a\x00", 0, "image/tiff", "02_Images", ".tiff", "TIFF image (little-endian)"),
+    FileSignature(b"MM\x00\x2a", 0, "image/tiff", "02_Images", ".tiff", "TIFF image (big-endian)"),
 
     # Documents
-    FileSignature(b"%PDF", 0, "application/pdf", "Documents", ".pdf", "PDF document"),
-    FileSignature(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1", 0, "application/msoffice", "Documents", ".doc", "Microsoft Office (legacy)"),
+    FileSignature(b"%PDF", 0, "application/pdf", "01_Documents", ".pdf", "PDF document"),
+    FileSignature(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1", 0, "application/msoffice", "01_Documents", ".doc", "Microsoft Office (legacy)"),
 
     # Audio
-    FileSignature(b"ID3", 0, "audio/mpeg", "Audio", ".mp3", "MP3 audio (ID3)"),
-    FileSignature(b"\xff\xfb", 0, "audio/mpeg", "Audio", ".mp3", "MP3 audio"),
-    FileSignature(b"\xff\xf3", 0, "audio/mpeg", "Audio", ".mp3", "MP3 audio"),
-    FileSignature(b"\xff\xf2", 0, "audio/mpeg", "Audio", ".mp3", "MP3 audio"),
-    FileSignature(b"fLaC", 0, "audio/flac", "Audio", ".flac", "FLAC audio"),
-    FileSignature(b"OggS", 0, "audio/ogg", "Audio", ".ogg", "OGG audio"),
+    FileSignature(b"ID3", 0, "audio/mpeg", "03_Audio", ".mp3", "MP3 audio (ID3)"),
+    FileSignature(b"\xff\xfb", 0, "audio/mpeg", "03_Audio", ".mp3", "MP3 audio"),
+    FileSignature(b"\xff\xf3", 0, "audio/mpeg", "03_Audio", ".mp3", "MP3 audio"),
+    FileSignature(b"\xff\xf2", 0, "audio/mpeg", "03_Audio", ".mp3", "MP3 audio"),
+    FileSignature(b"fLaC", 0, "audio/flac", "03_Audio", ".flac", "FLAC audio"),
+    FileSignature(b"OggS", 0, "audio/ogg", "03_Audio", ".ogg", "OGG audio"),
 
     # Video
-    FileSignature(b"\x1a\x45\xdf\xa3", 0, "video/webm", "Videos", ".webm", "WebM/MKV video"),
-    FileSignature(b"\x00\x00\x00\x1c\x66\x74\x79\x70", 0, "video/mp4", "Videos", ".mp4", "MP4 video"),
-    FileSignature(b"\x00\x00\x00\x20\x66\x74\x79\x70", 0, "video/mp4", "Videos", ".mp4", "MP4 video"),
-    FileSignature(b"\x00\x00\x00\x18\x66\x74\x79\x70", 0, "video/mp4", "Videos", ".mp4", "MP4 video"),
+    FileSignature(b"\x1a\x45\xdf\xa3", 0, "video/webm", "04_Video", ".webm", "WebM/MKV video"),
+    FileSignature(b"\x00\x00\x00\x1c\x66\x74\x79\x70", 0, "video/mp4", "04_Video", ".mp4", "MP4 video"),
+    FileSignature(b"\x00\x00\x00\x20\x66\x74\x79\x70", 0, "video/mp4", "04_Video", ".mp4", "MP4 video"),
+    FileSignature(b"\x00\x00\x00\x18\x66\x74\x79\x70", 0, "video/mp4", "04_Video", ".mp4", "MP4 video"),
 
     # Archives
-    FileSignature(b"PK\x03\x04", 0, "application/zip", "Archives", ".zip", "ZIP archive"),
-    FileSignature(b"Rar!\x1a\x07", 0, "application/x-rar", "Archives", ".rar", "RAR archive"),
-    FileSignature(b"\x37\x7a\xbc\xaf\x27\x1c", 0, "application/x-7z", "Archives", ".7z", "7-Zip archive"),
-    FileSignature(b"\x1f\x8b", 0, "application/gzip", "Archives", ".gz", "Gzip archive"),
-    FileSignature(b"\x42\x5a\x68", 0, "application/x-bzip2", "Archives", ".bz2", "Bzip2 archive"),
-    FileSignature(b"\xfd\x37\x7a\x58\x5a\x00", 0, "application/x-xz", "Archives", ".xz", "XZ archive"),
+    FileSignature(b"PK\x03\x04", 0, "application/zip", "05_Archives", ".zip", "ZIP archive"),
+    FileSignature(b"Rar!\x1a\x07", 0, "application/x-rar", "05_Archives", ".rar", "RAR archive"),
+    FileSignature(b"\x37\x7a\xbc\xaf\x27\x1c", 0, "application/x-7z", "05_Archives", ".7z", "7-Zip archive"),
+    FileSignature(b"\x1f\x8b", 0, "application/gzip", "05_Archives", ".gz", "Gzip archive"),
+    FileSignature(b"\x42\x5a\x68", 0, "application/x-bzip2", "05_Archives", ".bz2", "Bzip2 archive"),
+    FileSignature(b"\xfd\x37\x7a\x58\x5a\x00", 0, "application/x-xz", "05_Archives", ".xz", "XZ archive"),
 
     # Executables
-    FileSignature(b"MZ", 0, "application/x-executable", "Executables", ".exe", "Windows executable"),
+    FileSignature(b"MZ", 0, "application/x-executable", "07_Executables", ".exe", "Windows executable"),
 
     # Databases
-    FileSignature(b"SQLite format 3\x00", 0, "application/x-sqlite3", "Databases", ".sqlite", "SQLite database"),
+    FileSignature(b"SQLite format 3\x00", 0, "application/x-sqlite3", "10_Databases", ".sqlite", "SQLite database"),
 
     # Fonts
-    FileSignature(b"\x00\x01\x00\x00", 0, "font/ttf", "Fonts", ".ttf", "TrueType font"),
-    FileSignature(b"OTTO", 0, "font/otf", "Fonts", ".otf", "OpenType font"),
-    FileSignature(b"wOFF", 0, "font/woff", "Fonts", ".woff", "WOFF font"),
-    FileSignature(b"wOF2", 0, "font/woff2", "Fonts", ".woff2", "WOFF2 font"),
+    FileSignature(b"\x00\x01\x00\x00", 0, "font/ttf", "08_Fonts", ".ttf", "TrueType font"),
+    FileSignature(b"OTTO", 0, "font/otf", "08_Fonts", ".otf", "OpenType font"),
+    FileSignature(b"wOFF", 0, "font/woff", "08_Fonts", ".woff", "WOFF font"),
+    FileSignature(b"wOF2", 0, "font/woff2", "08_Fonts", ".woff2", "WOFF2 font"),
 ]
 
 
@@ -89,7 +89,7 @@ SIGNATURES: list[FileSignature] = [
 class ContentInfo:
     """Result of content-based file analysis."""
     detected_type: Optional[str] = None        # e.g. "image/jpeg"
-    detected_category: Optional[str] = None    # e.g. "Images"
+    detected_category: Optional[str] = None    # e.g. "02_Images"
     detected_extension: Optional[str] = None   # e.g. ".jpg"
     description: Optional[str] = None          # e.g. "JPEG image (EXIF)"
     extension_mismatch: bool = False           # True if extension doesn't match content
@@ -122,20 +122,20 @@ def detect_file_type(filepath: Path) -> Optional[FileSignature]:
             if sig.magic == b"RIFF" and len(header) >= 12:
                 sub_type = header[8:12]
                 if sub_type == b"WAVE":
-                    return FileSignature(b"RIFF", 0, "audio/wav", "Audio", ".wav", "WAV audio")
+                    return FileSignature(b"RIFF", 0, "audio/wav", "03_Audio", ".wav", "WAV audio")
                 elif sub_type == b"AVI ":
-                    return FileSignature(b"RIFF", 0, "video/avi", "Videos", ".avi", "AVI video")
+                    return FileSignature(b"RIFF", 0, "video/avi", "04_Video", ".avi", "AVI video")
                 elif sub_type == b"WEBP":
-                    return FileSignature(b"RIFF", 0, "image/webp", "Images", ".webp", "WebP image")
+                    return FileSignature(b"RIFF", 0, "image/webp", "02_Images", ".webp", "WebP image")
                 return None  # Unknown RIFF
 
             # Refine ftyp-based formats (MP4 vs M4A vs MOV)
             if b"ftyp" in sig.magic or (len(header) >= 12 and header[4:8] == b"ftyp"):
                 ftyp_brand = header[8:12] if len(header) >= 12 else b""
                 if ftyp_brand in (b"M4A ", b"M4A\x00"):
-                    return FileSignature(sig.magic, 0, "audio/mp4", "Audio", ".m4a", "M4A audio")
+                    return FileSignature(sig.magic, 0, "audio/mp4", "03_Audio", ".m4a", "M4A audio")
                 elif ftyp_brand in (b"qt  ",):
-                    return FileSignature(sig.magic, 0, "video/quicktime", "Videos", ".mov", "QuickTime video")
+                    return FileSignature(sig.magic, 0, "video/quicktime", "04_Video", ".mov", "QuickTime video")
 
             return sig
 
@@ -144,8 +144,8 @@ def detect_file_type(filepath: Path) -> Optional[FileSignature]:
         if header[offset:offset + 4] == b"ftyp":
             brand = header[offset + 4:offset + 8] if len(header) >= offset + 8 else b""
             if brand in (b"M4A ", b"M4A\x00"):
-                return FileSignature(b"ftyp", offset, "audio/mp4", "Audio", ".m4a", "M4A audio")
-            return FileSignature(b"ftyp", offset, "video/mp4", "Videos", ".mp4", "MP4 video")
+                return FileSignature(b"ftyp", offset, "audio/mp4", "03_Audio", ".m4a", "M4A audio")
+            return FileSignature(b"ftyp", offset, "video/mp4", "04_Video", ".mp4", "MP4 video")
 
     return None
 
@@ -158,20 +158,20 @@ def _is_zip_based_office(filepath: Path) -> Optional[FileSignature]:
             if "[Content_Types].xml" in names:
                 ct = zf.read("[Content_Types].xml").decode("utf-8", errors="ignore")
                 if "wordprocessingml" in ct:
-                    return FileSignature(b"PK", 0, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Documents", ".docx", "Word document")
+                    return FileSignature(b"PK", 0, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "01_Documents", ".docx", "Word document")
                 elif "spreadsheetml" in ct:
-                    return FileSignature(b"PK", 0, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Documents", ".xlsx", "Excel spreadsheet")
+                    return FileSignature(b"PK", 0, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "01_Documents", ".xlsx", "Excel spreadsheet")
                 elif "presentationml" in ct:
-                    return FileSignature(b"PK", 0, "application/vnd.openxmlformats-officedocument.presentationml.presentation", "Documents", ".pptx", "PowerPoint presentation")
+                    return FileSignature(b"PK", 0, "application/vnd.openxmlformats-officedocument.presentationml.presentation", "01_Documents", ".pptx", "PowerPoint presentation")
             # OpenDocument formats
             if "mimetype" in names:
                 mimetype = zf.read("mimetype").decode("utf-8", errors="ignore").strip()
                 if "opendocument.text" in mimetype:
-                    return FileSignature(b"PK", 0, mimetype, "Documents", ".odt", "OpenDocument text")
+                    return FileSignature(b"PK", 0, mimetype, "01_Documents", ".odt", "OpenDocument text")
                 elif "opendocument.spreadsheet" in mimetype:
-                    return FileSignature(b"PK", 0, mimetype, "Documents", ".ods", "OpenDocument spreadsheet")
+                    return FileSignature(b"PK", 0, mimetype, "01_Documents", ".ods", "OpenDocument spreadsheet")
                 elif "opendocument.presentation" in mimetype:
-                    return FileSignature(b"PK", 0, mimetype, "Documents", ".odp", "OpenDocument presentation")
+                    return FileSignature(b"PK", 0, mimetype, "01_Documents", ".odp", "OpenDocument presentation")
     except (zipfile.BadZipFile, OSError):
         pass
     return None
@@ -581,7 +581,7 @@ def _build_suggested_name(info: ContentInfo, filepath: Path) -> Optional[str]:
     parts = []
 
     # For audio: artist - title
-    if info.detected_category == "Audio" or filepath.suffix.lower() in (".mp3", ".flac", ".m4a", ".ogg", ".wav"):
+    if info.detected_category == "03_Audio" or filepath.suffix.lower() in (".mp3", ".flac", ".m4a", ".ogg", ".wav"):
         artist = meta.get("artist", "")
         title = meta.get("title", "")
         album = meta.get("album", "")
@@ -597,7 +597,7 @@ def _build_suggested_name(info: ContentInfo, filepath: Path) -> Optional[str]:
             parts = [title]
 
     # For images with EXIF date: date-description or date-camera
-    elif info.detected_category == "Images" or filepath.suffix.lower() in (".jpg", ".jpeg", ".png", ".tiff"):
+    elif info.detected_category == "02_Images" or filepath.suffix.lower() in (".jpg", ".jpeg", ".png", ".tiff"):
         date = meta.get("date_taken", "")
         desc = meta.get("description", "")
 
@@ -616,7 +616,7 @@ def _build_suggested_name(info: ContentInfo, filepath: Path) -> Optional[str]:
             parts = [desc]
 
     # For documents: use title
-    elif info.detected_category == "Documents" or filepath.suffix.lower() in (".pdf", ".docx", ".xlsx", ".pptx"):
+    elif info.detected_category == "01_Documents" or filepath.suffix.lower() in (".pdf", ".docx", ".xlsx", ".pptx"):
         title = meta.get("title", "")
         if title and len(title) > 3:  # Ignore very short/meaningless titles
             parts = [title]

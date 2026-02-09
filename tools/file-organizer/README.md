@@ -149,42 +149,77 @@ This creates `organizer-config.json` in the current directory. Edit it to custom
 
 ## Naming Convention
 
-The default naming convention transforms filenames like this:
+Based on institutional best practices from Stanford Libraries, Harvard, NARA (National Archives), the Smithsonian, Princeton, and CESSDA.
+
+### Standard format
+
+```
+descriptor_YYYYMMDD_v01.ext
+```
+
+- **Underscores** (`_`) separate major elements (subject, date, version)
+- **Hyphens** (`-`) separate words within an element
+- **ISO 8601 dates** (`YYYYMMDD`) — files sort chronologically
+- **Versions** with leading zeros (`v01`, `v02`)
+- **All lowercase**
+- **Max 50 characters** (Harvard recommendation)
+
+### Type-specific ordering
+
+| Type | Format | Example |
+|------|--------|---------|
+| Documents | `subject_YYYYMMDD_v01.ext` | `budget-proposal_20240315_v02.pdf` |
+| Images | `YYYYMMDD_subject.ext` | `20240315_birthday-party.jpg` |
+| Audio | `YYYYMMDD_subject.ext` | `20240315_podcast-episode-42.mp3` |
+| Video | `YYYYMMDD_subject.ext` | `20240315_wedding-ceremony.mp4` |
+
+### Transformation examples
 
 | Before | After |
 |--------|-------|
-| `My Document (Final).pdf` | `my-document-final.pdf` |
-| `IMG_20240115_photo.JPG` | `img-20240115-photo.jpg` |
-| `Report Q4  2024.xlsx` | `report-q4-2024.xlsx` |
-| `file___name---here.txt` | `file-name-here.txt` |
-| `café résumé.pdf` | `cafe-resume.pdf` |
-| `CON.txt` | `con_file.txt` (Windows reserved) |
+| `My Document (Final).pdf` | `my-document-final_20240315.pdf` |
+| `IMG_20240115_photo.JPG` | `20240115_photo.jpg` |
+| `Report Q4  2024 v3.xlsx` | `report-q4-2024_20240315_v03.xlsx` |
+| `Meeting Notes 01-15-2024.txt` | `meeting-notes_20240115.txt` |
+| `file___name---here.txt` | `file-name-here_20240315.txt` |
+| `café résumé.pdf` | `cafe-resume_20240315.pdf` |
+| `CON.txt` | `con_file_20240315.txt` |
+
+### What the renamer does automatically
+
+- Extracts dates from filenames (`01-15-2024` -> `20240115`) and reformats to ISO 8601
+- Extracts version numbers (`Version 3` -> `v03`) and normalizes with leading zeros
+- Strips meaningless camera prefixes (`IMG_`, `DSC_`, `DSCN_`)
+- Adds file modification date when no date is in the filename
+- With `--deep-scan`: renames from metadata (PDF title, MP3 artist/title, EXIF date)
 
 ## Directory Structure After Organizing
 
+Folders use numbered prefixes (NARA/Smithsonian standard) so they always sort in a logical order:
+
 ```
 Downloads/
-├── Archives/
-│   ├── project-backup.zip
-│   └── photos-2024.7z
-├── Audio/
-│   ├── podcast-episode-42.mp3
-│   └── meeting-recording.m4a
-├── Code/
-│   ├── script.py
-│   └── config.json
-├── Documents/
-│   ├── quarterly-report.pdf
-│   ├── meeting-notes.docx
-│   └── budget.xlsx
-├── Images/
-│   ├── profile-photo.jpg
-│   └── screenshot-2024-01-15.png
-├── Videos/
-│   ├── tutorial.mp4
-│   └── presentation-recording.mov
+├── 01_Documents/
+│   ├── quarterly-report_20240315.pdf
+│   ├── meeting-notes_20240210.docx
+│   └── budget-proposal_20240301_v02.xlsx
+├── 02_Images/
+│   ├── 20240315_profile-photo.jpg
+│   └── 20240115_screenshot.png
+├── 03_Audio/
+│   ├── 20240315_podcast-episode-42.mp3
+│   └── 20240210_meeting-recording.m4a
+├── 04_Video/
+│   ├── 20240315_tutorial.mp4
+│   └── 20240301_presentation.mov
+├── 05_Archives/
+│   ├── project-backup_20240315.zip
+│   └── photos-2024_20240301.7z
+├── 06_Code/
+│   ├── script_20240315.py
+│   └── config_20240315.json
 └── Other/
-    └── random-file.dat
+    └── random-file_20240315.dat
 ```
 
 ## Automatic Organization on Login
