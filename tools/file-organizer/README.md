@@ -21,12 +21,12 @@ A Python-based CLI tool for Windows that scans directories, renames files to con
 ### 1. Scan a directory to see what's there
 
 ```cmd
-python agent.py scan C:\Users\YourName\Downloads
+python agent.py scan C:\Users\dpsil\Downloads
 ```
 
 Output:
 ```
-Scanned: C:\Users\YourName\Downloads
+Scanned: C:\Users\dpsil\Downloads
 Total files: 247
 Total size: 3.2 GB
 Skipped: 2
@@ -42,7 +42,7 @@ Errors: 0
 ### 2. Preview what the organizer would do (dry run)
 
 ```cmd
-python agent.py organize C:\Users\YourName\Downloads --dry-run
+python agent.py organize C:\Users\dpsil\Downloads --dry-run
 ```
 
 This shows all planned renames and moves without touching any files.
@@ -50,7 +50,7 @@ This shows all planned renames and moves without touching any files.
 ### 3. Organize the directory
 
 ```cmd
-python agent.py organize C:\Users\YourName\Downloads
+python agent.py organize C:\Users\dpsil\Downloads
 ```
 
 The agent will:
@@ -64,7 +64,7 @@ The agent will:
 ### 4. Undo if needed
 
 ```cmd
-python agent.py undo C:\Users\YourName\Downloads
+python agent.py undo C:\Users\dpsil\Downloads
 ```
 
 Reverses the most recent operation, putting all files back exactly where they were.
@@ -96,10 +96,10 @@ For convenience, batch and PowerShell launchers are included:
 
 ```cmd
 :: CMD
-organize.bat scan C:\Users\YourName\Desktop
+organize.bat scan C:\Users\dpsil\Desktop
 
 :: PowerShell
-.\organize.ps1 organize C:\Users\YourName\Desktop --dry-run
+.\organize.ps1 organize C:\Users\dpsil\Desktop --dry-run
 ```
 
 ## Configuration
@@ -226,8 +226,8 @@ Add `watch_directories` to your `organizer-config.json`:
 ```json
 {
   "watch_directories": [
-    "C:\\Users\\YourName\\Downloads",
-    "C:\\Users\\YourName\\Desktop"
+    "C:\\Users\\dpsil\\Downloads",
+    "C:\\Users\\dpsil\\Desktop"
   ]
 }
 ```
@@ -246,7 +246,7 @@ python autorun.py --config organizer-config.json --watch --interval 30
 - Each directory is scanned, renamed, and organized automatically
 - All changes are logged (check `autorun.log` and `.file-organizer-logs/`)
 - A Windows toast notification pops up when files are organized
-- You can undo any run: `python agent.py undo C:\Users\YourName\Downloads`
+- You can undo any run: `python agent.py undo C:\Users\dpsil\Downloads`
 
 ### Reviewing autorun history
 
@@ -255,7 +255,7 @@ python autorun.py --config organizer-config.json --watch --interval 30
 type autorun.log
 
 :: List change logs for a specific directory
-python agent.py logs C:\Users\YourName\Downloads
+python agent.py logs C:\Users\dpsil\Downloads
 ```
 
 ## Safety

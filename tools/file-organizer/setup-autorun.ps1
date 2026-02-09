@@ -80,9 +80,9 @@ if (-not $pythonCmd) {
 Write-Host ""
 Write-Host "Which directories should be auto-organized?" -ForegroundColor Yellow
 Write-Host "Common choices:"
-Write-Host "  1. Downloads    ($env:USERPROFILE\Downloads)"
-Write-Host "  2. Desktop      ($env:USERPROFILE\Desktop)"
-Write-Host "  3. Documents    ($env:USERPROFILE\Documents)"
+Write-Host "  1. Downloads    (C:\Users\dpsil\Downloads)"
+Write-Host "  2. Desktop      (C:\Users\dpsil\Desktop)"
+Write-Host "  3. Documents    (C:\Users\dpsil\Documents)"
 Write-Host "  4. Custom path"
 Write-Host ""
 Write-Host "Enter numbers separated by commas, or type custom paths."

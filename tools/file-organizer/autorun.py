@@ -157,7 +157,7 @@ def run_once(config: dict) -> list[dict]:
     if not directories:
         log.warning("No watch_directories configured. Nothing to do.")
         log.warning("Add watch_directories to your organizer-config.json, e.g.:")
-        log.warning('  "watch_directories": ["C:\\\\Users\\\\YourName\\\\Downloads", "C:\\\\Users\\\\YourName\\\\Desktop"]')
+        log.warning('  "watch_directories": ["C:\\\\Users\\\\dpsil\\\\Downloads", "C:\\\\Users\\\\dpsil\\\\Desktop"]')
         return []
 
     results = []
