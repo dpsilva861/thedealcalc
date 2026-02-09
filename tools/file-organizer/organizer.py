@@ -81,16 +81,33 @@ def plan_organization(
     used_names: dict[Path, set[str]] = {}
 
     for entry in files:
-        # Step 1: Compute the normalized filename
-        new_name = normalize_filename(entry.stem, entry.extension, rename_rules)
+        # Step 1: Determine the best name stem
+        # If content scanning found metadata, use the smart suggested name
+        if entry.suggested_name:
+            name_stem = entry.suggested_name
+        else:
+            name_stem = entry.stem
 
-        # Step 2: Determine destination directory
+        # Step 2: Determine the correct extension
+        # If content scanning found a mismatch, fix the extension
+        if entry.extension_mismatch and entry.real_extension:
+            extension = entry.real_extension
+        else:
+            extension = entry.extension
+
+        # Step 3: Normalize the filename
+        new_name = normalize_filename(name_stem, extension, rename_rules)
+
+        # Step 4: Use the content-detected category if available
+        category = entry.category  # Already overridden by deep_scan
+
+        # Step 5: Determine destination directory
         if organize_into_folders:
-            dest_dir = target_root / entry.category
+            dest_dir = target_root / category
         else:
             dest_dir = entry.parent
 
-        # Step 3: Handle name collisions in the destination
+        # Step 6: Handle name collisions in the destination
         if dest_dir not in used_names:
             used_names[dest_dir] = set()
 
@@ -99,12 +116,22 @@ def plan_organization(
 
         dest_path = dest_dir / final_name
 
+        # Build reason string
+        reasons = []
+        if entry.suggested_name:
+            reasons.append("renamed from metadata")
+        if entry.extension_mismatch and entry.real_extension:
+            reasons.append(f"extension fixed: {entry.extension} -> {entry.real_extension}")
+        if not reasons:
+            reasons.append("naming convention normalization")
+        reason = ", ".join(reasons)
+
         # Record rename if the name changed (and file stays in place)
         if final_name != entry.name and not organize_into_folders:
             plan.renames.append(RenameAction(
                 original=entry.path,
                 new_path=dest_path,
-                reason="naming convention normalization",
+                reason=reason,
             ))
 
         # Record move if the file is going to a different directory
@@ -113,7 +140,7 @@ def plan_organization(
                 plan.moves.append(MoveAction(
                     original=entry.path,
                     destination=dest_path,
-                    category=entry.category,
+                    category=category,
                 ))
 
     return plan

@@ -1,5 +1,6 @@
 """
-File scanner module — walks directories and categorizes files by extension.
+File scanner module — walks directories and categorizes files by extension
+and by reading file contents (magic bytes + metadata extraction).
 """
 
 import os
@@ -8,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from config import DEFAULT_CATEGORIES, SKIP_DIRECTORIES, SKIP_FILES
+from content_detector import analyze_file, ContentInfo
 
 
 @dataclass
@@ -20,11 +22,18 @@ class FileEntry:
     size: int
     category: str
     parent: Path
+    # Content-aware fields
+    content_info: Optional[ContentInfo] = None  # Full content analysis
+    real_category: Optional[str] = None         # Category from content detection
+    real_extension: Optional[str] = None        # Correct extension from content
+    extension_mismatch: bool = False            # Extension doesn't match content
+    suggested_name: Optional[str] = None        # Smart name from metadata
 
     @classmethod
-    def from_path(cls, filepath: Path, category: str) -> "FileEntry":
+    def from_path(cls, filepath: Path, category: str,
+                  deep_scan: bool = False) -> "FileEntry":
         stat = filepath.stat()
-        return cls(
+        entry = cls(
             path=filepath,
             name=filepath.name,
             stem=filepath.stem,
@@ -33,6 +42,19 @@ class FileEntry:
             category=category,
             parent=filepath.parent,
         )
+
+        if deep_scan:
+            entry.content_info = analyze_file(filepath)
+            ci = entry.content_info
+            if ci.detected_category:
+                entry.real_category = ci.detected_category
+                entry.category = ci.detected_category  # Override extension-based category
+            if ci.detected_extension:
+                entry.real_extension = ci.detected_extension
+            entry.extension_mismatch = ci.extension_mismatch
+            entry.suggested_name = ci.suggested_name
+
+        return entry
 
 
 @dataclass
@@ -51,6 +73,14 @@ class ScanResult:
             groups.setdefault(f.category, []).append(f)
         return groups
 
+    @property
+    def mismatched_files(self) -> list[FileEntry]:
+        return [f for f in self.files if f.extension_mismatch]
+
+    @property
+    def files_with_metadata(self) -> list[FileEntry]:
+        return [f for f in self.files if f.suggested_name]
+
     def summary(self) -> str:
         lines = [f"Scanned: {self.root}"]
         lines.append(f"Total files: {len(self.files)}")
@@ -61,6 +91,26 @@ class ScanResult:
         for cat, entries in sorted(self.by_category.items()):
             cat_size = sum(e.size for e in entries)
             lines.append(f"  {cat}: {len(entries)} files ({_fmt_size(cat_size)})")
+
+        mismatched = self.mismatched_files
+        if mismatched:
+            lines.append("")
+            lines.append(f"Extension mismatches found: {len(mismatched)}")
+            for f in mismatched[:10]:
+                lines.append(f"  {f.name}: extension is {f.extension}, "
+                             f"content is actually {f.real_extension} ({f.content_info.description})")
+            if len(mismatched) > 10:
+                lines.append(f"  ... and {len(mismatched) - 10} more")
+
+        with_meta = self.files_with_metadata
+        if with_meta:
+            lines.append("")
+            lines.append(f"Files with extractable metadata: {len(with_meta)}")
+            for f in with_meta[:10]:
+                lines.append(f"  {f.name} -> suggested: {f.suggested_name}")
+            if len(with_meta) > 10:
+                lines.append(f"  ... and {len(with_meta) - 10} more")
+
         return "\n".join(lines)
 
 
@@ -90,6 +140,7 @@ def scan_directory(
     recursive: bool = True,
     skip_dirs: Optional[set[str]] = None,
     skip_files: Optional[set[str]] = None,
+    deep_scan: bool = False,
 ) -> ScanResult:
     """
     Walk a directory tree and categorize every file.
@@ -100,6 +151,8 @@ def scan_directory(
         recursive: Whether to descend into subdirectories.
         skip_dirs: Directory names to skip entirely.
         skip_files: Filenames to skip.
+        deep_scan: If True, read file contents for type detection and
+                   metadata extraction. Slower but much more accurate.
 
     Returns:
         ScanResult with all discovered files.
@@ -135,7 +188,8 @@ def scan_directory(
             try:
                 ext = filepath.suffix.lower()
                 category = ext_map.get(ext, "Other")
-                entry = FileEntry.from_path(filepath, category)
+                entry = FileEntry.from_path(filepath, category,
+                                            deep_scan=deep_scan)
                 result.files.append(entry)
                 result.total_size += entry.size
             except PermissionError:

@@ -53,8 +53,12 @@ def cmd_scan(args: argparse.Namespace) -> None:
     """Scan a directory and print a summary of found files."""
     target = Path(args.directory).resolve()
     config = load_config(Path(args.config) if args.config else None)
+    deep = args.deep_scan
 
-    print(f"Scanning: {target}")
+    if deep:
+        print(f"Deep scanning: {target} (reading file contents...)")
+    else:
+        print(f"Scanning: {target}")
     print()
 
     result = scan_directory(
@@ -63,6 +67,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         recursive=config["recursive"] if not args.no_recurse else False,
         skip_dirs=set(config["skip_directories"]),
         skip_files=set(config["skip_files"]),
+        deep_scan=deep,
     )
 
     print(result.summary())
@@ -84,13 +89,18 @@ def cmd_organize(args: argparse.Namespace) -> None:
     if "organize_into_folders" in config and not args.rename_only:
         organize_into_folders = config["organize_into_folders"]
 
-    print(f"Scanning: {target}")
+    deep = args.deep_scan
+    if deep:
+        print(f"Deep scanning: {target} (reading file contents...)")
+    else:
+        print(f"Scanning: {target}")
     scan_result = scan_directory(
         root=target,
         categories=config["categories"],
         recursive=config["recursive"] if not args.no_recurse else False,
         skip_dirs=set(config["skip_directories"]),
         skip_files=set(config["skip_files"]),
+        deep_scan=deep,
     )
 
     print(f"Found {len(scan_result.files)} files across {len(scan_result.by_category)} categories")
@@ -254,11 +264,13 @@ def main() -> None:
     p_scan = subparsers.add_parser("scan", help="Scan and summarize files in a directory")
     p_scan.add_argument("directory", help="Directory to scan")
     p_scan.add_argument("--no-recurse", action="store_true", help="Don't descend into subdirectories")
+    p_scan.add_argument("--deep-scan", "-d", action="store_true", help="Read file contents to detect real type and extract metadata")
 
     # organize
     p_org = subparsers.add_parser("organize", help="Rename and organize files")
     p_org.add_argument("directory", help="Directory to organize")
     p_org.add_argument("--dry-run", "-n", action="store_true", help="Preview changes without modifying files")
+    p_org.add_argument("--deep-scan", "-d", action="store_true", help="Read file contents to detect real type, extract metadata, and fix wrong extensions")
     p_org.add_argument("--rename-only", action="store_true", help="Only rename files, don't move into folders")
     p_org.add_argument("--no-recurse", action="store_true", help="Don't descend into subdirectories")
     p_org.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")

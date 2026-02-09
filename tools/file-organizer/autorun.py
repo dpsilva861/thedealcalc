@@ -100,12 +100,14 @@ def organize_directory(target: Path, config: dict) -> dict:
         log.warning(f"Skipping (not a directory): {target}")
         return {"directory": str(target), "status": "skipped", "reason": "not a directory"}
 
+    deep = config.get("deep_scan", True)
     scan_result = scan_directory(
         root=target,
         categories=config["categories"],
         recursive=config.get("recursive", True),
         skip_dirs=set(config.get("skip_directories", [])),
         skip_files=set(config.get("skip_files", [])),
+        deep_scan=deep,
     )
 
     if not scan_result.files:
