@@ -187,6 +187,77 @@ Downloads/
     └── random-file.dat
 ```
 
+## Automatic Organization on Login
+
+Run the setup script once to make the organizer run every time you open your laptop:
+
+### Quick setup (PowerShell)
+
+```powershell
+cd path\to\tools\file-organizer
+.\setup-autorun.ps1
+```
+
+The script will:
+1. Ask which directories to watch (Downloads, Desktop, Documents, or custom)
+2. Save your choices to `organizer-config.json`
+3. Register a Windows Task Scheduler task that runs on every login
+
+### Setup options
+
+```powershell
+# Basic: organize once per login
+.\setup-autorun.ps1
+
+# Watch mode: keep running and re-organize every 30 minutes
+.\setup-autorun.ps1 -WatchMode -IntervalMinutes 30
+
+# Disable toast notifications
+.\setup-autorun.ps1 -NoNotify
+
+# Remove the scheduled task
+.\setup-autorun.ps1 -Remove
+```
+
+### Manual config (alternative to setup script)
+
+Add `watch_directories` to your `organizer-config.json`:
+
+```json
+{
+  "watch_directories": [
+    "C:\\Users\\YourName\\Downloads",
+    "C:\\Users\\YourName\\Desktop"
+  ]
+}
+```
+
+Then register it manually in Task Scheduler or run directly:
+
+```cmd
+python autorun.py --config organizer-config.json
+python autorun.py --config organizer-config.json --watch --interval 30
+```
+
+### How it works
+
+- On every Windows login, Task Scheduler launches `autorun.py`
+- It reads `watch_directories` from your config
+- Each directory is scanned, renamed, and organized automatically
+- All changes are logged (check `autorun.log` and `.file-organizer-logs/`)
+- A Windows toast notification pops up when files are organized
+- You can undo any run: `python agent.py undo C:\Users\YourName\Downloads`
+
+### Reviewing autorun history
+
+```cmd
+:: Check the autorun log
+type autorun.log
+
+:: List change logs for a specific directory
+python agent.py logs C:\Users\YourName\Downloads
+```
+
 ## Safety
 
 - **Always preview first**: Use `--dry-run` to see what will happen

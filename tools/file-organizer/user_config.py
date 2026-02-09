@@ -21,6 +21,7 @@ def default_config() -> dict:
         "skip_files": list(SKIP_FILES),
         "organize_into_folders": True,
         "recursive": True,
+        "watch_directories": [],
     }
 
 
@@ -66,6 +67,9 @@ def load_config(config_path: Optional[Path] = None) -> dict:
 
     if "recursive" in user_cfg:
         cfg["recursive"] = user_cfg["recursive"]
+
+    if "watch_directories" in user_cfg:
+        cfg["watch_directories"] = user_cfg["watch_directories"]
 
     return cfg
 
