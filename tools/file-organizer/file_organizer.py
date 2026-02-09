@@ -1781,6 +1781,78 @@ def cmd_init_config(args):
     print("Edit this file to customize categories, naming rules, and skip lists.")
 
 
+def cmd_detect(args):
+    """Scan files, read every document, and report all detected companies."""
+    target = Path(args.directory).resolve()
+    config = load_config(Path(args.config) if args.config else None)
+
+    print("=" * 60)
+    print("COMPANY / BRAND DETECTION REPORT")
+    print("=" * 60)
+    print(f"Scanning: {target}\n")
+
+    scan_result = scan_directory(
+        root=target,
+        categories=config["categories"],
+        recursive=config["recursive"] if not args.no_recurse else False,
+        skip_dirs=set(config["skip_directories"]),
+        skip_files=set(config["skip_files"]),
+    )
+
+    print(f"Found {len(scan_result.files)} files\n")
+    if not scan_result.files:
+        print("No files found.")
+        return
+
+    print("Reading every document...")
+    docs_read = extract_texts_for_entries(scan_result.files)
+    print(f"  Read text from {docs_read} documents.\n")
+
+    # Detect brands for every file
+    brand_files: dict[str, list[str]] = {}  # brand -> [filename, ...]
+    unmatched = []
+
+    for entry in scan_result.files:
+        brand = _detect_brand(entry.name, entry.text_content)
+        if brand:
+            brand_files.setdefault(brand, []).append(entry.name)
+        else:
+            unmatched.append(entry.name)
+
+    # Print results
+    print("=" * 60)
+    print(f"DETECTED {len(brand_files)} COMPANIES / BRANDS")
+    print("=" * 60)
+
+    for brand, files in sorted(brand_files.items(), key=lambda x: -len(x[1])):
+        print(f"\n  {brand}  ({len(files)} files)")
+        show = files[:10] if not args.verbose else files
+        for f in show:
+            print(f"    - {f}")
+        if len(files) > 10 and not args.verbose:
+            print(f"    ... and {len(files) - 10} more")
+
+    print(f"\n{'=' * 60}")
+    print(f"UNMATCHED FILES: {len(unmatched)}  (will go to normal category folders)")
+    print("=" * 60)
+    if unmatched:
+        show = unmatched[:20] if not args.verbose else unmatched
+        for f in show:
+            print(f"    - {f}")
+        if len(unmatched) > 20 and not args.verbose:
+            print(f"    ... and {len(unmatched) - 20} more")
+
+    print(f"\n--- SUMMARY ---")
+    print(f"  Total files:      {len(scan_result.files)}")
+    print(f"  Companies found:  {len(brand_files)}")
+    print(f"  Matched files:    {sum(len(f) for f in brand_files.values())}")
+    print(f"  Unmatched files:  {len(unmatched)}")
+    print()
+    print("Nothing was moved. This is just a report.")
+    print("To see every file, run again with --verbose")
+    print("Send this output back so we can fine-tune the brands list.")
+
+
 def main():
     if sys.platform == "win32":
         try:
@@ -1817,6 +1889,12 @@ def main():
     p_logs = subparsers.add_parser("logs", help="List change logs")
     p_logs.add_argument("directory")
 
+    # detect
+    p_detect = subparsers.add_parser("detect", help="Read every document and show all detected companies (no files moved)")
+    p_detect.add_argument("directory", help="Directory to scan")
+    p_detect.add_argument("--no-recurse", action="store_true")
+    p_detect.add_argument("--verbose", "-v", action="store_true", help="Show all files, not just first 10 per brand")
+
     # watch
     p_watch = subparsers.add_parser("watch", help="Auto-organize directories on a timer")
     p_watch.add_argument("directories", nargs="+", help="Directories to watch")
@@ -1831,7 +1909,7 @@ def main():
     p_init.add_argument("--output", "-o")
 
     args = parser.parse_args()
-    {"scan": cmd_scan, "organize": cmd_organize, "undo": cmd_undo, "logs": cmd_logs, "watch": cmd_watch, "setup-autowatch": cmd_setup_autowatch, "init-config": cmd_init_config}[args.command](args)
+    {"scan": cmd_scan, "organize": cmd_organize, "undo": cmd_undo, "logs": cmd_logs, "detect": cmd_detect, "watch": cmd_watch, "setup-autowatch": cmd_setup_autowatch, "init-config": cmd_init_config}[args.command](args)
 
 
 if __name__ == "__main__":
