@@ -21,7 +21,7 @@ import sys
 import unicodedata
 import xml.etree.ElementTree as ET
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -1504,6 +1504,138 @@ def cmd_logs(args):
         print(f"    Actions: {data.get('actions_count', '?')}\n")
 
 
+def cmd_watch(args):
+    """Watch directories and auto-organize on a timer."""
+    import time
+    directories = [Path(d).resolve() for d in args.directories]
+    interval = args.interval * 60  # convert minutes to seconds
+    config = load_config(Path(args.config) if args.config else None)
+
+    # Validate directories
+    for d in directories:
+        if not d.is_dir():
+            print(f"Error: {d} is not a directory")
+            return
+
+    print("=" * 60)
+    print("FILE ORGANIZER — AUTO-WATCH MODE")
+    print("=" * 60)
+    print(f"Watching: {', '.join(str(d) for d in directories)}")
+    print(f"Interval: every {args.interval} minutes")
+    print(f"Press Ctrl+C to stop.\n")
+
+    run_count = 0
+    while True:
+        run_count += 1
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[{now}] Run #{run_count}")
+
+        for target in directories:
+            print(f"  Scanning: {target}")
+            try:
+                scan_result = scan_directory(
+                    root=target,
+                    categories=config["categories"],
+                    recursive=config.get("recursive", True),
+                    skip_dirs=set(config["skip_directories"]),
+                    skip_files=set(config["skip_files"]),
+                )
+
+                if not scan_result.files:
+                    print(f"    No files found.")
+                    continue
+
+                # Read document contents for Business/Personal classification
+                extract_texts_for_entries(scan_result.files)
+
+                plan = plan_organization(
+                    files=scan_result.files,
+                    target_root=target,
+                    rename_rules=config["naming_rules"],
+                    organize_into_folders=True,
+                )
+
+                if plan.total_actions == 0:
+                    print(f"    Already organized. Nothing to do.")
+                    continue
+
+                # Show what's happening
+                biz_msg = ""
+                if plan.business_count:
+                    biz_msg += f" | Business: {plan.business_count}"
+                if plan.personal_count:
+                    biz_msg += f" | Personal: {plan.personal_count}"
+                print(f"    Organizing {plan.total_actions} files...{biz_msg}")
+
+                exec_result = execute_plan(plan, dry_run=False)
+                log_path = save_log(target, exec_result.log_entries, dry_run=False)
+
+                print(f"    Done: {exec_result.moves_done} moved, {exec_result.renames_done} renamed")
+                if exec_result.errors:
+                    print(f"    Errors: {len(exec_result.errors)}")
+                print(f"    Log: {log_path.name}")
+
+            except Exception as exc:
+                print(f"    Error: {exc}")
+
+        next_run = (datetime.now() + timedelta(seconds=interval)).strftime("%H:%M")
+        print(f"  Next run at {next_run}\n")
+
+        try:
+            time.sleep(interval)
+        except KeyboardInterrupt:
+            print("\nStopped watching. All previous changes are saved and can be undone.")
+            break
+
+
+def cmd_setup_autowatch(args):
+    """Set up Windows Task Scheduler to run the watcher at login."""
+    script_path = Path(__file__).resolve()
+    directories = [Path(d).resolve() for d in args.directories]
+    interval = args.interval
+    python_path = sys.executable
+
+    # Validate directories
+    for d in directories:
+        if not d.is_dir():
+            print(f"Error: {d} is not a directory")
+            return
+
+    task_name = "FileOrganizerAutoWatch"
+    dir_args = " ".join(f'"{d}"' for d in directories)
+
+    if sys.platform == "win32":
+        # Create a .bat launcher file next to the script
+        bat_path = script_path.parent / "auto-organize.bat"
+        bat_content = f'@echo off\n"{python_path}" "{script_path}" watch {dir_args} --interval {interval}\n'
+        bat_path.write_text(bat_content, encoding="utf-8")
+
+        # Create the scheduled task using schtasks
+        schtasks_cmd = (
+            f'schtasks /Create /TN "{task_name}" /TR "\\"{bat_path}\\"" '
+            f'/SC ONLOGON /RL HIGHEST /F'
+        )
+        print("Setting up Windows Task Scheduler...")
+        print(f"  Task name: {task_name}")
+        print(f"  Watches: {', '.join(str(d) for d in directories)}")
+        print(f"  Interval: every {interval} minutes")
+        print(f"  Trigger: runs when you log in")
+        print()
+        print("Run this command in an ADMIN PowerShell or Command Prompt:")
+        print()
+        print(f"  {schtasks_cmd}")
+        print()
+        print(f"Launcher script saved to: {bat_path}")
+        print()
+        print("Or to run it manually right now (without Task Scheduler):")
+        print(f'  python "{script_path}" watch {dir_args} --interval {interval}')
+    else:
+        # Linux/Mac: print a cron suggestion
+        cron_line = f"*/{interval} * * * * {python_path} \"{script_path}\" organize {dir_args} --yes"
+        print("Add this line to your crontab (run: crontab -e):")
+        print(f"  {cron_line}")
+
+
 def cmd_init_config(args):
     output = Path(args.output) if args.output else None
     path = save_default_config(output)
@@ -1547,11 +1679,21 @@ def main():
     p_logs = subparsers.add_parser("logs", help="List change logs")
     p_logs.add_argument("directory")
 
+    # watch
+    p_watch = subparsers.add_parser("watch", help="Auto-organize directories on a timer")
+    p_watch.add_argument("directories", nargs="+", help="Directories to watch")
+    p_watch.add_argument("--interval", "-i", type=int, default=30, help="Minutes between runs (default: 30)")
+
+    # setup-autowatch
+    p_setup = subparsers.add_parser("setup-autowatch", help="Set up auto-organize to run at Windows login")
+    p_setup.add_argument("directories", nargs="+", help="Directories to watch")
+    p_setup.add_argument("--interval", "-i", type=int, default=30, help="Minutes between runs (default: 30)")
+
     p_init = subparsers.add_parser("init-config", help="Generate default config file")
     p_init.add_argument("--output", "-o")
 
     args = parser.parse_args()
-    {"scan": cmd_scan, "organize": cmd_organize, "undo": cmd_undo, "logs": cmd_logs, "init-config": cmd_init_config}[args.command](args)
+    {"scan": cmd_scan, "organize": cmd_organize, "undo": cmd_undo, "logs": cmd_logs, "watch": cmd_watch, "setup-autowatch": cmd_setup_autowatch, "init-config": cmd_init_config}[args.command](args)
 
 
 if __name__ == "__main__":
