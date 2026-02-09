@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+import zlib
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -551,6 +552,210 @@ def _build_suggested_name(info: ContentInfo, filepath: Path) -> Optional[str]:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# DOCUMENT TEXT EXTRACTION — reads actual text from inside documents
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Extensions we can extract text from
+EXTRACTABLE_EXTENSIONS = {
+    ".pdf", ".doc", ".docx", ".txt", ".rtf", ".odt", ".xls", ".xlsx",
+    ".csv", ".ppt", ".pptx", ".odp", ".ods", ".md", ".log",
+}
+
+
+def extract_pdf_text(filepath: Path, max_bytes: int = 200000) -> str:
+    """Extract readable text from a PDF by decompressing streams and scanning."""
+    text_parts = []
+    try:
+        with open(filepath, "rb") as f:
+            raw = f.read(max_bytes)
+
+        # Method 1: Decompress PDF streams (most PDFs use FlateDecode)
+        pos = 0
+        while True:
+            idx = raw.find(b"stream", pos)
+            if idx == -1:
+                break
+            # Skip past "stream\r\n" or "stream\n"
+            after = idx + 6
+            if after < len(raw) and raw[after:after + 1] == b"\r":
+                after += 1
+            if after < len(raw) and raw[after:after + 1] == b"\n":
+                after += 1
+            end_idx = raw.find(b"endstream", after)
+            if end_idx == -1:
+                break
+            stream_data = raw[after:end_idx]
+            try:
+                decompressed = zlib.decompress(stream_data)
+                # Extract text between BT and ET (PDF text blocks)
+                bt_pos = 0
+                while True:
+                    bt = decompressed.find(b"BT", bt_pos)
+                    if bt == -1:
+                        break
+                    et = decompressed.find(b"ET", bt)
+                    if et == -1:
+                        break
+                    text_block = decompressed[bt:et]
+                    # Get strings in parentheses (Tj/TJ operators)
+                    for match in re.finditer(rb'\(([^)]*)\)', text_block):
+                        try:
+                            text_parts.append(match.group(1).decode("utf-8", errors="ignore"))
+                        except Exception:
+                            pass
+                    # Get hex strings
+                    for match in re.finditer(rb'<([0-9a-fA-F]{4,})>', text_block):
+                        try:
+                            hex_str = match.group(1).decode("ascii")
+                            if len(hex_str) % 2 == 0:
+                                text_parts.append(bytes.fromhex(hex_str).decode("utf-16-be", errors="ignore"))
+                        except Exception:
+                            pass
+                    bt_pos = et + 2
+            except zlib.error:
+                pass
+            pos = end_idx + 9
+
+        # Method 2: Scan for uncompressed text (Tj operator)
+        decoded = raw.decode("latin-1", errors="ignore")
+        for match in re.finditer(r'\(([^)]{2,})\)\s*Tj', decoded):
+            text_parts.append(match.group(1))
+
+        # Method 3: Find readable ASCII sequences (catches text in any encoding)
+        for match in re.finditer(rb'[A-Za-z][A-Za-z ]{4,}', raw):
+            word = match.group().decode("ascii", errors="ignore")
+            text_parts.append(word)
+
+    except (PermissionError, OSError):
+        pass
+    return " ".join(text_parts)
+
+
+def extract_docx_text(filepath: Path, max_chars: int = 100000) -> str:
+    """Extract text from a DOCX file by reading word/document.xml."""
+    try:
+        with zipfile.ZipFile(filepath, "r") as zf:
+            if "word/document.xml" in zf.namelist():
+                xml_data = zf.read("word/document.xml")
+                text = re.sub(rb'<[^>]+>', b' ', xml_data)
+                decoded = text.decode("utf-8", errors="ignore")
+                decoded = re.sub(r'\s+', ' ', decoded).strip()
+                return decoded[:max_chars]
+    except (zipfile.BadZipFile, OSError):
+        pass
+    return ""
+
+
+def extract_xlsx_text(filepath: Path, max_chars: int = 100000) -> str:
+    """Extract text from an XLSX file by reading shared strings and sheets."""
+    text_parts = []
+    try:
+        with zipfile.ZipFile(filepath, "r") as zf:
+            if "xl/sharedStrings.xml" in zf.namelist():
+                xml_data = zf.read("xl/sharedStrings.xml")
+                root = ET.fromstring(xml_data)
+                ns = {"s": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+                for si in root.findall(".//s:t", ns):
+                    if si.text:
+                        text_parts.append(si.text)
+                        if sum(len(t) for t in text_parts) > max_chars:
+                            break
+            # Also check inline strings in sheets
+            for name in zf.namelist():
+                if name.startswith("xl/worksheets/") and name.endswith(".xml"):
+                    try:
+                        sheet_data = zf.read(name)
+                        sheet_root = ET.fromstring(sheet_data)
+                        ns2 = {"s": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+                        for t_elem in sheet_root.findall(".//s:is/s:t", ns2):
+                            if t_elem.text:
+                                text_parts.append(t_elem.text)
+                    except (ET.ParseError, OSError):
+                        pass
+                    if sum(len(t) for t in text_parts) > max_chars:
+                        break
+    except (zipfile.BadZipFile, ET.ParseError, OSError):
+        pass
+    return " ".join(text_parts)
+
+
+def extract_pptx_text(filepath: Path, max_chars: int = 100000) -> str:
+    """Extract text from a PPTX file by reading slide XML."""
+    text_parts = []
+    try:
+        with zipfile.ZipFile(filepath, "r") as zf:
+            for name in sorted(zf.namelist()):
+                if name.startswith("ppt/slides/slide") and name.endswith(".xml"):
+                    try:
+                        slide_data = zf.read(name)
+                        text = re.sub(rb'<[^>]+>', b' ', slide_data)
+                        decoded = text.decode("utf-8", errors="ignore")
+                        decoded = re.sub(r'\s+', ' ', decoded).strip()
+                        text_parts.append(decoded)
+                    except (ET.ParseError, OSError):
+                        pass
+                    if sum(len(t) for t in text_parts) > max_chars:
+                        break
+    except (zipfile.BadZipFile, OSError):
+        pass
+    return " ".join(text_parts)
+
+
+def extract_document_text(filepath: Path) -> str:
+    """Extract text content from a document file based on its extension.
+
+    Supports: PDF, DOCX, XLSX, PPTX, TXT, CSV, RTF, DOC (legacy), XLS (legacy).
+    Returns empty string if unsupported or extraction fails.
+    """
+    ext = filepath.suffix.lower()
+    if ext == ".pdf":
+        return extract_pdf_text(filepath)
+    elif ext == ".docx":
+        return extract_docx_text(filepath)
+    elif ext == ".xlsx":
+        return extract_xlsx_text(filepath)
+    elif ext == ".pptx":
+        return extract_pptx_text(filepath)
+    elif ext in (".txt", ".csv", ".rtf", ".md", ".log"):
+        try:
+            with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                return f.read(100000)
+        except (PermissionError, OSError):
+            return ""
+    elif ext in (".doc", ".xls", ".ppt"):
+        # Legacy Office: extract readable ASCII strings from binary
+        try:
+            with open(filepath, "rb") as f:
+                raw = f.read(200000)
+            parts = []
+            for match in re.finditer(rb'[A-Za-z][A-Za-z ]{3,}', raw):
+                parts.append(match.group().decode("ascii", errors="ignore"))
+            return " ".join(parts)
+        except (PermissionError, OSError):
+            return ""
+    return ""
+
+
+def extract_texts_for_entries(files: list) -> int:
+    """Extract text content for all document-type files in the list.
+
+    Populates each FileEntry.text_content in-place.
+    Returns the count of files whose text was extracted.
+    """
+    count = 0
+    doc_files = [f for f in files if f.extension.lower() in EXTRACTABLE_EXTENSIONS
+                 or f.category == "01_Documents"]
+    total = len(doc_files)
+    for i, entry in enumerate(doc_files, 1):
+        if total > 20 and (i == 1 or i % 50 == 0 or i == total):
+            print(f"  Reading document {i}/{total}...")
+        entry.text_content = extract_document_text(entry.path)
+        if entry.text_content:
+            count += 1
+    return count
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SCANNER
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -568,6 +773,7 @@ class FileEntry:
     real_extension: Optional[str] = None
     extension_mismatch: bool = False
     suggested_name: Optional[str] = None
+    text_content: str = ""
 
     @classmethod
     def from_path(cls, filepath: Path, category: str, deep_scan: bool = False) -> "FileEntry":
@@ -871,6 +1077,45 @@ def _detect_subcategory(filename: str, extension: str, category: str) -> Optiona
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# BUSINESS / PERSONAL DETECTION (Silva Operations)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Business keywords — checked first (more specific)
+BUSINESS_KEYWORDS = [
+    "silva operations llc",
+    "silva operations",
+]
+
+# Personal keywords — checked after business (less specific)
+PERSONAL_KEYWORDS = [
+    "silva",
+]
+
+
+def _detect_business_personal(filename: str, text_content: str) -> Optional[str]:
+    """Classify a file as Business, Personal, or None based on Silva keywords.
+
+    Checks both the filename and the extracted document text content.
+    - "Silva Operations" or "Silva Operations LLC" -> "Business"
+    - "Silva" (without "Operations") -> "Personal"
+    - Neither -> None (use normal category routing)
+    """
+    combined = (filename + " " + text_content).lower()
+    # Normalize separators so "silva_operations" and "silva-operations" also match
+    normalized = combined.replace("_", " ").replace("-", " ")
+
+    for kw in BUSINESS_KEYWORDS:
+        if kw in combined or kw in normalized:
+            return "Business"
+
+    for kw in PERSONAL_KEYWORDS:
+        if kw in combined or kw in normalized:
+            return "Personal"
+
+    return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # ORGANIZER
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -889,6 +1134,8 @@ class MoveAction:
 class OrganizePlan:
     renames: list[RenameAction] = field(default_factory=list)
     moves: list[MoveAction] = field(default_factory=list)
+    business_count: int = 0
+    personal_count: int = 0
 
     @property
     def total_actions(self) -> int:
@@ -896,6 +1143,13 @@ class OrganizePlan:
 
     def preview(self, max_lines: int = 50) -> str:
         lines = []
+        if self.business_count or self.personal_count:
+            lines.append("--- Silva Classification ---")
+            if self.business_count:
+                lines.append(f"  Business (Silva Operations): {self.business_count} files")
+            if self.personal_count:
+                lines.append(f"  Personal (Silva): {self.personal_count} files")
+            lines.append("")
         if self.renames:
             lines.append(f"--- Renames ({len(self.renames)}) ---")
             for action in self.renames[:max_lines]:
@@ -910,7 +1164,10 @@ class OrganizePlan:
                 try:
                     rel_dest = action.destination.relative_to(action.destination.parent.parent.parent)
                 except ValueError:
-                    rel_dest = action.destination.relative_to(action.destination.parent.parent)
+                    try:
+                        rel_dest = action.destination.relative_to(action.destination.parent.parent)
+                    except ValueError:
+                        rel_dest = action.destination.name
                 lines.append(f"  {rel_orig}  ->  {rel_dest}")
             if len(self.moves) > max_lines:
                 lines.append(f"  ... and {len(self.moves) - max_lines} more")
@@ -934,11 +1191,33 @@ def plan_organization(files, target_root, rename_rules=None, organize_into_folde
         new_name = normalize_filename(name_stem, extension, rename_rules, filepath=entry.path, category=entry.category)
         category = entry.category
         if organize_into_folders:
+            # Check Business/Personal classification using filename + extracted text
+            biz_personal = _detect_business_personal(entry.name, entry.text_content)
             subcategory = _detect_subcategory(entry.name, entry.extension, category)
-            if subcategory:
-                dest_dir = target_root / category / subcategory
+
+            if biz_personal == "Business":
+                plan.business_count += 1
+                folder_name = "Business (Silva Operations)"
+                if subcategory:
+                    dest_dir = target_root / folder_name / subcategory
+                else:
+                    # Use cleaned category name (strip number prefix)
+                    clean_cat = re.sub(r'^\d+_', '', category)
+                    dest_dir = target_root / folder_name / clean_cat
+            elif biz_personal == "Personal":
+                plan.personal_count += 1
+                folder_name = "Personal (Silva)"
+                if subcategory:
+                    dest_dir = target_root / folder_name / subcategory
+                else:
+                    clean_cat = re.sub(r'^\d+_', '', category)
+                    dest_dir = target_root / folder_name / clean_cat
             else:
-                dest_dir = target_root / category
+                # Normal category routing
+                if subcategory:
+                    dest_dir = target_root / category / subcategory
+                else:
+                    dest_dir = target_root / category
         else:
             dest_dir = entry.parent
         if dest_dir not in used_names:
@@ -1138,6 +1417,10 @@ def cmd_organize(args):
     if not scan_result.files:
         print("No files to organize.")
         return
+    # Read document contents to detect Business (Silva Operations) vs Personal (Silva)
+    print("Reading document contents for Business/Personal classification...")
+    docs_read = extract_texts_for_entries(scan_result.files)
+    print(f"  Read text from {docs_read} documents.\n")
     plan = plan_organization(files=scan_result.files, target_root=target, rename_rules=config["naming_rules"], organize_into_folders=organize_into_folders)
     if plan.total_actions == 0:
         print("All files are already organized and properly named.")
