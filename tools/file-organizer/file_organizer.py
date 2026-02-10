@@ -75,7 +75,7 @@ NAMING_RULES = {
     "element_separator": "_",
     "lowercase": True,
     "strip_characters": "!@#$%^&()+={}[]|;',`~",
-    "max_filename_length": 50,
+    "max_filename_length": 80,
     "collapse_separators": True,
     "strip_edge_separators": True,
     "add_date_prefix": True,
@@ -943,12 +943,22 @@ def _extract_existing_version(name: str) -> tuple[str | None, str]:
 
 
 def _get_file_date(filepath: Path) -> str:
+    """Get the file's modification date in YYYYMMDD format (converted to MMDDYYYY later)."""
     try:
         mtime = os.path.getmtime(filepath)
         dt = datetime.fromtimestamp(mtime, tz=timezone.utc)
         return dt.strftime("%Y%m%d")
     except OSError:
         return datetime.now(timezone.utc).strftime("%Y%m%d")
+
+
+def _to_mmddyyyy(yyyymmdd: str) -> str:
+    """Convert YYYYMMDD to MMDDYYYY."""
+    if len(yyyymmdd) == 8:
+        return yyyymmdd[4:6] + yyyymmdd[6:8] + yyyymmdd[:4]
+    elif len(yyyymmdd) == 6:
+        return yyyymmdd[4:6] + yyyymmdd[:4]
+    return yyyymmdd
 
 
 def _clean_stem(name: str, rules: dict) -> str:
@@ -969,9 +979,14 @@ def _clean_stem(name: str, rules: dict) -> str:
     return stem
 
 
-def normalize_filename(name, extension, rules=None, filepath=None, category=None) -> str:
+def normalize_filename(name, extension, rules=None, filepath=None, category=None, brand=None) -> str:
+    """Build filename in format: mmddyyyy_Company_DocumentType.ext
+
+    - Date: MMDDYYYY from the file or original filename
+    - Company: brand/company name (if detected), hyphens for spaces
+    - DocumentType: cleaned descriptor from the original filename
+    """
     r = rules or NAMING_RULES
-    elem_sep = r.get("element_separator", "_")
     if r.get("lowercase", True):
         extension = extension.lower()
     date_str, name_no_date = _extract_existing_date(name)
@@ -979,27 +994,39 @@ def normalize_filename(name, extension, rules=None, filepath=None, category=None
     descriptor = _clean_stem(name_cleaned, r)
     descriptor = re.sub(r"^(img|dsc|dscn|dscf|sam|p|wp|imag)\b-?", "", descriptor)
     descriptor = descriptor.strip("-")
-    if not date_str and r.get("add_date_prefix", True) and filepath:
+    if not date_str and filepath:
         date_str = _get_file_date(filepath)
+    # Convert date to MMDDYYYY
+    if date_str:
+        date_str = _to_mmddyyyy(date_str)
+    # Clean company name for filename (spaces -> hyphens, strip parens)
+    company = ""
+    if brand:
+        company = brand.replace(" ", "-").replace("(", "").replace(")", "")
+        if r.get("lowercase", True):
+            company = company.lower()
+        # Remove brand words from the descriptor to avoid duplication
+        # e.g. "uber-ride-receipt" -> "ride-receipt" when brand is "Uber"
+        brand_words = brand.lower().replace("-", " ").replace("(", "").replace(")", "").split()
+        for bw in brand_words:
+            descriptor = re.sub(r'\b' + re.escape(bw) + r'\b-?', '', descriptor)
+        descriptor = re.sub(r'-{2,}', '-', descriptor).strip('-')
+    # Build: mmddyyyy_Company_DocumentType
     parts = []
-    is_media = category and any(cat in (category or "").lower() for cat in ("image", "audio", "video", "photo"))
-    if is_media and date_str:
+    if date_str:
         parts.append(date_str)
-        if descriptor:
-            parts.append(descriptor)
-    else:
-        if descriptor:
-            parts.append(descriptor)
-        if date_str:
-            parts.append(date_str)
+    if company:
+        parts.append(company)
+    if descriptor:
+        parts.append(descriptor)
     if version_str:
         parts.append(version_str)
-    stem = elem_sep.join(parts)
-    max_len = r.get("max_filename_length", 50)
+    stem = "_".join(parts)
+    max_len = r.get("max_filename_length", 80)
     if len(stem) > max_len:
         stem = stem[:max_len].rstrip("-").rstrip("_")
     if stem.upper() in WINDOWS_RESERVED_NAMES:
-        stem = f"{stem}{elem_sep}file"
+        stem = f"{stem}_file"
     if not stem:
         stem = date_str if date_str else "unnamed"
     return f"{stem}{extension}"
@@ -1336,23 +1363,20 @@ def plan_organization(files, target_root, rename_rules=None, organize_into_folde
             extension = entry.real_extension
         else:
             extension = entry.extension
-        new_name = normalize_filename(name_stem, extension, rename_rules, filepath=entry.path, category=entry.category)
         category = entry.category
+        # Detect brand and subcategory
+        brand = _detect_brand(entry.name, entry.text_content)
+        subcategory = _detect_subcategory(entry.name, entry.extension, category)
+        new_name = normalize_filename(name_stem, extension, rename_rules, filepath=entry.path, category=entry.category, brand=brand)
         if organize_into_folders:
-            # Check if file belongs to a known brand/company
-            brand = _detect_brand(entry.name, entry.text_content)
-            subcategory = _detect_subcategory(entry.name, entry.extension, category)
-
             if brand:
                 plan.brand_counts[brand] = plan.brand_counts.get(brand, 0) + 1
                 if subcategory:
                     dest_dir = target_root / brand / subcategory
                 else:
-                    # Use cleaned category name (strip number prefix)
                     clean_cat = re.sub(r'^\d+_', '', category)
                     dest_dir = target_root / brand / clean_cat
             else:
-                # Normal category routing (no brand match)
                 if subcategory:
                     dest_dir = target_root / category / subcategory
                 else:
