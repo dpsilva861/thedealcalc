@@ -8,7 +8,23 @@ Usage:
     python file_organizer.py scan C:\Users\dpsil\Downloads
     python file_organizer.py organize C:\Users\dpsil\Downloads --dry-run
     python file_organizer.py organize C:\Users\dpsil\Downloads --deep-scan
+    python file_organizer.py detect C:\Users\dpsil\Downloads
+    python file_organizer.py watch C:\Users\dpsil\Downloads C:\Users\dpsil\Documents
     python file_organizer.py undo C:\Users\dpsil\Downloads
+    python file_organizer.py init-brands          # export brands.json for editing
+    python file_organizer.py learn C:\Users\dpsil\Downloads   # learn from your manual moves
+    python file_organizer.py report C:\Users\dpsil\Downloads  # show weekly summary
+
+Features:
+    - Smart brand/company detection (known brands + auto-detect from content)
+    - Document type detection (Invoice, Receipt, Statement, Contract, etc.)
+    - Configurable brand list via brands.json
+    - Duplicate detection via SHA-256 hashing
+    - OneDrive/Dropbox sync awareness (skips locked/syncing files)
+    - Email attachment extraction from .eml files
+    - Weekly summary report (weekly-report.txt)
+    - Learning from corrections (tracks your manual file moves)
+    - Full undo/rollback support
 """
 
 import argparse
@@ -26,6 +42,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 import zlib
+import hashlib
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -979,12 +996,13 @@ def _clean_stem(name: str, rules: dict) -> str:
     return stem
 
 
-def normalize_filename(name, extension, rules=None, filepath=None, category=None, brand=None) -> str:
+def normalize_filename(name, extension, rules=None, filepath=None, category=None,
+                       brand=None, doc_type=None) -> str:
     """Build filename in format: mmddyyyy_Company_DocumentType.ext
 
     - Date: MMDDYYYY from the file or original filename
     - Company: brand/company name (if detected), hyphens for spaces
-    - DocumentType: cleaned descriptor from the original filename
+    - DocumentType: smart doc type label (Invoice, Receipt, etc.) or cleaned descriptor
     """
     r = rules or NAMING_RULES
     if r.get("lowercase", True):
@@ -1006,11 +1024,22 @@ def normalize_filename(name, extension, rules=None, filepath=None, category=None
         if r.get("lowercase", True):
             company = company.lower()
         # Remove brand words from the descriptor to avoid duplication
-        # e.g. "uber-ride-receipt" -> "ride-receipt" when brand is "Uber"
         brand_words = brand.lower().replace("-", " ").replace("(", "").replace(")", "").split()
         for bw in brand_words:
             descriptor = re.sub(r'\b' + re.escape(bw) + r'\b-?', '', descriptor)
         descriptor = re.sub(r'-{2,}', '-', descriptor).strip('-')
+    # Use smart doc_type label when available (replaces generic descriptor)
+    if doc_type and doc_type != "Document":
+        doc_label = doc_type.lower().replace(" ", "-")
+        # If descriptor has useful info beyond the doc type, keep both
+        # e.g. "uber-ride-receipt" with doc_type="Receipt" -> just "receipt"
+        type_words = set(doc_type.lower().replace("-", " ").split())
+        desc_words = set(descriptor.replace("-", " ").split()) if descriptor else set()
+        extra_words = desc_words - type_words - (set(brand.lower().replace("-", " ").replace("(", "").replace(")", "").split()) if brand else set())
+        if extra_words and len("-".join(sorted(extra_words))) > 2:
+            descriptor = doc_label + "-" + "-".join(sorted(extra_words))
+        else:
+            descriptor = doc_label
     # Build: mmddyyyy_Company_DocumentType
     parts = []
     if date_str:
@@ -1104,6 +1133,72 @@ def _detect_subcategory(filename: str, extension: str, category: str) -> Optiona
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# DOCUMENT TYPE DETECTION — determines Invoice, Receipt, Statement, etc.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+DOC_TYPE_KEYWORDS = {
+    "Invoice": ["invoice", "inv #", "inv#", "bill to", "billed to", "amount due", "payment due"],
+    "Receipt": ["receipt", "payment received", "thank you for your payment", "transaction id", "order confirmation"],
+    "Statement": ["statement", "account summary", "ending balance", "beginning balance", "statement period"],
+    "Contract": ["contract", "agreement", "hereby agree", "terms and conditions", "binding agreement", "scope of work"],
+    "Lease": ["lease", "tenant", "landlord", "rental agreement", "premises", "occupancy"],
+    "Tax-Form": ["w-2", "w2", "1099", "1095", "1098", "1040", "k-1", "tax return", "internal revenue"],
+    "Insurance": ["insurance", "policy number", "coverage", "premium", "deductible", "certificate of insurance"],
+    "Legal": ["amendment", "addendum", "litigation", "complaint", "resolution", "bylaws", "articles of"],
+    "Report": ["report", "analysis", "findings", "executive summary", "assessment"],
+    "Proposal": ["proposal", "pitch", "quotation", "estimate", "bid"],
+    "Letter": ["dear sir", "dear madam", "to whom it may concern", "attention:"],
+    "Financial": ["balance sheet", "income statement", "profit and loss", "p&l", "cash flow", "ledger"],
+    "Investment": ["investment", "capital call", "distribution", "offering memorandum", "ppm", "subscription"],
+    "Memo": ["memo", "memorandum", "internal memo"],
+}
+
+
+def _detect_doc_type(filename: str, extension: str, text_content: str) -> str:
+    """Detect the document type from content and filename.
+
+    Returns a label like 'Invoice', 'Receipt', 'Statement', etc.
+    Used in the filename: mmddyyyy_Company_Invoice.pdf
+    """
+    ext = extension.lower()
+
+    # Extension-based types (non-documents)
+    if ext in (".xlsx", ".xls", ".csv"):
+        # Still check content for financial docs in spreadsheets
+        combined = (filename + " " + text_content[:5000]).lower()
+        for doc_type in ("Invoice", "Statement", "Financial", "Tax-Form"):
+            for kw in DOC_TYPE_KEYWORDS[doc_type]:
+                if kw in combined:
+                    return doc_type
+        return "Spreadsheet"
+    if ext in (".pptx", ".ppt", ".odp"):
+        return "Presentation"
+    if ext in (".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp", ".tiff", ".heic"):
+        return "Photo"
+    if ext in (".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a"):
+        return "Audio"
+    if ext in (".mp4", ".avi", ".mkv", ".mov", ".wmv", ".webm"):
+        return "Video"
+    if ext in (".zip", ".rar", ".7z", ".tar", ".gz"):
+        return "Archive"
+    if ext in (".exe", ".msi", ".dmg"):
+        return "Installer"
+
+    # Content-based detection (score each type)
+    combined = (filename + " " + text_content[:10000]).lower()
+    scores: dict[str, int] = {}
+    for doc_type, keywords in DOC_TYPE_KEYWORDS.items():
+        for kw in keywords:
+            if kw in combined:
+                scores[doc_type] = scores.get(doc_type, 0) + 1
+
+    if scores:
+        return max(scores, key=scores.get)
+
+    return "Document"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SMART BRAND / COMPANY DETECTION
 # ═══════════════════════════════════════════════════════════════════════════════
 #
@@ -1145,6 +1240,41 @@ BRAND_FOLDERS = [
     # --- Personal catch-all — checked LAST (matches any "Silva" not caught above) ---
     ("Personal (Silva)",            ["silva"]),
 ]
+
+BRANDS_FILENAME = "brands.json"
+
+
+def load_brands(config_dir: Optional[Path] = None) -> list:
+    """Load brand definitions from brands.json, falling back to built-in BRAND_FOLDERS."""
+    if config_dir is None:
+        config_dir = Path.cwd()
+    brands_path = config_dir / BRANDS_FILENAME
+    if not brands_path.exists():
+        # Also check next to the script
+        script_dir = Path(__file__).resolve().parent
+        brands_path = script_dir / BRANDS_FILENAME
+    if not brands_path.exists():
+        return BRAND_FOLDERS
+    try:
+        data = json.loads(brands_path.read_text(encoding="utf-8"))
+        if isinstance(data, list):
+            brands = [(entry["name"], entry["keywords"]) for entry in data
+                      if "name" in entry and "keywords" in entry]
+            if brands:
+                return brands
+    except (json.JSONDecodeError, OSError, KeyError) as exc:
+        print(f"Warning: Could not read brands file {brands_path}: {exc}")
+    return BRAND_FOLDERS
+
+
+def save_default_brands(output_path: Optional[Path] = None) -> Path:
+    """Save the built-in brand list to brands.json for customization."""
+    if output_path is None:
+        output_path = Path.cwd() / BRANDS_FILENAME
+    data = [{"name": name, "keywords": keywords} for name, keywords in BRAND_FOLDERS]
+    output_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return output_path
+
 
 # Common English words to filter out of entity extraction
 _COMMON_WORDS = {
@@ -1265,18 +1395,30 @@ def _auto_detect_entity(text_content: str) -> Optional[str]:
     return None
 
 
-def _detect_brand(filename: str, text_content: str) -> Optional[str]:
+def _detect_brand(filename: str, text_content: str, brands: Optional[list] = None,
+                   corrections: Optional[dict] = None) -> Optional[str]:
     """Classify a file into a company/brand folder.
 
-    Step 1: Check known brands from BRAND_FOLDERS (guaranteed matches).
+    Step 0: Check learned corrections (user manually moved a file before).
+    Step 1: Check known brands from brands list (guaranteed matches).
     Step 2: Auto-detect entity from document text (LLC, Inc, sender, email).
     Returns the folder name or None.
     """
+    # Step 0: Learned corrections override everything
+    if corrections:
+        fname_lower = filename.lower()
+        if fname_lower in corrections:
+            return corrections[fname_lower]
+        for pattern, brand in corrections.items():
+            if pattern in fname_lower:
+                return brand
+
     combined = (filename + " " + text_content).lower()
     normalized = combined.replace("_", " ").replace("-", " ")
 
     # Step 1: Known brands (priority — always checked first)
-    for folder_name, keywords in BRAND_FOLDERS:
+    brand_list = brands if brands is not None else BRAND_FOLDERS
+    for folder_name, keywords in brand_list:
         for kw in keywords:
             if " " in kw or "." in kw:
                 if kw in combined or kw in normalized:
@@ -1291,6 +1433,152 @@ def _detect_brand(filename: str, text_content: str) -> Optional[str]:
         return entity
 
     return None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DUPLICATE DETECTION — find identical files via SHA-256 hashing
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _hash_file(filepath: Path, chunk_size: int = 65536) -> str:
+    """Compute SHA-256 hash of a file (first + last 64KB + size for speed)."""
+    h = hashlib.sha256()
+    try:
+        size = filepath.stat().st_size
+        h.update(str(size).encode())
+        with open(filepath, "rb") as f:
+            data = f.read(chunk_size)
+            h.update(data)
+            if size > chunk_size * 2:
+                f.seek(-chunk_size, 2)
+                h.update(f.read(chunk_size))
+    except (PermissionError, OSError):
+        return ""
+    return h.hexdigest()
+
+
+def find_duplicates(files: list) -> dict[str, list]:
+    """Find duplicate files by content hash.
+
+    Returns {hash: [FileEntry, ...]} for groups with 2+ files.
+    """
+    hash_groups: dict[str, list] = {}
+    for entry in files:
+        h = _hash_file(entry.path)
+        if h:
+            hash_groups.setdefault(h, []).append(entry)
+    return {h: entries for h, entries in hash_groups.items() if len(entries) > 1}
+
+
+def report_duplicates(duplicates: dict[str, list]) -> str:
+    """Format a human-readable duplicate report."""
+    if not duplicates:
+        return "No duplicates found."
+    lines = [f"Found {len(duplicates)} groups of duplicate files:\n"]
+    for i, (h, entries) in enumerate(sorted(duplicates.items(), key=lambda x: -len(x[1])), 1):
+        total_size = sum(e.size for e in entries)
+        waste = total_size - entries[0].size
+        lines.append(f"  Group {i}: {len(entries)} copies ({_fmt_size(waste)} wasted)")
+        for e in entries:
+            lines.append(f"    - {e.path}")
+    total_waste = sum(
+        sum(e.size for e in ents) - ents[0].size for ents in duplicates.values()
+    )
+    lines.append(f"\nTotal duplicate waste: {_fmt_size(total_waste)}")
+    return "\n".join(lines)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CLOUD SYNC AWARENESS — skip files being synced by OneDrive/Dropbox
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _is_cloud_folder(filepath: Path) -> bool:
+    """Check if a file is inside a OneDrive or Dropbox folder."""
+    path_str = str(filepath).lower()
+    return "onedrive" in path_str or "dropbox" in path_str
+
+
+def _is_syncing(filepath: Path) -> bool:
+    """Check if a file is currently being synced by OneDrive/Dropbox."""
+    name = filepath.name
+    # Office temp/lock files (OneDrive locks)
+    if name.startswith("~$"):
+        return True
+    # Companion lock file
+    lock_path = filepath.parent / f"~${name}"
+    if lock_path.exists():
+        return True
+    # .tmp companion (OneDrive upload in progress)
+    tmp_path = filepath.with_suffix(filepath.suffix + ".tmp")
+    if tmp_path.exists():
+        return True
+    # File modified very recently (< 5 seconds) ONLY in cloud sync folders
+    if _is_cloud_folder(filepath):
+        try:
+            import time as _time
+            mtime = filepath.stat().st_mtime
+            if _time.time() - mtime < 5:
+                return True
+        except OSError:
+            pass
+    # Dropbox cache file indicates pending sync
+    pending = filepath.with_suffix(filepath.suffix + ".dropbox.cache")
+    if pending.exists():
+        return True
+    return False
+
+
+def _filter_syncing(files: list) -> tuple[list, list]:
+    """Split files into (safe, syncing). Syncing files should be skipped."""
+    safe = []
+    syncing = []
+    for entry in files:
+        if _is_syncing(entry.path):
+            syncing.append(entry)
+        else:
+            safe.append(entry)
+    return safe, syncing
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EMAIL ATTACHMENT EXTRACTION — pull files out of .eml attachments
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def extract_email_attachments(eml_path: Path, output_dir: Optional[Path] = None) -> list[Path]:
+    """Extract attachments from .eml files. Returns list of extracted file paths."""
+    import email as _email
+    import email.policy as _policy
+
+    if output_dir is None:
+        output_dir = eml_path.parent
+
+    extracted = []
+    try:
+        with open(eml_path, "rb") as f:
+            msg = _email.message_from_binary_file(f, policy=_policy.default)
+
+        for part in msg.walk():
+            content_disposition = str(part.get("Content-Disposition", ""))
+            if "attachment" in content_disposition:
+                filename = part.get_filename()
+                if not filename:
+                    continue
+                # Sanitize filename
+                filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
+                output_dir.mkdir(parents=True, exist_ok=True)
+                filepath = output_dir / filename
+                counter = 1
+                while filepath.exists():
+                    stem = Path(filename).stem
+                    ext = Path(filename).suffix
+                    filepath = output_dir / f"{stem}_{counter:02d}{ext}"
+                    counter += 1
+                payload = part.get_payload(decode=True)
+                if payload:
+                    filepath.write_bytes(payload)
+                    extracted.append(filepath)
+    except (OSError, Exception) as exc:
+        print(f"  Warning: Could not extract attachments from {eml_path.name}: {exc}")
+    return extracted
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1351,7 +1639,8 @@ class OrganizePlan:
         return "\n".join(lines)
 
 
-def plan_organization(files, target_root, rename_rules=None, organize_into_folders=True) -> OrganizePlan:
+def plan_organization(files, target_root, rename_rules=None, organize_into_folders=True,
+                      brands=None, corrections=None) -> OrganizePlan:
     plan = OrganizePlan()
     used_names: dict[Path, set[str]] = {}
     for entry in files:
@@ -1364,10 +1653,14 @@ def plan_organization(files, target_root, rename_rules=None, organize_into_folde
         else:
             extension = entry.extension
         category = entry.category
-        # Detect brand and subcategory
-        brand = _detect_brand(entry.name, entry.text_content)
+        # Detect brand, doc type, and subcategory
+        brand = _detect_brand(entry.name, entry.text_content, brands=brands,
+                              corrections=corrections)
+        doc_type = _detect_doc_type(entry.name, entry.extension, entry.text_content)
         subcategory = _detect_subcategory(entry.name, entry.extension, category)
-        new_name = normalize_filename(name_stem, extension, rename_rules, filepath=entry.path, category=entry.category, brand=brand)
+        new_name = normalize_filename(name_stem, extension, rename_rules,
+                                      filepath=entry.path, category=entry.category,
+                                      brand=brand, doc_type=doc_type)
         if organize_into_folders:
             if brand:
                 plan.brand_counts[brand] = plan.brand_counts.get(brand, 0) + 1
@@ -1542,6 +1835,137 @@ def rollback(log_path) -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# WEEKLY SUMMARY REPORT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+REPORT_FILENAME = "weekly-report.txt"
+
+
+def append_weekly_report(root: Path, exec_result, plan, scan_result,
+                         duplicates: Optional[dict] = None) -> Path:
+    """Append a run summary to the weekly report file."""
+    report_path = root / LOG_DIR_NAME / REPORT_FILENAME
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    lines = [
+        f"\n--- Run: {ts} ---",
+        f"  Files scanned:  {len(scan_result.files) if scan_result else 0}",
+        f"  Files moved:    {exec_result.moves_done}",
+        f"  Files renamed:  {exec_result.renames_done}",
+        f"  Errors:         {len(exec_result.errors)}",
+    ]
+    brands = plan.brand_counts if plan else {}
+    if brands:
+        lines.append("  Brands detected:")
+        for brand, count in sorted(brands.items(), key=lambda x: -x[1]):
+            lines.append(f"    {brand}: {count}")
+    if duplicates:
+        lines.append(f"  Duplicate groups: {len(duplicates)}")
+    lines.append("")
+
+    with open(report_path, "a", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    return report_path
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LEARNING FROM CORRECTIONS — track user's manual moves to improve future runs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+CORRECTIONS_FILENAME = "corrections.json"
+
+
+def load_corrections(root: Path) -> dict:
+    """Load learned corrections from corrections.json.
+
+    Returns {filename_pattern: correct_brand} mapping.
+    """
+    corrections_path = root / LOG_DIR_NAME / CORRECTIONS_FILENAME
+    if not corrections_path.exists():
+        return {}
+    try:
+        return json.loads(corrections_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_correction(root: Path, filename: str, correct_brand: str):
+    """Save a learned correction: this filename pattern -> this brand."""
+    corrections_path = root / LOG_DIR_NAME / CORRECTIONS_FILENAME
+    corrections_path.parent.mkdir(parents=True, exist_ok=True)
+    corrections = load_corrections(root)
+    corrections[filename.lower()] = correct_brand
+    corrections_path.write_text(json.dumps(corrections, indent=2), encoding="utf-8")
+
+
+def detect_manual_moves(root: Path) -> list[dict]:
+    """Detect files the user manually moved after a previous organize run.
+
+    Compares the most recent log to actual file locations.
+    Returns list of {filename, expected_brand, actual_brand, actual_path}.
+    """
+    logs = list_logs(root)
+    real_logs = [l for l in logs if "dry-run" not in l.name]
+    if not real_logs:
+        return []
+
+    data = load_log(real_logs[0])
+    if data.get("dry_run"):
+        return []
+
+    corrections_list = []
+    for action in data.get("actions", []):
+        dest = action.get("to")
+        if not dest:
+            continue
+        dest_path = Path(dest)
+        if dest_path.exists():
+            continue  # File is where we put it — no correction
+
+        # File was moved by user — try to find it
+        filename = dest_path.name
+        for dirpath, dirnames, filenames in os.walk(root, topdown=True):
+            dirnames[:] = [d for d in dirnames if d != LOG_DIR_NAME]
+            if filename in filenames:
+                actual = Path(dirpath) / filename
+                if actual != dest_path:
+                    try:
+                        rel = actual.relative_to(root)
+                        actual_brand = rel.parts[0] if len(rel.parts) >= 2 else "Unknown"
+                    except ValueError:
+                        actual_brand = "Unknown"
+                    try:
+                        expected_rel = dest_path.relative_to(root)
+                        expected_brand = expected_rel.parts[0] if expected_rel.parts else "Unknown"
+                    except ValueError:
+                        expected_brand = "Unknown"
+
+                    if actual_brand != expected_brand:
+                        corrections_list.append({
+                            "filename": filename,
+                            "expected_brand": expected_brand,
+                            "actual_brand": actual_brand,
+                            "actual_path": str(actual),
+                        })
+                break
+    return corrections_list
+
+
+def learn_from_corrections(root: Path) -> int:
+    """Auto-detect and save corrections from user's manual file moves.
+
+    Returns the number of new corrections learned.
+    """
+    moves = detect_manual_moves(root)
+    count = 0
+    for move in moves:
+        save_correction(root, move["filename"], move["actual_brand"])
+        count += 1
+    return count
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # CLI
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1580,11 +2004,57 @@ def cmd_organize(args):
     if not scan_result.files:
         print("No files to organize.")
         return
-    # Read document contents to detect brands (Silva Operations, Delta, Uber, etc.)
+
+    # Filter out files currently syncing (OneDrive/Dropbox)
+    safe_files, syncing_files = _filter_syncing(scan_result.files)
+    if syncing_files:
+        print(f"  Skipping {len(syncing_files)} files currently syncing (OneDrive/Dropbox)")
+        scan_result.files = safe_files
+
+    # Extract email attachments from .eml files
+    eml_files = [f for f in scan_result.files if f.extension.lower() == ".eml"]
+    if eml_files:
+        print(f"Extracting attachments from {len(eml_files)} email files...")
+        for eml_entry in eml_files:
+            extracted = extract_email_attachments(eml_entry.path, output_dir=target)
+            if extracted:
+                print(f"  {eml_entry.name}: extracted {len(extracted)} attachments")
+                # Re-scan to pick up newly extracted files
+        if eml_files:
+            scan_result = scan_directory(root=target, categories=config["categories"], recursive=config["recursive"] if not args.no_recurse else False, skip_dirs=set(config["skip_directories"]), skip_files=set(config["skip_files"]), deep_scan=deep)
+            safe_files, _ = _filter_syncing(scan_result.files)
+            scan_result.files = safe_files
+
+    # Read document contents for brand/company classification
     print("Reading document contents for brand/company classification...")
     docs_read = extract_texts_for_entries(scan_result.files)
     print(f"  Read text from {docs_read} documents.\n")
-    plan = plan_organization(files=scan_result.files, target_root=target, rename_rules=config["naming_rules"], organize_into_folders=organize_into_folders)
+
+    # Load external brands and learned corrections
+    brands = load_brands(target)
+    corrections = load_corrections(target)
+    if corrections:
+        print(f"  Loaded {len(corrections)} learned corrections.")
+
+    # Learn from any manual moves since last run
+    new_corrections = learn_from_corrections(target)
+    if new_corrections:
+        print(f"  Learned {new_corrections} new corrections from your manual moves.")
+        corrections = load_corrections(target)
+
+    # Check for duplicates
+    print("Checking for duplicate files...")
+    duplicates = find_duplicates(scan_result.files)
+    if duplicates:
+        print(f"  Found {len(duplicates)} groups of duplicates.")
+        if args.verbose if hasattr(args, 'verbose') else False:
+            print(report_duplicates(duplicates))
+        print()
+
+    plan = plan_organization(files=scan_result.files, target_root=target,
+                             rename_rules=config["naming_rules"],
+                             organize_into_folders=organize_into_folders,
+                             brands=brands, corrections=corrections)
     if plan.total_actions == 0:
         print("All files are already organized and properly named.")
         return
@@ -1611,6 +2081,10 @@ def cmd_organize(args):
     print(exec_result.summary())
     print(f"\nChange log saved to: {log_path}")
     print(f'To undo: python file_organizer.py undo "{target}" --log "{log_path}"')
+
+    # Append to weekly report
+    report_path = append_weekly_report(target, exec_result, plan, scan_result, duplicates)
+    print(f"Weekly report updated: {report_path}")
 
 
 def cmd_undo(args):
@@ -1708,14 +2182,50 @@ def cmd_watch(args):
                     print(f"    No files found.")
                     continue
 
-                # Read document contents for Business/Personal classification
+                # Filter out syncing files
+                safe_files, syncing = _filter_syncing(scan_result.files)
+                if syncing:
+                    print(f"    Skipping {len(syncing)} syncing files.")
+                scan_result.files = safe_files
+
+                # Extract .eml attachments
+                eml_files = [f for f in scan_result.files if f.extension.lower() == ".eml"]
+                if eml_files:
+                    for eml_entry in eml_files:
+                        extracted = extract_email_attachments(eml_entry.path, output_dir=target)
+                        if extracted:
+                            print(f"    Extracted {len(extracted)} attachments from {eml_entry.name}")
+                    # Re-scan after extraction
+                    scan_result = scan_directory(
+                        root=target,
+                        categories=config["categories"],
+                        recursive=config.get("recursive", True),
+                        skip_dirs=set(config["skip_directories"]),
+                        skip_files=set(config["skip_files"]),
+                    )
+                    safe_files, _ = _filter_syncing(scan_result.files)
+                    scan_result.files = safe_files
+
+                # Read document contents for brand classification
                 extract_texts_for_entries(scan_result.files)
+
+                # Load brands and corrections
+                brands = load_brands(target)
+                corrections = load_corrections(target)
+
+                # Learn from manual moves
+                new_corrections = learn_from_corrections(target)
+                if new_corrections:
+                    print(f"    Learned {new_corrections} corrections from manual moves.")
+                    corrections = load_corrections(target)
 
                 plan = plan_organization(
                     files=scan_result.files,
                     target_root=target,
                     rename_rules=config["naming_rules"],
                     organize_into_folders=True,
+                    brands=brands,
+                    corrections=corrections,
                 )
 
                 if plan.total_actions == 0:
@@ -1732,10 +2242,18 @@ def cmd_watch(args):
                 exec_result = execute_plan(plan, dry_run=False)
                 log_path = save_log(target, exec_result.log_entries, dry_run=False)
 
+                # Check for duplicates
+                duplicates = find_duplicates(scan_result.files)
+
                 print(f"    Done: {exec_result.moves_done} moved, {exec_result.renames_done} renamed")
+                if duplicates:
+                    print(f"    Duplicates: {len(duplicates)} groups")
                 if exec_result.errors:
                     print(f"    Errors: {len(exec_result.errors)}")
                 print(f"    Log: {log_path.name}")
+
+                # Append to weekly report
+                append_weekly_report(target, exec_result, plan, scan_result, duplicates)
 
             except Exception as exc:
                 print(f"    Error: {exc}")
@@ -1805,13 +2323,53 @@ def cmd_init_config(args):
     print("Edit this file to customize categories, naming rules, and skip lists.")
 
 
+def cmd_init_brands(args):
+    """Export the built-in brand list to brands.json for customization."""
+    output = Path(args.output) if args.output else None
+    path = save_default_brands(output)
+    print(f"Brand list written to: {path}")
+    print("Edit this file to add/remove brands. The organizer will use it automatically.")
+
+
+def cmd_learn(args):
+    """Detect and learn from user's manual file moves."""
+    target = Path(args.directory).resolve()
+    print(f"Checking for manual moves in: {target}\n")
+
+    moves = detect_manual_moves(target)
+    if not moves:
+        print("No manual moves detected since last organize run.")
+        return
+
+    print(f"Found {len(moves)} file(s) you moved manually:\n")
+    for mv in moves:
+        print(f"  {mv['filename']}")
+        print(f"    Was in: {mv['expected_brand']}")
+        print(f"    Now in: {mv['actual_brand']}")
+        print()
+
+    count = learn_from_corrections(target)
+    print(f"Saved {count} correction(s) to {CORRECTIONS_FILENAME}.")
+    print("Future runs will use these corrections automatically.")
+
+
+def cmd_report(args):
+    """Show the weekly summary report."""
+    target = Path(args.directory).resolve()
+    report_path = target / LOG_DIR_NAME / REPORT_FILENAME
+    if not report_path.exists():
+        print("No weekly report found yet. Run 'organize' first.")
+        return
+    print(report_path.read_text(encoding="utf-8"))
+
+
 def cmd_detect(args):
     """Scan files, read every document, and report all detected companies."""
     target = Path(args.directory).resolve()
     config = load_config(Path(args.config) if args.config else None)
 
     print("=" * 60)
-    print("COMPANY / BRAND DETECTION REPORT")
+    print("FULL DETECTION REPORT")
     print("=" * 60)
     print(f"Scanning: {target}\n")
 
@@ -1828,22 +2386,38 @@ def cmd_detect(args):
         print("No files found.")
         return
 
+    # Cloud sync check
+    safe_files, syncing_files = _filter_syncing(scan_result.files)
+    if syncing_files:
+        print(f"  {len(syncing_files)} files currently syncing (will be skipped during organize)")
+    scan_result.files = safe_files
+
     print("Reading every document...")
     docs_read = extract_texts_for_entries(scan_result.files)
     print(f"  Read text from {docs_read} documents.\n")
 
+    # Load brands and corrections
+    brands = load_brands(target)
+    corrections = load_corrections(target)
+    if corrections:
+        print(f"  {len(corrections)} learned corrections loaded.")
+
     # Detect brands for every file
-    brand_files: dict[str, list[str]] = {}  # brand -> [filename, ...]
+    brand_files: dict[str, list[str]] = {}
+    doc_type_counts: dict[str, int] = {}
     unmatched = []
 
     for entry in scan_result.files:
-        brand = _detect_brand(entry.name, entry.text_content)
+        brand = _detect_brand(entry.name, entry.text_content, brands=brands,
+                              corrections=corrections)
+        doc_type = _detect_doc_type(entry.name, entry.extension, entry.text_content)
+        doc_type_counts[doc_type] = doc_type_counts.get(doc_type, 0) + 1
         if brand:
             brand_files.setdefault(brand, []).append(entry.name)
         else:
             unmatched.append(entry.name)
 
-    # Print results
+    # Print brand results
     print("=" * 60)
     print(f"DETECTED {len(brand_files)} COMPANIES / BRANDS")
     print("=" * 60)
@@ -1856,6 +2430,30 @@ def cmd_detect(args):
         if len(files) > 10 and not args.verbose:
             print(f"    ... and {len(files) - 10} more")
 
+    # Print document type breakdown
+    print(f"\n{'=' * 60}")
+    print("DOCUMENT TYPES")
+    print("=" * 60)
+    for dtype, count in sorted(doc_type_counts.items(), key=lambda x: -x[1]):
+        print(f"  {dtype}: {count} files")
+
+    # Print duplicate report
+    print(f"\n{'=' * 60}")
+    print("DUPLICATE FILES")
+    print("=" * 60)
+    duplicates = find_duplicates(scan_result.files)
+    print(report_duplicates(duplicates))
+
+    # Print corrections info
+    manual_moves = detect_manual_moves(target)
+    if manual_moves:
+        print(f"\n{'=' * 60}")
+        print(f"DETECTED {len(manual_moves)} MANUAL MOVES (corrections to learn)")
+        print("=" * 60)
+        for mv in manual_moves:
+            print(f"  {mv['filename']}: was in {mv['expected_brand']} -> moved to {mv['actual_brand']}")
+
+    # Unmatched
     print(f"\n{'=' * 60}")
     print(f"UNMATCHED FILES: {len(unmatched)}  (will go to normal category folders)")
     print("=" * 60)
@@ -1871,6 +2469,12 @@ def cmd_detect(args):
     print(f"  Companies found:  {len(brand_files)}")
     print(f"  Matched files:    {sum(len(f) for f in brand_files.values())}")
     print(f"  Unmatched files:  {len(unmatched)}")
+    print(f"  Document types:   {len(doc_type_counts)}")
+    print(f"  Duplicate groups: {len(duplicates)}")
+    if syncing_files:
+        print(f"  Syncing (skipped):{len(syncing_files)}")
+    if corrections:
+        print(f"  Learned rules:    {len(corrections)}")
     print()
     print("Nothing was moved. This is just a report.")
     print("To see every file, run again with --verbose")
@@ -1904,6 +2508,7 @@ def main():
     p_org.add_argument("--rename-only", action="store_true", help="Only rename, don't move into folders")
     p_org.add_argument("--no-recurse", action="store_true")
     p_org.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")
+    p_org.add_argument("--verbose", "-v", action="store_true", help="Show detailed duplicate report")
 
     p_undo = subparsers.add_parser("undo", help="Undo changes from a previous run")
     p_undo.add_argument("directory", help="Directory that was organized")
@@ -1932,8 +2537,23 @@ def main():
     p_init = subparsers.add_parser("init-config", help="Generate default config file")
     p_init.add_argument("--output", "-o")
 
+    # init-brands
+    p_brands = subparsers.add_parser("init-brands", help="Export brands.json for customization")
+    p_brands.add_argument("--output", "-o", help="Output path (default: brands.json in current dir)")
+
+    # learn
+    p_learn = subparsers.add_parser("learn", help="Learn corrections from manual file moves")
+    p_learn.add_argument("directory", help="Directory to scan for manual moves")
+
+    # report
+    p_report = subparsers.add_parser("report", help="Show the weekly summary report")
+    p_report.add_argument("directory", help="Directory to show report for")
+
     args = parser.parse_args()
-    {"scan": cmd_scan, "organize": cmd_organize, "undo": cmd_undo, "logs": cmd_logs, "detect": cmd_detect, "watch": cmd_watch, "setup-autowatch": cmd_setup_autowatch, "init-config": cmd_init_config}[args.command](args)
+    {"scan": cmd_scan, "organize": cmd_organize, "undo": cmd_undo, "logs": cmd_logs,
+     "detect": cmd_detect, "watch": cmd_watch, "setup-autowatch": cmd_setup_autowatch,
+     "init-config": cmd_init_config, "init-brands": cmd_init_brands,
+     "learn": cmd_learn, "report": cmd_report}[args.command](args)
 
 
 if __name__ == "__main__":
