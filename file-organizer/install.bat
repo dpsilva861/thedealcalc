@@ -66,6 +66,35 @@ echo.
 echo Creating default configuration...
 python -m file_organizer.cli.main config --init
 
+REM Create global wrapper scripts so file-organizer works from any directory
+echo.
+echo Setting up global commands...
+set "WRAPPER_DIR=%USERPROFILE%\bin"
+if not exist "%WRAPPER_DIR%" mkdir "%WRAPPER_DIR%"
+
+REM Create file-organizer.bat wrapper
+>"%WRAPPER_DIR%\file-organizer.bat" (
+    echo @echo off
+    echo "%CD%\.venv\Scripts\file-organizer.exe" %%*
+)
+
+REM Create fo.bat shortcut wrapper
+>"%WRAPPER_DIR%\fo.bat" (
+    echo @echo off
+    echo "%CD%\.venv\Scripts\fo.exe" %%*
+)
+
+REM Add %USERPROFILE%\bin to user PATH if not already there
+echo %PATH% | findstr /I /C:"%WRAPPER_DIR%" >nul 2>&1
+if errorlevel 1 (
+    echo Adding %WRAPPER_DIR% to your PATH...
+    powershell -Command "[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';%WRAPPER_DIR%', 'User')"
+    set "PATH=%PATH%;%WRAPPER_DIR%"
+    echo Done! PATH updated.
+) else (
+    echo %WRAPPER_DIR% is already in PATH.
+)
+
 REM Install PowerShell module
 echo.
 echo To install the PowerShell module, run in PowerShell:
@@ -78,6 +107,9 @@ echo.
 echo ============================================
 echo  Installation Complete!
 echo ============================================
+echo.
+echo The "file-organizer" and "fo" commands now work from ANY directory.
+echo If this is a fresh install, close and reopen your terminal once.
 echo.
 echo Quick Start:
 echo   file-organizer scan "%%USERPROFILE%%\Documents"
