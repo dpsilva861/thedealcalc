@@ -37,8 +37,8 @@ call .venv\Scripts\activate.bat
 REM Install dependencies
 echo.
 echo Installing dependencies...
-pip install --upgrade pip
-pip install -e .
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -e .
 
 REM Install Windows-specific packages
 echo.
