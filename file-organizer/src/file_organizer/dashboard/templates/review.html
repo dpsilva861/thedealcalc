@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Review Queue — File Organizer{% endblock %}
+{% block content %}
+<h1>Review Queue ({{ files|length }} files)</h1>
+
+{% if not files %}
+<div class="card">
+    <p>No files awaiting review. The agent is handling everything automatically.</p>
+</div>
+{% endif %}
+
+{% for f in files %}
+<div class="card review-card" id="file-{{ f.id }}">
+    <div class="review-header">
+        <h3>{{ f.filename }}</h3>
+        <span class="confidence-badge" style="--confidence: {{ (f.confidence * 100)|int }}%">
+            Confidence: {{ "%.0f"|format(f.confidence * 100) }}%
+        </span>
+    </div>
+    <div class="review-meta">
+        <span>Path: {{ f.file_path }}</span>
+        <span>Size: {{ "%.1f"|format(f.file_size / 1024) }} KB</span>
+        <span>Modified: {{ f.modified_at[:10] }}</span>
+    </div>
+
+    {% if f.summary %}
+    <div class="review-summary">{{ f.summary }}</div>
+    {% endif %}
+
+    <form onsubmit="event.preventDefault(); submitReview({{ f.id }}, this);" class="review-form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category">
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if cat == f.category %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Document Type</label>
+                <select name="document_type">
+                    {% for dt in doc_types %}
+                    <option value="{{ dt }}" {% if dt == f.document_type %}selected{% endif %}>{{ dt }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Entities</label>
+                <input type="text" name="entities" value="{{ f.entities|join(', ') }}" placeholder="Company, property...">
+            </div>
+            <div class="form-group">
+                <label>Tags</label>
+                <input type="text" name="tags" value="{{ f.tags|join(', ') }}" placeholder="tag1, tag2, tag3">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status">
+                    <option value="active" {% if f.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="archived" {% if f.status == 'archived' %}selected{% endif %}>Archived</option>
+                    <option value="reference" {% if f.status == 'reference' %}selected{% endif %}>Reference</option>
+                    <option value="draft" {% if f.status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="final" {% if f.status == 'final' %}selected{% endif %}>Final</option>
+                    <option value="expired" {% if f.status == 'expired' %}selected{% endif %}>Expired</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Confidentiality</label>
+                <select name="confidentiality">
+                    <option value="general" {% if f.confidentiality == 'general' %}selected{% endif %}>General</option>
+                    <option value="business-confidential" {% if f.confidentiality == 'business-confidential' %}selected{% endif %}>Business Confidential</option>
+                    <option value="personal-private" {% if f.confidentiality == 'personal-private' %}selected{% endif %}>Personal Private</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Feedback Note</label>
+            <input type="text" name="feedback_note" placeholder="Why are you correcting this classification?">
+        </div>
+        <div class="review-actions">
+            <button type="submit" class="btn-primary">Approve & Save</button>
+            <button type="button" onclick="openFile({{ f.id }})" class="btn-secondary">Open File</button>
+        </div>
+    </form>
+</div>
+{% endfor %}
+
+<script>
+function submitReview(fileId, form) {
+    const data = {};
+    const formData = new FormData(form);
+    for (const [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    updateFile(fileId, data);
+}
+</script>
+{% endblock %}

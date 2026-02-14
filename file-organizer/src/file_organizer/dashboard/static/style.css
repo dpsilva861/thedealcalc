@@ -1,0 +1,370 @@
+/* File Organizer Dashboard — Clean, premium design */
+:root {
+    --bg: #0f1117;
+    --bg-card: #1a1d27;
+    --bg-hover: #242836;
+    --text: #e4e6eb;
+    --text-muted: #8b8fa3;
+    --accent: #4f8ff7;
+    --accent-hover: #3a7ae0;
+    --border: #2a2d3a;
+    --success: #4caf50;
+    --warning: #ff9800;
+    --danger: #f44336;
+    --radius: 8px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+/* Navigation */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 56px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-brand {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.nav-links { display: flex; gap: 4px; }
+
+.nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.nav-links a:hover { color: var(--text); background: var(--bg-hover); }
+.nav-links a.active { color: var(--accent); background: rgba(79, 143, 247, 0.1); }
+
+.badge {
+    background: var(--warning);
+    color: #000;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+/* Layout */
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+.grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+/* Cards */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-number { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+h1 { font-size: 24px; margin-bottom: 20px; }
+h2 { font-size: 18px; margin-bottom: 16px; color: var(--text); }
+h3 { font-size: 16px; margin-bottom: 12px; }
+
+/* Tables */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(42, 45, 58, 0.5);
+}
+
+.data-table tr:hover td { background: var(--bg-hover); }
+
+.filename {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.summary {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/* Tags */
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(79, 143, 247, 0.15);
+    color: var(--accent);
+    border-radius: 14px;
+    font-size: 13px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.tag:hover { background: rgba(79, 143, 247, 0.3); }
+
+.tag-small {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(79, 143, 247, 0.1);
+    color: var(--accent);
+    border-radius: 10px;
+    font-size: 11px;
+    margin: 1px 0;
+}
+
+/* Buttons */
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover { background: var(--accent-hover); }
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 8px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover { color: var(--text); border-color: var(--text-muted); }
+
+.btn-small {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.btn-small:hover { background: rgba(79, 143, 247, 0.1); }
+
+/* Search */
+.search-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+
+.search-input {
+    flex: 1;
+    padding: 10px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+}
+
+.search-input:focus { border-color: var(--accent); }
+
+/* Filters */
+.filters { margin-top: 8px; }
+.filters summary { color: var(--text-muted); cursor: pointer; font-size: 13px; }
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 13px;
+}
+
+/* Browse sidebar */
+.sidebar-nav .nav-list {
+    list-style: none;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.sidebar-nav .nav-list li a {
+    display: block;
+    padding: 6px 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.sidebar-nav .nav-list li a:hover { background: var(--bg-hover); color: var(--text); }
+.sidebar-nav .nav-list li a.active { background: rgba(79, 143, 247, 0.15); color: var(--accent); }
+
+/* View tabs */
+.view-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+}
+
+.tab {
+    padding: 8px 16px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--radius) var(--radius) 0 0;
+    font-size: 14px;
+}
+
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+/* Review */
+.review-card { margin-bottom: 16px; }
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.confidence-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(255, 152, 0, 0.2);
+    color: var(--warning);
+}
+
+.review-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.review-summary {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg);
+    border-radius: var(--radius);
+}
+
+/* Forms */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.form-group { margin-bottom: 12px; }
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 13px;
+}
+
+.review-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2col { grid-template-columns: 1fr; }
+    .filter-grid { grid-template-columns: 1fr; }
+}

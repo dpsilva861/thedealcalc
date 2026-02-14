@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}File Organizer{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">File Organizer</div>
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('search') }}" class="{% if request.endpoint == 'search' %}active{% endif %}">Search</a>
+            <a href="{{ url_for('browse') }}" class="{% if request.endpoint == 'browse' %}active{% endif %}">Browse</a>
+            <a href="{{ url_for('review') }}" class="{% if request.endpoint == 'review' %}active{% endif %}">
+                Review
+                {% if review_count is defined and review_count > 0 %}
+                    <span class="badge">{{ review_count }}</span>
+                {% endif %}
+            </a>
+        </div>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <script>
+        function openFile(fileId) {
+            fetch(`/api/file/${fileId}/open`, { method: 'POST' })
+                .then(r => r.json())
+                .then(d => { if (d.error) alert(d.error); });
+        }
+        function updateFile(fileId, data) {
+            fetch(`/api/file/${fileId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.status === 'updated') location.reload();
+                else alert(d.error || 'Update failed');
+            });
+        }
+    </script>
+</body>
+</html>

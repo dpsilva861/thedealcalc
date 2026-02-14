@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Browse — File Organizer{% endblock %}
+{% block content %}
+<h1>Browse Files</h1>
+
+<div class="view-tabs">
+    <a href="{{ url_for('browse', view='category') }}" class="tab {% if view == 'category' %}active{% endif %}">By Category</a>
+    <a href="{{ url_for('browse', view='tags') }}" class="tab {% if view == 'tags' %}active{% endif %}">By Tag</a>
+    <a href="{{ url_for('browse', view='entity') }}" class="tab {% if view == 'entity' %}active{% endif %}">By Entity</a>
+    <a href="{{ url_for('browse', view='status') }}" class="tab {% if view == 'status' %}active{% endif %}">By Status</a>
+</div>
+
+<div class="grid-2col">
+    <div class="card sidebar-nav">
+        <h3>
+            {% if view == 'category' %}Categories
+            {% elif view == 'tags' %}Tags
+            {% elif view == 'entity' %}Entities
+            {% elif view == 'status' %}Statuses
+            {% endif %}
+        </h3>
+        <ul class="nav-list">
+            {% if view == 'category' %}
+                {% for cat, count in stats.by_category.items() %}
+                <li><a href="{{ url_for('browse', view='category', selected=cat) }}"
+                       class="{% if selected == cat %}active{% endif %}">{{ cat }} ({{ count }})</a></li>
+                {% endfor %}
+            {% elif view == 'tags' %}
+                {% for tag, count in all_tags %}
+                <li><a href="{{ url_for('browse', view='tags', selected=tag) }}"
+                       class="{% if selected == tag %}active{% endif %}">{{ tag }} ({{ count }})</a></li>
+                {% endfor %}
+            {% elif view == 'entity' %}
+                {% for entity, count in all_entities %}
+                <li><a href="{{ url_for('browse', view='entity', selected=entity) }}"
+                       class="{% if selected == entity %}active{% endif %}">{{ entity }} ({{ count }})</a></li>
+                {% endfor %}
+            {% elif view == 'status' %}
+                {% for status, count in stats.by_status.items() %}
+                <li><a href="{{ url_for('browse', view='status', selected=status) }}"
+                       class="{% if selected == status %}active{% endif %}">{{ status }} ({{ count }})</a></li>
+                {% endfor %}
+            {% endif %}
+        </ul>
+    </div>
+
+    <div class="card">
+        {% if selected %}
+        <h3>{{ selected }} ({{ files|length }} files)</h3>
+        <table class="data-table">
+            <thead>
+                <tr><th>Filename</th><th>Type</th><th>Tags</th><th>Date</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for f in files %}
+            <tr>
+                <td class="filename" title="{{ f.file_path }}">{{ f.filename }}</td>
+                <td>{{ f.document_type }}</td>
+                <td>
+                    {% for tag in f.tags[:3] %}
+                    <span class="tag-small">{{ tag }}</span>
+                    {% endfor %}
+                </td>
+                <td>{{ f.date_relevance or f.modified_at[:10] }}</td>
+                <td><button onclick="openFile({{ f.id }})" class="btn-small">Open</button></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>Select a {{ view }} from the sidebar to view files.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

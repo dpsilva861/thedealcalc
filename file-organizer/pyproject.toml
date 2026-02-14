@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "file-organizer"
+version = "2.0.0"
+description = "Intelligent file organization system with LLM-powered classification"
+requires-python = ">=3.10"
+dependencies = [
+    "watchdog>=3.0.0",
+    "tika>=2.6.0",
+    "python-docx>=1.1.0",
+    "openpyxl>=3.1.2",
+    "PyPDF2>=3.0.0",
+    "python-pptx>=0.6.23",
+    "Pillow>=10.0.0",
+    "pytesseract>=0.3.10",
+    "extract-msg>=0.48.0",
+    "olefile>=0.47",
+    "mutagen>=1.47.0",
+    "chardet>=5.2.0",
+    "python-magic-bin>=0.4.14; sys_platform == 'win32'",
+    "python-magic>=0.4.27; sys_platform != 'win32'",
+    "flask>=3.0.0",
+    "requests>=2.31.0",
+    "pywin32>=306; sys_platform == 'win32'",
+    "pystray>=0.19.5; sys_platform == 'win32'",
+    "click>=8.1.7",
+    "rich>=13.7.0",
+    "thefuzz[speedup]>=0.22.1",
+    "tabulate>=0.9.0",
+    "xxhash>=3.4.1",
+    "schedule>=1.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=24.0.0",
+    "ruff>=0.3.0",
+]
+
+[project.scripts]
+file-organizer = "file_organizer.cli.main:cli"
+fo = "file_organizer.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
