@@ -54,9 +54,12 @@ class Organizer:
         for record in records:
             if record.needs_review:
                 # Move to review folder instead
-                move = self._move_to_review(record)
-                if move:
-                    moves.append(move)
+                try:
+                    move = self._move_to_review(record)
+                    if move:
+                        moves.append(move)
+                except Exception as e:
+                    logger.error("Failed to move to review %s: %s", record.file_path, e)
                 continue
 
             if not record.category or not record.document_type:
