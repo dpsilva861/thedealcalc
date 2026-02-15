@@ -140,7 +140,7 @@ class Organizer:
 
     def _move_to_review(self, record: FileRecord) -> MoveRecord | None:
         """Move a file to the review/quarantine folder."""
-        review_dir = self.config.review_dir
+        review_dir = os.path.normpath(self.config.review_dir)
         new_path = os.path.join(review_dir, record.filename)
         new_path = self._resolve_collision(new_path)
 
@@ -190,7 +190,7 @@ class Organizer:
             if doc_folder:
                 parts.append(doc_folder)
 
-        return os.path.join(base, *parts)
+        return os.path.normpath(os.path.join(base, *parts))
 
     def _pick_primary_entity(self, record: FileRecord) -> str:
         """Pick the primary entity (company) for folder placement."""
