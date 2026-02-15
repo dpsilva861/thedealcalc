@@ -287,3 +287,113 @@ class TestTaxonomy:
         doc = engine.get_naming_convention_doc()
         assert "MMDDYYYY" in doc
         assert "underscore" in doc.lower() or "_" in doc
+
+
+# ------------------------------------------------------------------ #
+# Classifier Tests
+# ------------------------------------------------------------------ #
+
+class TestClassifier:
+    def test_rule_based_classify_lease(self, config, tmp_db):
+        from file_organizer.agent.classifier import Classifier
+
+        classifier = Classifier(config, tmp_db)
+        record = FileRecord(
+            file_path="/test/docs/lease_24hour.pdf",
+            filename="lease_24hour.pdf",
+            extension="pdf",
+            file_size=102400,
+            extracted_text="This lease agreement is between 24 Hour Fitness and the landlord for the premises.",
+            modified_at="2025-03-22T14:30:00",
+        )
+        tmp_db.upsert_file(record)
+        result = classifier.classify(record)
+        assert result.document_type == "Lease"
+        assert result.category == "Legal"
+        assert result.confidence > 0
+
+    def test_rule_based_classify_invoice(self, config, tmp_db):
+        from file_organizer.agent.classifier import Classifier
+
+        classifier = Classifier(config, tmp_db)
+        record = FileRecord(
+            file_path="/test/docs/uber_invoice.pdf",
+            filename="uber_invoice.pdf",
+            extension="pdf",
+            file_size=50000,
+            extracted_text="Invoice #12345. Bill to: Company. Amount due: $150.00. Uber trip receipt.",
+            modified_at="2025-06-01T10:00:00",
+        )
+        tmp_db.upsert_file(record)
+        result = classifier.classify(record)
+        assert result.document_type == "Invoice"
+        assert result.confidence > 0
+
+    def test_unclassified_file_skipped_by_organizer(self, config, tmp_db):
+        """Verify that unclassified files are skipped by organizer (the original bug)."""
+        from file_organizer.organizer import Organizer
+
+        record = FileRecord(
+            file_path="/test/docs/mystery.pdf",
+            filename="mystery.pdf",
+            extension="pdf",
+            file_size=1024,
+            # No category or document_type set
+        )
+        tmp_db.upsert_file(record)
+
+        organizer = Organizer(config, tmp_db)
+        moves = organizer.organize(dry_run=True)
+        assert len(moves) == 0  # Confirms the original bug behavior
+
+    def test_classified_file_organized(self, config, tmp_db):
+        """Verify that classified files get organized."""
+        from file_organizer.organizer import Organizer
+
+        record = FileRecord(
+            file_path="/test/docs/lease_24hour.pdf",
+            filename="lease_24hour.pdf",
+            extension="pdf",
+            file_size=102400,
+            category="Legal",
+            subcategory="Leases",
+            document_type="Lease",
+            entities=["24 Hour Fitness"],
+            modified_at="2025-03-22T14:30:00",
+        )
+        tmp_db.upsert_file(record)
+
+        organizer = Organizer(config, tmp_db)
+        moves = organizer.organize(dry_run=True)
+        assert len(moves) == 1
+        assert "24-Hour-Fitness" in moves[0].new_path or "24" in moves[0].new_path
+
+    def test_classify_then_organize_pipeline(self, config, tmp_db):
+        """Test the full classify-then-organize pipeline (the fix)."""
+        from file_organizer.agent.classifier import Classifier
+        from file_organizer.organizer import Organizer
+
+        # Insert an unclassified file with content that can be classified
+        record = FileRecord(
+            file_path="/test/docs/marriott_lease.pdf",
+            filename="marriott_lease.pdf",
+            extension="pdf",
+            file_size=102400,
+            extracted_text="This lease agreement is between Marriott International and the landlord.",
+            modified_at="2025-03-22T14:30:00",
+        )
+        tmp_db.upsert_file(record)
+
+        # Before classification, organize should yield 0 moves
+        organizer = Organizer(config, tmp_db)
+        moves = organizer.organize(dry_run=True)
+        assert len(moves) == 0
+
+        # Classify the file
+        classifier = Classifier(config, tmp_db)
+        classifier.classify(record)
+
+        # After classification, organize should yield moves
+        moves = organizer.organize(dry_run=True)
+        assert len(moves) == 1
+        assert "Marriott" in moves[0].new_path

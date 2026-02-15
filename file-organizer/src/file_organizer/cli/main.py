@@ -229,12 +229,41 @@ def taxonomy(ctx: click.Context, create: bool, json_output: bool) -> None:
 # ------------------------------------------------------------------ #
 @cli.command()
 @click.option("--dry-run", is_flag=True, help="Preview without moving files")
+@click.option("--skip-classify", is_flag=True, help="Skip auto-classification of unclassified files")
 @click.option("--manifest", default="", help="Export manifest CSV to this path")
 @click.pass_context
-def organize(ctx: click.Context, dry_run: bool, manifest: str) -> None:
+def organize(ctx: click.Context, dry_run: bool, skip_classify: bool, manifest: str) -> None:
     """Execute file organization based on classifications."""
     config = _get_config(ctx.obj.get("config_path"))
     db = _get_db(config)
+
+    # Auto-classify unclassified files unless skipped
+    if not skip_classify:
+        from ..agent.classifier import Classifier
+
+        classifier = Classifier(config, db)
+        all_files = db.get_all_files()
+        unclassified = [
+            f for f in all_files
+            if not f.category or not f.document_type
+        ]
+        if unclassified:
+            console.print(f"[bold]Classifying {len(unclassified)} unclassified files...[/bold]")
+            classified_count = 0
+            for i, record in enumerate(unclassified):
+                try:
+                    classifier.classify(record)
+                    classified_count += 1
+                except Exception as e:
+                    logging.getLogger(__name__).error(
+                        "Failed to classify %s: %s", record.file_path, e
+                    )
+                if (i + 1) % 100 == 0 or (i + 1) == len(unclassified):
+                    console.print(f"  [{i + 1}/{len(unclassified)}] classified")
+            console.print(
+                f"[green]Classified {classified_count} files[/green]\n"
+            )
+
     from ..organizer import Organizer
 
     organizer = Organizer(config, db)
@@ -295,6 +324,53 @@ def classify(ctx: click.Context, file_path: str, json_output: bool) -> None:
         console.print(f"  Destination:   {result.destination_folder}")
         console.print(f"  New Filename:  {result.filename}")
         console.print(f"  Reasoning:     {result.reasoning}")
+
+    db.close()
+
+
+# ------------------------------------------------------------------ #
+# classify-all
+# ------------------------------------------------------------------ #
+@cli.command("classify-all")
+@click.option("--force", is_flag=True, help="Re-classify already classified files")
+@click.pass_context
+def classify_all(ctx: click.Context, force: bool) -> None:
+    """Batch-classify all scanned files using rules + LLM."""
+    config = _get_config(ctx.obj.get("config_path"))
+    db = _get_db(config)
+    from ..agent.classifier import Classifier
+
+    classifier = Classifier(config, db)
+    all_files = db.get_all_files()
+
+    if force:
+        targets = all_files
+    else:
+        targets = [f for f in all_files if not f.category or not f.document_type]
+
+    if not targets:
+        console.print("[green]All files are already classified.[/green]")
+        db.close()
+        return
+
+    console.print(f"[bold]Classifying {len(targets)} files...[/bold]")
+    classified = 0
+    errors = 0
+    for i, record in enumerate(targets):
+        try:
+            classifier.classify(record)
+            classified += 1
+        except Exception as e:
+            errors += 1
+            logging.getLogger(__name__).error(
+                "Failed to classify %s: %s", record.file_path, e
+            )
+        if (i + 1) % 100 == 0 or (i + 1) == len(targets):
+            console.print(f"  [{i + 1}/{len(targets)}] processed")
+
+    console.print(f"\n[bold green]Classification complete![/bold green]")
+    console.print(f"  Classified: {classified}")
+    console.print(f"  Errors:     {errors}")
 
     db.close()
 
