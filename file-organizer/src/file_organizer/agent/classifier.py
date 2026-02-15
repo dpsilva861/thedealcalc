@@ -110,15 +110,19 @@ class Classifier:
         detected_brand = ""
         for brand in self.config.brands:
             brand_lower = brand.lower()
-            # Check filename and content
-            if brand_lower in filename_lower or brand_lower in text_lower:
+            # Use word-boundary matching to avoid false positives
+            # (e.g., "aman" matching inside "management")
+            brand_pattern = r"\b" + re.escape(brand_lower) + r"\b"
+            if re.search(brand_pattern, filename_lower) or re.search(brand_pattern, text_lower):
                 detected_brand = brand
                 result.entities.append(brand)
                 confidence_factors.append(0.3)
                 break
             # Check without spaces (e.g., "24hourfitness")
             brand_nospace = brand_lower.replace(" ", "")
-            if brand_nospace in filename_lower.replace(" ", "").replace("-", "").replace("_", ""):
+            fname_collapsed = filename_lower.replace(" ", "").replace("-", "").replace("_", "")
+            brand_nospace_pattern = r"\b" + re.escape(brand_nospace) + r"\b"
+            if re.search(brand_nospace_pattern, fname_collapsed):
                 detected_brand = brand
                 result.entities.append(brand)
                 confidence_factors.append(0.25)
@@ -134,13 +138,18 @@ class Classifier:
             "Contract": [r"contract", r"(?<!lease\s)agreement", r"terms\s+and\s+conditions"],
             "Tax-Form": [r"w-?2\b", r"\b1099\b", r"k-?1\b", r"form\s+\d{3,4}"],
             "Tax-Return": [r"tax\s+return", r"form\s+1040", r"schedule\s+[a-e]"],
-            "Insurance": [r"insurance", r"policy\s+number", r"coverage", r"premium"],
+            "Financial-Model": [r"pro\s*forma", r"financial\s+model", r"financial\s+analysis",
+                               r"rental\s+analysis", r"projection", r"underwriting",
+                               r"cash\s+flow\s+analysis", r"cash\s+flow\s+before\s+tax",
+                               r"net\s+operating\s+income", r"\bnoi\b.*\bcap\s*rate\b"],
+            "Insurance": [r"(?<!/)\binsurance\s+(policy|certificate|claim)",
+                         r"policy\s+number", r"coverage\s+limit", r"premium\s+amount",
+                         r"\binsured\s+party\b"],
             "Legal": [r"attorney", r"law\s+firm", r"legal\s+notice", r"litigation"],
-            "Report": [r"report", r"analysis", r"findings", r"executive\s+summary"],
+            "Report": [r"(?<!financial\s)(?<!rental\s)\breport\b", r"findings",
+                      r"executive\s+summary"],
             "Proposal": [r"proposal", r"scope\s+of\s+work", r"quotation"],
             "Letter": [r"dear\s+\w", r"sincerely", r"regards", r"to\s+whom"],
-            "Financial-Model": [r"pro\s*forma", r"financial\s+model", r"projection",
-                               r"underwriting", r"cash\s+flow\s+analysis"],
             "Memo": [r"\bmemo\b", r"memorandum", r"internal\s+memo"],
             "Amendment": [r"amendment", r"first\s+amendment", r"lease\s+amendment"],
             "Appraisal": [r"appraisal", r"appraised\s+value", r"market\s+value"],

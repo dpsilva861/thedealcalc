@@ -230,7 +230,7 @@ class Config:
 
     # Ollama configuration
     ollama_url: str = "http://localhost:11434"
-    ollama_model: str = "llama3:8b"
+    ollama_model: str = "llama3:latest"
 
     # Tika server URL (empty = use tika-python's built-in server)
     tika_server_url: str = ""
@@ -242,8 +242,10 @@ class Config:
         os.path.expanduser("~/Documents"),
     ])
 
-    # Base directory for organized files
-    organized_base: str = field(default_factory=lambda: os.path.expanduser("~/Organized"))
+    # Base directory for organized files (inside OneDrive for cloud sync)
+    organized_base: str = field(
+        default_factory=lambda: os.path.join(os.path.expanduser("~"), "OneDrive", "Organized")
+    )
 
     # Known brands
     brands: list[str] = field(default_factory=lambda: list(DEFAULT_BRANDS))
@@ -268,7 +270,9 @@ class Config:
 
     # Review/quarantine directory
     review_dir: str = field(
-        default_factory=lambda: os.path.expanduser("~/Organized/_Inbox/_Review")
+        default_factory=lambda: os.path.join(
+            os.path.expanduser("~"), "OneDrive", "Organized", "_Inbox", "_Review"
+        )
     )
 
     # Dashboard
