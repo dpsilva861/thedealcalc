@@ -448,3 +448,150 @@ export interface ShareLink {
   viewCount: number;
   createdAt: string;
 }
+
+// ── Timer & Analytics Types ──────────────────────────────────────────────
+
+export type TimerPhase =
+  | "upload"
+  | "ai_analysis"
+  | "human_review"
+  | "export";
+
+export interface TimerPhaseDuration {
+  phase: TimerPhase;
+  startedAt: number;
+  endedAt?: number;
+  durationMs?: number;
+}
+
+export interface TimerSession {
+  id: string;
+  analysisId: string;
+  documentType: DocumentType;
+  phases: TimerPhaseDuration[];
+  totalDurationMs?: number;
+  revisionCount?: number;
+  decisionsPerMinute?: number;
+  startedAt: string;
+  completedAt?: string;
+}
+
+export interface AnalyticsMetrics {
+  totalAnalyses: number;
+  avgTotalTimeMs: number;
+  avgAiTimeMs: number;
+  avgHumanReviewTimeMs: number;
+  avgDecisionsPerMinute: number;
+  estimatedManualTimeMs: number;
+  totalTimeSavedMs: number;
+  byDocumentType: Record<string, { count: number; avgTimeMs: number }>;
+  recentSessions: TimerSession[];
+}
+
+// ── Negotiation Round Types ─────────────────────────────────────────────
+
+export type RoundStatus =
+  | "drafting"
+  | "sent"
+  | "awaiting_response"
+  | "received"
+  | "reviewing"
+  | "closed";
+
+export type RoundParty = "us" | "counterparty";
+
+export interface NegotiationRound {
+  id: string;
+  dealId: string;
+  roundNumber: number;
+  party: RoundParty;
+  status: RoundStatus;
+  analysisId?: string;
+  documentText?: string;
+  revisionsAccepted: number;
+  revisionsRejected: number;
+  revisionsOpen: number;
+  notes?: string;
+  receivedAt?: string;
+  sentAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NegotiationSummary {
+  dealId: string;
+  totalRounds: number;
+  currentRound: number;
+  currentParty: RoundParty;
+  currentStatus: RoundStatus;
+  elapsedDays: number;
+  avgResponseTimeDays: number;
+  concessionsMade: number;
+  concessionsReceived: number;
+}
+
+// ── Deal Status Extension ────────────────────────────────────────────────
+
+export type DealStatus =
+  | "new"
+  | "in_review"
+  | "redlines_sent"
+  | "awaiting_response"
+  | "counter_received"
+  | "final_review"
+  | "executed"
+  | "dead";
+
+export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
+  new: "New",
+  in_review: "In Review",
+  redlines_sent: "Redlines Sent",
+  awaiting_response: "Awaiting Response",
+  counter_received: "Counter Received",
+  final_review: "Final Review",
+  executed: "Executed",
+  dead: "Dead Deal",
+};
+
+export const DEAL_STATUS_COLORS: Record<DealStatus, string> = {
+  new: "bg-blue-100 text-blue-800",
+  in_review: "bg-yellow-100 text-yellow-800",
+  redlines_sent: "bg-purple-100 text-purple-800",
+  awaiting_response: "bg-orange-100 text-orange-800",
+  counter_received: "bg-indigo-100 text-indigo-800",
+  final_review: "bg-teal-100 text-teal-800",
+  executed: "bg-green-100 text-green-800",
+  dead: "bg-gray-100 text-gray-500",
+};
+
+// ── Cross-Document Consistency Types ─────────────────────────────────────
+
+export interface ConsistencyIssue {
+  id: string;
+  severity: RiskLevel;
+  category: "defined_term" | "date" | "amount" | "party_name" | "address" | "cross_reference";
+  description: string;
+  documentA: { id: string; fileName: string; excerpt: string };
+  documentB: { id: string; fileName: string; excerpt: string };
+  suggestion?: string;
+}
+
+// ── DOCX Import Types ────────────────────────────────────────────────────
+
+export interface ImportedTrackChange {
+  id: string;
+  type: "insertion" | "deletion";
+  author: string;
+  date: string;
+  text: string;
+  context: string;
+  paragraphIndex: number;
+}
+
+export interface DocxImportResult {
+  plainText: string;
+  trackChanges: ImportedTrackChange[];
+  authors: string[];
+  totalInsertions: number;
+  totalDeletions: number;
+}

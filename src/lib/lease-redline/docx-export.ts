@@ -20,6 +20,8 @@ import {
   BorderStyle,
   ShadingType,
   PageBreak,
+  InsertedTextRun,
+  DeletedTextRun,
 } from 'docx';
 
 import type {
@@ -1174,4 +1176,196 @@ export function downloadBlob(blob: Blob, filename: string): void {
     document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
   }, 100);
+}
+
+// ── Real Track Changes Export ────────────────────────────────────────────
+
+/**
+ * Generates a Word document with REAL tracked changes (w:ins / w:del).
+ *
+ * This produces a .docx that opens in Word with Track Changes visible,
+ * allowing the counterparty's attorney to review changes natively.
+ *
+ * Only accepted revisions are rendered as tracked changes.
+ * Pending/rejected revisions are omitted (original text preserved).
+ */
+export async function exportWithTrackChanges(
+  originalText: string,
+  revisions: LeaseRedlineRevision[],
+  decisions: RevisionDecision[],
+  author: string = 'DealCalc Redline Agent'
+): Promise<Blob> {
+  const dateStr = new Date().toISOString();
+
+  // Build a list of accepted replacements with positions in the original text
+  type Replacement = {
+    start: number;
+    end: number;
+    original: string;
+    replacement: string;
+    revisionIndex: number;
+  };
+
+  const replacements: Replacement[] = [];
+  for (let i = 0; i < revisions.length; i++) {
+    if (decisions[i] !== 'accepted') continue;
+
+    const orig = revisions[i].originalLanguage;
+    const idx = originalText.indexOf(orig);
+    if (idx >= 0) {
+      replacements.push({
+        start: idx,
+        end: idx + orig.length,
+        original: orig,
+        replacement: revisions[i].cleanReplacement,
+        revisionIndex: i,
+      });
+    }
+  }
+
+  // Sort by start position, longest first for overlapping
+  replacements.sort((a, b) => a.start - b.start || b.end - a.end);
+
+  // Remove overlapping replacements (keep first/longest)
+  const filtered: Replacement[] = [];
+  let lastEnd = -1;
+  for (const rep of replacements) {
+    if (rep.start >= lastEnd) {
+      filtered.push(rep);
+      lastEnd = rep.end;
+    }
+  }
+
+  // Split original text into paragraphs
+  const paragraphs = originalText.split('\n');
+
+  // Build document paragraphs with tracked changes
+  let globalOffset = 0;
+  let repIdx = 0;
+  const docParagraphs: Paragraph[] = [];
+
+  for (const paraText of paragraphs) {
+    const paraStart = globalOffset;
+    const paraEnd = globalOffset + paraText.length;
+    const children: (TextRun | InsertedTextRun | DeletedTextRun)[] = [];
+
+    let cursor = paraStart;
+
+    // Process replacements that overlap this paragraph
+    while (repIdx < filtered.length && filtered[repIdx].start < paraEnd) {
+      const rep = filtered[repIdx];
+
+      if (rep.start >= paraEnd) break;
+
+      // Text before this replacement (within paragraph)
+      if (rep.start > cursor) {
+        const beforeText = originalText.slice(
+          Math.max(cursor, paraStart),
+          Math.min(rep.start, paraEnd)
+        );
+        if (beforeText) {
+          children.push(new TextRun({ text: beforeText, size: 22, font: 'Calibri' }));
+        }
+      }
+
+      // The replacement itself
+      const trackId = rep.revisionIndex + 1;
+
+      // Deleted text (original language, marked as deletion)
+      const deletedText = originalText.slice(
+        Math.max(rep.start, paraStart),
+        Math.min(rep.end, paraEnd)
+      );
+      if (deletedText) {
+        children.push(
+          new DeletedTextRun({
+            text: deletedText,
+            id: trackId,
+            author,
+            date: dateStr,
+            size: 22,
+            font: 'Calibri',
+          })
+        );
+      }
+
+      // Inserted text (replacement language)
+      // Only insert if this is the first paragraph of the replacement
+      if (rep.start >= paraStart) {
+        children.push(
+          new InsertedTextRun({
+            text: rep.replacement,
+            id: trackId + 1000, // Offset to avoid ID collision
+            author,
+            date: dateStr,
+            size: 22,
+            font: 'Calibri',
+          })
+        );
+      }
+
+      cursor = Math.min(rep.end, paraEnd);
+
+      // Move to next replacement if fully consumed
+      if (rep.end <= paraEnd) {
+        repIdx++;
+      } else {
+        break;
+      }
+    }
+
+    // Remaining text in paragraph
+    if (cursor < paraEnd) {
+      const remainingText = originalText.slice(
+        Math.max(cursor, paraStart),
+        paraEnd
+      );
+      if (remainingText) {
+        children.push(new TextRun({ text: remainingText, size: 22, font: 'Calibri' }));
+      }
+    }
+
+    // If no children, add empty run
+    if (children.length === 0) {
+      children.push(new TextRun({ text: '', size: 22, font: 'Calibri' }));
+    }
+
+    docParagraphs.push(
+      new Paragraph({
+        children,
+        spacing: { after: 120, line: 276 },
+      })
+    );
+
+    // +1 for the newline character
+    globalOffset = paraEnd + 1;
+  }
+
+  const doc = new Document({
+    creator: author,
+    title: 'Lease Redline — Track Changes',
+    description: 'Lease redline with native Word track changes',
+    styles: {
+      default: {
+        document: {
+          run: {
+            font: 'Calibri',
+            size: 22,
+          },
+        },
+      },
+    },
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 },
+          },
+        },
+        children: docParagraphs,
+      },
+    ],
+  });
+
+  return Packer.toBlob(doc);
 }
