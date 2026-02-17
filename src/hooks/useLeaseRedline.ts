@@ -8,6 +8,7 @@ import type {
 
 interface AnalyzeOptions {
   learnedRules?: string;
+  clauseLibraryContext?: string;
 }
 
 const MAX_RETRIES = 2;
@@ -42,6 +43,7 @@ export function useLeaseRedline() {
               additionalInstructions: request.additionalInstructions,
               jurisdiction: request.jurisdiction,
               learnedRules: options?.learnedRules,
+              clauseLibraryContext: options?.clauseLibraryContext,
             },
           }
         );

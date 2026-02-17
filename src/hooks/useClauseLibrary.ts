@@ -1,5 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { CustomClause, DocumentType } from "@/lib/lease-redline/types";
+import {
+  extractClauseCandidates,
+  clauseSimilarity,
+  type ClauseCandidate,
+} from "@/lib/lease-redline/learning-engine";
 
 const CLAUSES_KEY = "lease-redline-clause-library";
 const MAX_CLAUSES = 200;
@@ -142,6 +147,103 @@ export function useClauseLibrary() {
     return JSON.stringify(clauses, null, 2);
   }, [clauses]);
 
+  /**
+   * Similarity threshold — if an existing clause is this similar,
+   * we boost its acceptance count instead of creating a duplicate.
+   */
+  const SIMILARITY_THRESHOLD = 0.7;
+
+  /**
+   * Auto-learn clauses from accepted revisions.
+   *
+   * When the user accepts a revision with substantial replacement text,
+   * this extracts it as a clause candidate. If a similar clause already
+   * exists, its acceptanceCount is incremented. If not, a new "learned"
+   * clause is added to the library.
+   *
+   * Returns the number of clauses created or updated.
+   */
+  const learnFromDecisions = useCallback(
+    (
+      revisions: { category?: string; clauseNumber: number; riskLevel?: string; reason: string; cleanReplacement: string }[],
+      decisions: string[]
+    ): number => {
+      const candidates = extractClauseCandidates(revisions, decisions);
+      if (candidates.length === 0) return 0;
+
+      let changes = 0;
+
+      setClausesState((prev) => {
+        let updated = [...prev];
+
+        for (const candidate of candidates) {
+          // Check if a similar clause already exists
+          const existing = updated.find(
+            (c) =>
+              c.category.toLowerCase() === candidate.category.toLowerCase() &&
+              clauseSimilarity(c.language, candidate.language) >= SIMILARITY_THRESHOLD
+          );
+
+          if (existing) {
+            // Boost existing clause's acceptance count
+            existing.acceptanceCount = (existing.acceptanceCount || 0) + 1;
+            existing.updatedAt = new Date().toISOString();
+            changes++;
+          } else {
+            // Create new learned clause
+            const id = `clause_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+            const now = new Date().toISOString();
+            updated = [
+              {
+                id,
+                category: candidate.category,
+                label: candidate.label,
+                language: candidate.language,
+                documentTypes: [],
+                isDefault: false,
+                source: "learned" as const,
+                acceptanceCount: 1,
+                learnedFromReason: candidate.reason,
+                createdAt: now,
+                updatedAt: now,
+              },
+              ...updated,
+            ].slice(0, MAX_CLAUSES);
+            changes++;
+          }
+        }
+
+        return persistClauses(updated);
+      });
+
+      return changes;
+    },
+    []
+  );
+
+  /**
+   * Get clauses relevant for AI prompt injection.
+   * Returns clauses sorted by acceptance count — most-proven first.
+   */
+  const getClausesForPrompt = useCallback(
+    (documentType?: DocumentType, jurisdiction?: string): CustomClause[] => {
+      return clauses
+        .filter((c) => {
+          const matchesType =
+            !documentType ||
+            c.documentTypes.length === 0 ||
+            c.documentTypes.includes(documentType);
+          const matchesJurisdiction =
+            !jurisdiction ||
+            !c.jurisdiction ||
+            c.jurisdiction === jurisdiction;
+          return matchesType && matchesJurisdiction;
+        })
+        .sort((a, b) => (b.acceptanceCount || 0) - (a.acceptanceCount || 0));
+    },
+    [clauses]
+  );
+
   return {
     clauses,
     addClause,
@@ -149,7 +251,9 @@ export function useClauseLibrary() {
     deleteClause,
     getClausesByCategory,
     getClausesForDocument,
+    getClausesForPrompt,
     importClause,
     exportClauses,
+    learnFromDecisions,
   };
 }

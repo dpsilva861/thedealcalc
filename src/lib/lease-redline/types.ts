@@ -332,6 +332,12 @@ export interface CustomClause {
   jurisdiction?: string;
   documentTypes: DocumentType[];
   isDefault: boolean;
+  /** "manual" = user created, "learned" = auto-extracted from accepted revisions */
+  source?: "manual" | "learned";
+  /** How many times this clause's language was accepted across analyses */
+  acceptanceCount?: number;
+  /** The original revision reason that prompted this clause */
+  learnedFromReason?: string;
   createdAt: string;
   updatedAt: string;
 }

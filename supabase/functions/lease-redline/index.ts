@@ -560,7 +560,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { documentText, documentType, outputMode, additionalInstructions, learnedRules, jurisdiction, stream: requestStream } = body;
+    const { documentText, documentType, outputMode, additionalInstructions, learnedRules, clauseLibraryContext, jurisdiction, stream: requestStream } = body;
 
     // ── Rate limiting (per IP, 20 requests per 10 minutes) ──
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -628,6 +628,11 @@ serve(async (req) => {
     // Inject learned rules from user feedback history
     if (learnedRules && typeof learnedRules === "string" && learnedRules.trim().length > 0) {
       systemPrompt += `\n\n${learnedRules.trim().slice(0, 3000)}`;
+    }
+
+    // Inject clause library context (user's standard positions)
+    if (clauseLibraryContext && typeof clauseLibraryContext === "string" && clauseLibraryContext.trim().length > 0) {
+      systemPrompt += `\n\n${clauseLibraryContext.trim().slice(0, 5000)}`;
     }
 
     // Inject jurisdiction-specific rules

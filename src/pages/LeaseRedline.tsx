@@ -170,6 +170,19 @@ export default function LeaseRedline() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const learnedRulesPrompt = useMemo(() => learning.getRulesForPrompt(), [learning.rules]);
 
+  // Build clause library context for prompt injection
+  const clauseLibraryContext = useMemo(() => {
+    const relevant = clauseLibrary.getClausesForPrompt(documentType);
+    if (relevant.length === 0) return "";
+    const sorted = [...relevant]
+      .sort((a, b) => (b.acceptanceCount || 0) - (a.acceptanceCount || 0))
+      .slice(0, 15);
+    const lines = sorted.map(
+      (c) => `- [${c.category.toUpperCase()}] "${c.label}": ${c.language.slice(0, 300)}`
+    );
+    return `\nUSER'S STANDARD CLAUSE POSITIONS (use this language when applicable):\n${lines.join("\n")}`;
+  }, [clauseLibrary.getClausesForPrompt, documentType]);
+
   // Chat options with learning integration
   const chatOptions = useMemo(
     () => ({
@@ -181,7 +194,7 @@ export default function LeaseRedline() {
 
   const chat = useLeaseChat(response, decisions, preferences, chatOptions);
 
-  // Submit handler that injects learned rules + starts timer
+  // Submit handler that injects learned rules + clause library + starts timer
   const handleSubmit = useCallback(
     async (request: LeaseRedlineRequest) => {
       setDocumentText(request.documentText);
@@ -189,9 +202,12 @@ export default function LeaseRedline() {
       // Start timer session
       timer.startSession(analysisId, request.documentType);
       timer.startPhase("ai_analysis");
-      return analyze(request, { learnedRules: learnedRulesPrompt });
+      return analyze(request, {
+        learnedRules: learnedRulesPrompt,
+        clauseLibraryContext: clauseLibraryContext || undefined,
+      });
     },
-    [analyze, learnedRulesPrompt, timer, analysisId]
+    [analyze, learnedRulesPrompt, clauseLibraryContext, timer, analysisId]
   );
 
   const handleReset = useCallback(() => {
@@ -200,6 +216,17 @@ export default function LeaseRedline() {
       timer.endPhase();
       timer.completeSession(response.revisions.length);
       learning.learnFromDecisions(response, decisions);
+      // Auto-learn clauses from accepted revisions
+      clauseLibrary.learnFromDecisions(
+        response.revisions.map((r) => ({
+          category: r.category,
+          clauseNumber: r.clauseNumber,
+          riskLevel: r.riskLevel,
+          reason: r.reason,
+          cleanReplacement: r.cleanReplacement,
+        })),
+        decisions
+      );
       saveToHistory(response, decisions, chat.messages);
     }
     chat.clearChat();

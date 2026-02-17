@@ -511,6 +511,110 @@ export function decayStaleRules(maxAgeDays = 30): void {
   }
 }
 
+// ── Clause Candidate Extraction ─────────────────────────────────────
+
+/**
+ * A clause candidate extracted from accepted revisions.
+ * These become entries in the clause library once confirmed.
+ */
+export interface ClauseCandidate {
+  category: string;
+  label: string;
+  language: string;
+  reason: string;
+  riskLevel?: string;
+  /** Similarity key for deduplication — normalized lowercase language */
+  fingerprint: string;
+}
+
+/**
+ * Minimum replacement length (chars) to be a useful clause.
+ * Short replacements like "5%" or "30 days" aren't clause-worthy.
+ */
+const MIN_CLAUSE_LENGTH = 40;
+
+/**
+ * Extract clause candidates from accepted revisions.
+ * Only returns revisions that have enough substance to be reusable.
+ */
+export function extractClauseCandidates(
+  revisions: { category?: string; clauseNumber: number; riskLevel?: string; reason: string; cleanReplacement: string }[],
+  decisions: string[]
+): ClauseCandidate[] {
+  const candidates: ClauseCandidate[] = [];
+
+  for (let i = 0; i < revisions.length; i++) {
+    if (decisions[i] !== "accepted") continue;
+
+    const rev = revisions[i];
+    const lang = rev.cleanReplacement.trim();
+
+    // Skip short or generic replacements
+    if (lang.length < MIN_CLAUSE_LENGTH) continue;
+
+    const category = rev.category || "other";
+
+    candidates.push({
+      category,
+      label: `${capitalize(category)} — Clause ${rev.clauseNumber}`,
+      language: lang,
+      reason: rev.reason,
+      riskLevel: rev.riskLevel,
+      fingerprint: normalizeForComparison(lang),
+    });
+  }
+
+  return candidates;
+}
+
+/**
+ * Check how similar two clause texts are (0-1 scale).
+ * Uses a simple token overlap approach, not full edit distance.
+ */
+export function clauseSimilarity(a: string, b: string): number {
+  const tokensA = new Set(normalizeForComparison(a).split(/\s+/));
+  const tokensB = new Set(normalizeForComparison(b).split(/\s+/));
+  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+
+  let overlap = 0;
+  for (const t of tokensA) {
+    if (tokensB.has(t)) overlap++;
+  }
+  return (2 * overlap) / (tokensA.size + tokensB.size);
+}
+
+/**
+ * Format clause library entries as context for the AI prompt.
+ * Tells the agent "the user's standard positions" so it can
+ * proactively use preferred language.
+ */
+export function formatClausesForPrompt(
+  clauses: { category: string; label: string; language: string; acceptanceCount?: number }[],
+  maxClauses = 15
+): string {
+  if (clauses.length === 0) return "";
+
+  // Sort by acceptance count descending (most-proven first)
+  const sorted = [...clauses]
+    .sort((a, b) => (b.acceptanceCount || 0) - (a.acceptanceCount || 0))
+    .slice(0, maxClauses);
+
+  const lines = sorted.map(
+    (c) => `- [${c.category.toUpperCase()}] "${c.label}": ${c.language.slice(0, 300)}`
+  );
+
+  return `\nUSER'S STANDARD CLAUSE POSITIONS (use this language when applicable):
+${lines.join("\n")}`;
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function normalizeForComparison(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
+}
+
 // ── Utility ──────────────────────────────────────────────────────────
 
 function groupBy<T>(items: T[], keyFn: (item: T) => string): Record<string, T[]> {

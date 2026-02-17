@@ -373,7 +373,7 @@ export function ClauseLibraryPanel({
                   <>
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-medium">
                             {clause.label}
                           </span>
@@ -385,10 +385,25 @@ export function ClauseLibraryPanel({
                               {clause.jurisdiction}
                             </Badge>
                           )}
+                          {clause.source === "learned" && (
+                            <Badge className="text-[10px] bg-blue-100 text-blue-800 hover:bg-blue-100">
+                              Auto-learned
+                            </Badge>
+                          )}
+                          {(clause.acceptanceCount || 0) > 1 && (
+                            <Badge variant="outline" className="text-[10px] text-green-700 border-green-300">
+                              {clause.acceptanceCount}x accepted
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                           {clause.language}
                         </p>
+                        {clause.learnedFromReason && (
+                          <p className="text-[10px] text-muted-foreground/70 mt-0.5 italic line-clamp-1">
+                            Learned from: {clause.learnedFromReason}
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <Button
