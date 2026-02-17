@@ -1,12 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { LeaseInput } from "@/components/lease-redline/LeaseInput";
 import { RedlineOutput } from "@/components/lease-redline/RedlineOutput";
+import { ChatPanel } from "@/components/lease-redline/ChatPanel";
 import { useLeaseRedline } from "@/hooks/useLeaseRedline";
+import { useLeaseChat } from "@/hooks/useLeaseChat";
+import { useLeaseMemory } from "@/hooks/useLeaseMemory";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
+import type { RevisionDecision } from "@/lib/lease-redline/types";
 import {
   Shield,
   Scale,
@@ -64,6 +68,31 @@ function AnalysisProgress() {
 
 export default function LeaseRedline() {
   const { isLoading, error, response, analyze, reset } = useLeaseRedline();
+  const { preferences, saveToHistory, getContextualSuggestions } = useLeaseMemory();
+
+  // Lift decisions state so both RedlineOutput and ChatPanel can access it
+  const [decisions, setDecisions] = useState<RevisionDecision[]>([]);
+
+  // Initialize decisions when response arrives
+  useEffect(() => {
+    if (response) {
+      setDecisions(response.revisions.map(() => "pending" as RevisionDecision));
+    }
+  }, [response]);
+
+  const chat = useLeaseChat(response, decisions, preferences);
+
+  const handleReset = useCallback(() => {
+    // Save to memory before resetting
+    if (response) {
+      saveToHistory(response, decisions, chat.messages);
+    }
+    chat.clearChat();
+    setDecisions([]);
+    reset();
+  }, [response, decisions, chat, saveToHistory, reset]);
+
+  const contextualSuggestions = getContextualSuggestions();
 
   return (
     <Layout>
@@ -139,9 +168,26 @@ export default function LeaseRedline() {
             </div>
           )}
 
-          {/* Show input or output */}
+          {/* Show input or output + chat */}
           {response ? (
-            <RedlineOutput response={response} onReset={reset} />
+            <div className="space-y-6">
+              <RedlineOutput
+                response={response}
+                onReset={handleReset}
+                decisions={decisions}
+                onDecisionsChange={setDecisions}
+              />
+
+              {/* Chat Panel — appears after analysis */}
+              <ChatPanel
+                messages={chat.messages}
+                isLoading={chat.isLoading}
+                error={chat.error}
+                onSendMessage={chat.sendMessage}
+                onClear={chat.clearChat}
+                contextualSuggestions={contextualSuggestions}
+              />
+            </div>
           ) : (
             <LeaseInput onSubmit={analyze} isLoading={isLoading} />
           )}

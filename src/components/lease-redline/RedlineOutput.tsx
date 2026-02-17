@@ -34,6 +34,8 @@ import { DOCUMENT_TYPE_LABELS } from "@/lib/lease-redline/types";
 interface RedlineOutputProps {
   response: LeaseRedlineResponse;
   onReset: () => void;
+  decisions: RevisionDecision[];
+  onDecisionsChange: (decisions: RevisionDecision[]) => void;
 }
 
 const RISK_COLORS: Record<string, string> = {
@@ -292,23 +294,16 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   );
 }
 
-export function RedlineOutput({ response, onReset }: RedlineOutputProps) {
+export function RedlineOutput({ response, onReset, decisions, onDecisionsChange }: RedlineOutputProps) {
   const { revisions, summary, riskFlags, definedTerms, documentType, tokenUsage } = response;
-
-  // Accept/reject state per revision
-  const [decisions, setDecisions] = useState<RevisionDecision[]>(
-    () => revisions.map(() => "pending" as RevisionDecision)
-  );
 
   // Severity filter: 0=all, 1=medium+, 2=high+, 3=critical only
   const [severityFilter, setSeverityFilter] = useState(0);
 
   const handleDecision = (index: number, decision: RevisionDecision) => {
-    setDecisions((prev) => {
-      const next = [...prev];
-      next[index] = decision;
-      return next;
-    });
+    const next = [...decisions];
+    next[index] = decision;
+    onDecisionsChange(next);
   };
 
   const filterByRisk = (rev: LeaseRedlineRevision): boolean => {
