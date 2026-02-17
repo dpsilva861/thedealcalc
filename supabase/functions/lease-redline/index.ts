@@ -1,18 +1,44 @@
 /**
- * Lease Redline Edge Function
+ * Lease Redline Edge Function v2
  *
- * Accepts lease/LOI document text and returns AI-powered redline analysis
- * from the landlord's perspective using the Anthropic Claude API.
+ * Production-grade AI lease redlining with:
+ * - CORS restrictions for known origins
+ * - Document-type-specific review protocols
+ * - Explicit risk level criteria for consistent scoring
+ * - Increased output limits (16K tokens)
+ * - Temperature 0 for deterministic output
+ * - Robust JSON extraction with multiple fallback strategies
+ * - Input sanitization and validation
+ * - No sensitive data logging
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+// ── CORS ────────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  "https://yneaxuokgfqyoomycjam.lovableproject.com",
+  "https://thedealcalc.com",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:8080",
+];
 
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowedOrigin =
+    origin &&
+    ALLOWED_ORIGINS.some((o) => origin.startsWith(o.replace(/\/$/, "")))
+      ? origin
+      : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Content-Type": "application/json",
+  };
+}
+
+// ── Constants ───────────────────────────────────────────────────────
 const ALLOWED_DOCUMENT_TYPES = [
   "lease",
   "loi",
@@ -26,11 +52,111 @@ const ALLOWED_DOCUMENT_TYPES = [
 
 const ALLOWED_OUTPUT_MODES = ["redline", "clean", "summary"];
 
-// Max input size: ~100k chars (~25k tokens roughly)
-const MAX_DOCUMENT_LENGTH = 100_000;
+// 200K chars ≈ 50K tokens — fits within Claude's 200K context window
+const MAX_DOCUMENT_LENGTH = 200_000;
+const MIN_DOCUMENT_LENGTH = 100;
 
+// ── Document-Type-Specific Review Protocols ─────────────────────────
+function getDocumentTypeInstructions(docType: string): string {
+  switch (docType) {
+    case "loi":
+      return `
+LOI-SPECIFIC REVIEW PROTOCOL:
+1. Verify non-binding language is present and adequate throughout.
+2. Focus on economic terms: rent structure, TI allowance, delivery condition, commencement triggers.
+3. Flag any language that inadvertently creates binding obligations.
+4. Ensure "lease to control" or "subject to definitive lease agreement" language is present.
+5. Check exclusivity period and termination-of-negotiations clause.
+6. Lower revision granularity — focus on material business terms only.
+7. Verify that all key deal terms are addressed (term, options, rent, TI, use, CAM, insurance).`;
+
+    case "amendment":
+      return `
+AMENDMENT-SPECIFIC REVIEW PROTOCOL:
+1. Verify correct reference to original lease (date, parties, premises description).
+2. Check that amendment language clearly supersedes conflicting original terms.
+3. Flag any cascading impacts on unchanged lease provisions (rent escalations, guaranty, etc.).
+4. Verify rent/expense modification effective dates and escalation continuity.
+5. Check whether amendment inadvertently modifies guaranty obligations.
+6. Require "except as modified herein, all terms of the Original Lease remain in full force and effect" language.
+7. Verify amendment numbering is sequential with prior amendments.`;
+
+    case "addendum":
+      return `
+ADDENDUM-SPECIFIC REVIEW PROTOCOL:
+1. Verify the addendum properly incorporates into and becomes part of the lease.
+2. Check for conflicts between addendum terms and main lease body.
+3. Ensure addendum takes precedence in case of conflict (specify order of precedence).
+4. Verify cross-references to main lease sections are accurate.`;
+
+    case "work_letter":
+      return `
+WORK LETTER REVIEW PROTOCOL:
+1. Clearly delineate Landlord's Work (vanilla shell) vs. Tenant's Work.
+2. Verify TI allowance structure: amount, disbursement conditions, amortization.
+3. Ensure unused TI allowance is NOT payable in cash.
+4. Check for construction timeline protections and delay remedies.
+5. Verify insurance and indemnification requirements during construction.
+6. Ensure landlord approval rights over plans, contractors, and material changes.
+7. Check lien waiver and bonding requirements.`;
+
+    case "guaranty":
+      return `
+GUARANTY REVIEW PROTOCOL:
+1. Verify guaranty is unconditional, absolute, and continuing.
+2. Check burn-off provisions — ensure tied to specific performance thresholds, not just time.
+3. Verify guarantor's obligations survive assignment and subletting.
+4. Ensure guaranty covers all lease obligations (rent, damages, costs).
+5. Check notice requirements — ensure landlord has reasonable notification obligations.
+6. Verify waiver of defenses (suretyship defenses, statute of limitations).`;
+
+    case "subordination_estoppel":
+      return `
+SUBORDINATION/ESTOPPEL REVIEW PROTOCOL:
+1. Verify subordination is automatic but conditioned on non-disturbance agreement.
+2. Check estoppel representations are limited to factual matters within tenant's knowledge.
+3. Ensure no expansion of landlord obligations through estoppel admissions.
+4. Verify cure period protections for tenant in case of foreclosure.
+5. Check attornment provisions are mutual (tenant agrees to attorn to successor).`;
+
+    case "restaurant_exhibit":
+      return `
+RESTAURANT EXHIBIT REVIEW PROTOCOL:
+1. Verify all kitchen infrastructure costs (grease interceptors, exhaust, venting) are tenant responsibility.
+2. Check that nuisance prevention obligations are comprehensive (odor, noise, vibration, pests).
+3. Ensure environmental compliance obligations shift to tenant.
+4. Verify hours-of-operation flexibility for landlord in common areas.
+5. Check that roof penetration and structural modification costs are tenant's responsibility.
+6. Ensure comprehensive indemnification for food-service-related claims.`;
+
+    case "lease":
+    default:
+      return `
+FULL LEASE REVIEW PROTOCOL:
+1. Apply complete negotiation playbook across all clause categories.
+2. Cross-reference all defined terms for consistency throughout the document.
+3. Verify exhibit/schedule alignment with body terms.
+4. Check for internal contradictions between sections.
+5. Verify rent commencement, escalation, and option rent structures.
+6. Ensure all standard protections are present (default, remedies, insurance, indemnity).`;
+  }
+}
+
+// ── Risk Level Criteria ─────────────────────────────────────────────
+const RISK_LEVEL_CRITERIA = `
+RISK LEVEL ASSIGNMENT CRITERIA (apply consistently):
+- critical: Direct NOI impact >5% OR creates unlimited landlord liability OR grants automatic termination rights OR below-market option locks. Always flag.
+- high: NOI impact 2-5% OR limits asset flexibility significantly OR excessive TI/capital obligation OR co-tenancy rent reduction.
+- medium: Unfavorable but negotiable terms OR missing standard protections OR vague language creating ambiguity.
+- low: Minor wording improvements OR formatting/consistency issues OR strengthening existing protections.`;
+
+// ── System Prompt Builder ───────────────────────────────────────────
 function buildSystemPrompt(documentType: string, outputMode: string): string {
   return `${MASTER_PROMPT}
+
+${getDocumentTypeInstructions(documentType)}
+
+${RISK_LEVEL_CRITERIA}
 
 CURRENT DOCUMENT CONTEXT:
 - Document Type: ${documentType}
@@ -39,24 +165,26 @@ CURRENT DOCUMENT CONTEXT:
 OUTPUT FORMAT INSTRUCTIONS:
 ${getOutputFormatInstructions(outputMode)}
 
-IMPORTANT: You must respond with valid JSON matching this schema:
+CRITICAL: Respond with ONLY valid JSON. No markdown fences, no commentary, no text before or after.
+
+The JSON must match this exact structure:
 {
   "revisions": [
     {
-      "clauseNumber": <number>,
-      "originalLanguage": "<exact quoted clause>",
-      "redlineMarkup": "<markup with ~~deleted~~ and **added** text>",
-      "cleanReplacement": "<final landlord-preferred clause>",
-      "reason": "<1 sentence business/legal rationale>",
-      "riskLevel": "<low|medium|high|critical>",
-      "category": "<category like rent, term, TI, CAM, use, exclusive, co-tenancy, etc.>"
+      "clauseNumber": 1,
+      "originalLanguage": "exact quoted clause from the document",
+      "redlineMarkup": "markup with ~~deleted~~ and **added** text",
+      "cleanReplacement": "final landlord-preferred clause",
+      "reason": "1 sentence business/legal rationale",
+      "riskLevel": "low|medium|high|critical",
+      "category": "rent|term|TI|CAM|use|exclusive|co-tenancy|assignment|default|guaranty|casualty|maintenance|insurance|other",
+      "confidence": 0.95
     }
   ],
-  "summary": "<optional overall summary of key issues and strategy>",
-  "riskFlags": ["<list of high-priority risk items found>"]
-}
-
-Respond ONLY with valid JSON. Do not include any text before or after the JSON.`;
+  "summary": "overall summary of key issues, negotiation strategy, and deal risk assessment",
+  "riskFlags": ["list of high-priority risk items found in the document"],
+  "definedTerms": ["list of key defined terms identified in the document"]
+}`;
 }
 
 function getOutputFormatInstructions(mode: string): string {
@@ -64,29 +192,66 @@ function getOutputFormatInstructions(mode: string): string {
     case "redline":
       return `For REDLINE MODE:
 - For each clause requiring revision, provide all four steps: original language, redline markup, clean replacement, and reason.
-- Use ~~strikethrough~~ for deleted text and **bold** for added text in the redlineMarkup field.
+- Use ~~strikethrough~~ for deleted text and **added** for added text in the redlineMarkup field.
 - Include every clause that needs revision, even minor ones.
-- Flag risk levels for each revision.`;
+- Flag risk levels and confidence (0.0-1.0) for each revision.
+- Order revisions by their appearance in the document.`;
 
     case "clean":
       return `For CLEAN MODE:
 - Provide the final landlord-preferred version of each clause.
 - The cleanReplacement field should contain the complete revised clause.
 - The redlineMarkup field can be left as an empty string.
-- Still include the original language and reason for each change.`;
+- Still include the original language and reason for each change.
+- Include confidence score for each revision.`;
 
     case "summary":
       return `For SUMMARY MODE:
 - Focus on key business issues and negotiation strategy.
 - Group revisions by category (rent, term, TI, CAM, use, etc.).
-- Provide a detailed summary field with negotiation leverage points and deal risk scoring.
-- Include the most critical revisions but can omit minor formatting changes.`;
+- Provide a detailed summary with: negotiation leverage points, deal risk scoring, recommended concession strategy.
+- Include the most critical revisions but can omit minor formatting changes.
+- Emphasize risk flags and NOI impact.`;
 
     default:
       return "";
   }
 }
 
+// ── JSON Extraction ─────────────────────────────────────────────────
+function extractJSON(raw: string): unknown {
+  // Strategy 1: Direct parse
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // continue
+  }
+
+  // Strategy 2: Strip markdown code fences
+  const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) {
+    try {
+      return JSON.parse(fenceMatch[1].trim());
+    } catch {
+      // continue
+    }
+  }
+
+  // Strategy 3: Find first { to last }
+  const firstBrace = raw.indexOf("{");
+  const lastBrace = raw.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    try {
+      return JSON.parse(raw.slice(firstBrace, lastBrace + 1));
+    } catch {
+      // continue
+    }
+  }
+
+  return null;
+}
+
+// ── Master Prompt ───────────────────────────────────────────────────
 const MASTER_PROMPT = `You are a Commercial Real Estate Lease & LOI Redlining Specialist acting exclusively on behalf of the Landlord.
 
 You combine the expertise of:
@@ -116,7 +281,7 @@ PRIMARY OBJECTIVES
 - Prevent below-market renewals.
 
 2. Preserve Landlord Capital
-- Limit landlord work to vanilla shell.
+- Limit landlord work to vanilla shell (warm shell for retail: HVAC, electrical panel, restroom rough-in; cold shell for office/industrial: structure, roof, exterior walls only).
 - Avoid build-to-suit obligations.
 - Shift specialty infrastructure to tenant.
 - Minimize TI exposure and amortize any allowance.
@@ -185,9 +350,10 @@ Tenant responsible:
 - Specialty infrastructure
 
 If TI allowance is included:
-- Amortize over term
-- Repay if early termination
+- Amortize over term at 8% or prime + 2%
+- Repay unamortized balance if early termination
 - Unused TI not payable in cash
+- Disbursement only upon completion and lien waivers
 
 USE CLAUSE
 Revise to: Tenant may use premises for lawful retail/office use consistent with a first-class shopping center.
@@ -201,19 +367,22 @@ EXCLUSIVES & RADIUS RESTRICTIONS
 Default: strike.
 
 If unavoidable:
-- Narrow scope
-- Limited duration
-- Apply only to identical primary use
+- Narrow scope to primary product/service only
+- Limited duration (initial term only, no options)
+- Apply only to identical primary use, not ancillary
+- Carve out existing tenants and pre-committed spaces
 
 CAM & OPERATING EXPENSES
 Ensure:
-- Full CAM recoverability
+- Full CAM recoverability (NNN preferred)
 - Administrative fee inclusion (10-15%)
-- Capital expenditures recoverable if: reduce operating costs, required by law, improve safety or efficiency
+- Capital expenditures recoverable if: reduce operating costs, required by law, improve safety or efficiency (amortized over useful life at 8%)
+- No cap on controllable expenses (or cap at CPI + 3% minimum)
 
 Limit:
 - Audit lookback to 12 months
-- Tenant audit frequency
+- Tenant audit frequency to once per calendar year
+- Audit costs borne by tenant unless overcharge exceeds 5%
 
 MAINTENANCE & REPAIRS
 Tenant responsible for:
@@ -221,56 +390,69 @@ Tenant responsible for:
 - Storefront & glass
 - Dedicated HVAC maintenance & replacement
 - Plumbing serving premises
-- Grease traps
+- Grease traps and interceptors
+- Pest control within premises
 
 ASSIGNMENT & SUBLETTING
 Require:
 - Landlord consent not unreasonably withheld
-- Recapture rights
-- Profit sharing
-- Release only with landlord approval
+- Recapture rights on any proposed assignment
+- 50% profit sharing on sublease excess rent
+- Release only with landlord approval and guarantor consent
+- Assignee must meet financial and use criteria
 
 CO-TENANCY CLAUSES
 Strike or revise. Replace with:
-- Delayed termination right only
+- Delayed termination right only (not rent reduction)
 - Cure period >= 12 months
-- No rent reduction
+- No rent reduction during cure period
+- Termination right extinguishes if condition cured
 
 CASUALTY & CONDEMNATION
 Ensure:
-- Landlord controls restoration
-- Termination only if substantial destruction
-- Rent abates only if unusable
+- Landlord controls restoration decisions
+- Termination only if >50% of premises substantially destroyed
+- Rent abates only for portion actually unusable
+- Landlord not obligated to restore tenant improvements
 
 DEFAULT & REMEDIES
 Strengthen:
-- Late fees & interest
-- Recovery of legal fees
-- Self-help rights
-- Cross-default rights
+- Late fees (5% after 5 days) & interest (prime + 5%)
+- Recovery of all legal fees and costs
+- Self-help rights after notice and cure period
+- Cross-default rights across all tenant leases
+- Acceleration of rent upon default
 
 GUARANTIES
 Require when tenant credit is limited:
 - Personal or corporate guaranty
-- Burn-off only after performance threshold
+- Burn-off only after 36+ months of timely performance AND minimum net worth maintained
+- Guaranty revives upon any subsequent default
 
 RESTAURANT & FOOD USE PROVISIONS
 Tenant responsible for:
-- Grease interceptors
-- Venting & odor control
+- Grease interceptors (installation, maintenance, cleaning)
+- Venting & odor control (including rooftop equipment)
 - Pest control
-- Environmental compliance
+- Environmental compliance (all permits, licenses, certifications)
 - Noise & vibration control
 
-Add nuisance prevention clause.
+Add nuisance prevention clause with specific remedies.
 
-LOI-SPECIFIC REQUIREMENTS
-Ensure LOI states:
-- Non-binding nature (except limited provisions)
-- Vanilla shell delivery
-- TI structure summary
-- Rent commencement trigger
-- Final lease controls
+SUBORDINATION, ESTOPPELS, AND SNDA
+- Subordination automatic but conditioned on SNDA from lender
+- Estoppel delivery within 10 business days of request
+- Failure to deliver estoppel deemed confirmation of lease terms
+- Limit estoppel representations to tenant's actual knowledge
+
+INSURANCE REQUIREMENTS
+Tenant must maintain:
+- CGL: $1M per occurrence / $2M aggregate minimum
+- Property: full replacement cost of tenant improvements
+- Workers compensation: statutory limits
+- Business interruption: 12 months minimum
+- Landlord named as additional insured
+- 30-day advance notice of cancellation
 
 DECISION LOGIC ENGINE
 
@@ -281,6 +463,8 @@ IF language limits leasing flexibility -> revise
 IF language creates ambiguity -> clarify
 IF tenant receives concession -> tie to term/rent/guaranty
 IF clause adds operational burden -> shift to tenant
+IF defined term is used inconsistently -> flag and standardize
+IF cross-reference is broken or ambiguous -> flag and correct
 
 RISK FLAGGING (MANDATORY)
 Flag and revise:
@@ -292,13 +476,16 @@ Flag and revise:
 - Relocation prohibitions
 - Landlord performance guarantees
 - Early termination rights
+- Missing insurance requirements
+- Uncapped landlord obligations
+- Automatic termination triggers
 
 FALLBACK NEGOTIATION TIERS
 
 When resistance expected:
 Tier 1 (Preferred): Strict landlord position
 Tier 2 (Moderate): Limited concessions tied to term & rent
-Tier 3 (Fallback): Allow concession only with economic offset
+Tier 3 (Fallback): Allow concession only with economic offset (higher rent, longer term, additional security)
 
 TONE & STYLE REQUIREMENTS
 - Professional & precise
@@ -309,114 +496,111 @@ TONE & STYLE REQUIREMENTS
 
 DOCUMENT PROCESSING RULES
 Maintain:
-- Numbering
-- Formatting
-- Defined terms
-- Cross-references
+- Numbering and section references
+- Formatting and structure
+- Defined terms exactly as written (case-sensitive)
+- Cross-references between sections and exhibits
 
 Never:
 - Alter defined terms unintentionally
-- Break exhibit references
-- Change party names
-- Alter legal descriptions
+- Break exhibit or schedule references
+- Change party names or legal descriptions
+- Modify recitals or preamble unless specifically problematic
+- Remove provisions without replacement language
 
 SAFETY & QUALITY CONTROLS
 Before final output, verify:
-- Legal consistency
-- Defined terms preserved
-- No conflicting revisions
-- Landlord protections intact
-- Formatting preserved
-- Economic protections maintained
+- Legal consistency across all revisions
+- Defined terms preserved exactly
+- No conflicting revisions between sections
+- Landlord protections intact in every revised clause
+- Formatting and numbering preserved
+- Economic protections maintained or strengthened
+- Cross-references still valid after revisions
 
 EXCLUSIONS
 Agent does NOT:
 - Provide legal advice
 - Replace attorney review
-- Override jurisdictional law`;
+- Override jurisdictional law
+- Guarantee enforceability of suggested language`;
 
+// ── Request Handler ─────────────────────────────────────────────────
 serve(async (req) => {
-  // Handle CORS preflight
+  const origin = req.headers.get("origin");
+  const cors = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: cors });
   }
 
   try {
     const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!anthropicApiKey) {
       return new Response(
-        JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "Service configuration error. Please contact support." }),
+        { status: 500, headers: cors }
       );
     }
 
     const body = await req.json();
-    const { documentText, documentType, outputMode, additionalInstructions } =
-      body;
+    const { documentText, documentType, outputMode, additionalInstructions } = body;
 
-    // Validate required fields
+    // ── Validate inputs ──
     if (!documentText || typeof documentText !== "string") {
       return new Response(
         JSON.stringify({ error: "documentText is required and must be a string" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 400, headers: cors }
+      );
+    }
+
+    if (documentText.trim().length < MIN_DOCUMENT_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Document must be at least ${MIN_DOCUMENT_LENGTH} characters` }),
+        { status: 400, headers: cors }
       );
     }
 
     if (documentText.length > MAX_DOCUMENT_LENGTH) {
       return new Response(
         JSON.stringify({
-          error: `Document exceeds maximum length of ${MAX_DOCUMENT_LENGTH} characters`,
+          error: `Document exceeds maximum length of ${MAX_DOCUMENT_LENGTH.toLocaleString()} characters. Current: ${documentText.length.toLocaleString()}`,
         }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 400, headers: cors }
       );
     }
 
     if (!ALLOWED_DOCUMENT_TYPES.includes(documentType)) {
       return new Response(
-        JSON.stringify({
-          error: `Invalid documentType. Must be one of: ${ALLOWED_DOCUMENT_TYPES.join(", ")}`,
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: `Invalid documentType. Must be one of: ${ALLOWED_DOCUMENT_TYPES.join(", ")}` }),
+        { status: 400, headers: cors }
       );
     }
 
     if (!ALLOWED_OUTPUT_MODES.includes(outputMode)) {
       return new Response(
-        JSON.stringify({
-          error: `Invalid outputMode. Must be one of: ${ALLOWED_OUTPUT_MODES.join(", ")}`,
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: `Invalid outputMode. Must be one of: ${ALLOWED_OUTPUT_MODES.join(", ")}` }),
+        { status: 400, headers: cors }
       );
     }
 
+    // ── Build prompt ──
     const systemPrompt = buildSystemPrompt(documentType, outputMode);
 
-    let userMessage = `Please review and redline the following ${documentType} document from the landlord's perspective:\n\n---\n\n${documentText}`;
+    let userMessage = `Review and redline the following ${documentType} document from the landlord's perspective.\n\n---BEGIN DOCUMENT---\n\n${documentText}\n\n---END DOCUMENT---`;
 
-    if (additionalInstructions) {
-      userMessage += `\n\n---\n\nAdditional instructions from the landlord representative:\n${String(additionalInstructions).slice(0, 2000)}`;
+    if (additionalInstructions && typeof additionalInstructions === "string") {
+      const sanitized = additionalInstructions.trim().slice(0, 2000);
+      if (sanitized) {
+        userMessage += `\n\n---\n\nAdditional instructions from the landlord representative:\n${sanitized}`;
+      }
     }
 
     console.log(
-      `[lease-redline] Processing ${documentType} document (${documentText.length} chars) in ${outputMode} mode`
+      `[lease-redline] Processing ${documentType} (${documentText.length} chars) in ${outputMode} mode`
     );
 
-    // Call Anthropic Claude API
+    // ── Call Anthropic Claude API ──
     const anthropicResponse = await fetch(
       "https://api.anthropic.com/v1/messages",
       {
@@ -428,81 +612,93 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 8192,
+          max_tokens: 16384,
+          temperature: 0,
           system: systemPrompt,
-          messages: [
-            {
-              role: "user",
-              content: userMessage,
-            },
-          ],
+          messages: [{ role: "user", content: userMessage }],
         }),
       }
     );
 
     if (!anthropicResponse.ok) {
       const errorText = await anthropicResponse.text();
-      console.error(`[lease-redline] Anthropic API error: ${errorText}`);
+      console.error(`[lease-redline] API error (${anthropicResponse.status}): ${errorText.slice(0, 200)}`);
+
+      if (anthropicResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Service is temporarily busy. Please try again in a moment." }),
+          { status: 429, headers: cors }
+        );
+      }
+      if (anthropicResponse.status === 413) {
+        return new Response(
+          JSON.stringify({ error: "Document is too large for processing. Try a shorter section." }),
+          { status: 413, headers: cors }
+        );
+      }
+
       return new Response(
-        JSON.stringify({
-          error: "AI processing failed. Please try again.",
-        }),
-        {
-          status: 502,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "AI processing failed. Please try again." }),
+        { status: 502, headers: cors }
       );
     }
 
     const anthropicData = await anthropicResponse.json();
-    const rawContent =
-      anthropicData.content?.[0]?.text || "";
+    const rawContent = anthropicData.content?.[0]?.text || "";
 
-    // Try to parse structured JSON from the response
-    let parsedResponse;
-    try {
-      // Extract JSON from the response (handle potential markdown code blocks)
-      let jsonStr = rawContent;
-      const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        jsonStr = jsonMatch[1].trim();
-      }
-      parsedResponse = JSON.parse(jsonStr);
-    } catch {
-      // If JSON parsing fails, return the raw content with a basic structure
-      console.warn(
-        "[lease-redline] Could not parse structured JSON, returning raw content"
+    if (!rawContent) {
+      return new Response(
+        JSON.stringify({ error: "AI returned an empty response. Please try again." }),
+        { status: 502, headers: cors }
       );
-      parsedResponse = {
+    }
+
+    // ── Parse response ──
+    const parsed = extractJSON(rawContent);
+
+    let result;
+    if (parsed && typeof parsed === "object" && "revisions" in (parsed as Record<string, unknown>)) {
+      const p = parsed as Record<string, unknown>;
+      result = {
+        revisions: Array.isArray(p.revisions) ? p.revisions : [],
+        summary: typeof p.summary === "string" ? p.summary : null,
+        riskFlags: Array.isArray(p.riskFlags) ? p.riskFlags : [],
+        definedTerms: Array.isArray(p.definedTerms) ? p.definedTerms : [],
+        documentType,
+        outputMode,
+        rawContent,
+        tokenUsage: {
+          input: anthropicData.usage?.input_tokens || 0,
+          output: anthropicData.usage?.output_tokens || 0,
+        },
+      };
+    } else {
+      console.warn("[lease-redline] Could not parse structured JSON, returning raw content");
+      result = {
         revisions: [],
         summary: rawContent,
         riskFlags: [],
+        definedTerms: [],
+        documentType,
+        outputMode,
+        rawContent,
+        tokenUsage: {
+          input: anthropicData.usage?.input_tokens || 0,
+          output: anthropicData.usage?.output_tokens || 0,
+        },
       };
     }
 
-    const result = {
-      revisions: parsedResponse.revisions || [],
-      summary: parsedResponse.summary || null,
-      riskFlags: parsedResponse.riskFlags || [],
-      documentType,
-      outputMode,
-      rawContent,
-    };
-
     console.log(
-      `[lease-redline] Completed: ${result.revisions.length} revisions, ${result.riskFlags.length} risk flags`
+      `[lease-redline] Done: ${result.revisions.length} revisions, ${result.riskFlags.length} flags, ${result.tokenUsage.input + result.tokenUsage.output} tokens`
     );
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify(result), { headers: cors });
   } catch (error) {
     console.error("[lease-redline] Error:", error);
-    const message =
-      error instanceof Error ? error.message : "Redline processing failed";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "An unexpected error occurred. Please try again." }),
+      { status: 500, headers: getCorsHeaders(null) }
+    );
   }
 });

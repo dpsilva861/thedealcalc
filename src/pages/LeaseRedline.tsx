@@ -1,10 +1,66 @@
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { LeaseInput } from "@/components/lease-redline/LeaseInput";
 import { RedlineOutput } from "@/components/lease-redline/RedlineOutput";
 import { useLeaseRedline } from "@/hooks/useLeaseRedline";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, Scale, AlertTriangle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Shield,
+  Scale,
+  AlertTriangle,
+  Loader2,
+  FileSearch,
+  ListChecks,
+  FileOutput,
+} from "lucide-react";
+
+const ANALYSIS_STEPS = [
+  { label: "Parsing document structure...", icon: FileSearch, pct: 15 },
+  { label: "Identifying clauses and defined terms...", icon: FileSearch, pct: 30 },
+  { label: "Evaluating risk levels...", icon: AlertTriangle, pct: 50 },
+  { label: "Generating redline revisions...", icon: ListChecks, pct: 70 },
+  { label: "Applying quality controls...", icon: Shield, pct: 85 },
+  { label: "Formatting output...", icon: FileOutput, pct: 95 },
+];
+
+function AnalysisProgress() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStep((s) => (s < ANALYSIS_STEPS.length - 1 ? s + 1 : s));
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const current = ANALYSIS_STEPS[step];
+  const Icon = current.icon;
+
+  return (
+    <Card className="border-primary/20">
+      <CardContent className="py-8">
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2 text-primary">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <Icon className="h-5 w-5" />
+          </div>
+          <p className="text-sm font-medium text-foreground text-center">
+            {current.label}
+          </p>
+          <div className="w-full max-w-sm">
+            <Progress value={current.pct} className="h-2" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            This typically takes 30-90 seconds depending on document length
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function LeaseRedline() {
   const { isLoading, error, response, analyze, reset } = useLeaseRedline();
@@ -76,6 +132,13 @@ export default function LeaseRedline() {
             </Alert>
           )}
 
+          {/* Progress indicator while loading */}
+          {isLoading && (
+            <div className="mb-6">
+              <AnalysisProgress />
+            </div>
+          )}
+
           {/* Show input or output */}
           {response ? (
             <RedlineOutput response={response} onReset={reset} />
@@ -86,7 +149,7 @@ export default function LeaseRedline() {
       </section>
 
       {/* Features Grid */}
-      {!response && (
+      {!response && !isLoading && (
         <section className="py-12 md:py-16 bg-cream-dark">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
@@ -136,7 +199,7 @@ const FEATURE_CARDS = [
     title: "Tenant Improvements",
     items: [
       "Vanilla shell delivery scope",
-      "TI allowance amortization",
+      "TI allowance amortization (8%+ rate)",
       "Early termination repayment",
       "Specialty infrastructure allocation",
       "Landlord vs tenant work delineation",
@@ -145,8 +208,8 @@ const FEATURE_CARDS = [
   {
     title: "Operating Expenses",
     items: [
-      "CAM recoverability",
-      "Administrative fee inclusion",
+      "CAM recoverability (NNN)",
+      "Administrative fee inclusion (10-15%)",
       "Capital expenditure pass-throughs",
       "Audit rights and limitations",
       "Tax & insurance escalations",
@@ -166,10 +229,10 @@ const FEATURE_CARDS = [
     title: "Risk & Liability",
     items: [
       "Assignment & subletting controls",
-      "Guaranty requirements",
-      "Default & remedies",
+      "Guaranty requirements & burn-off",
+      "Default & remedies (cross-default)",
       "Casualty & condemnation",
-      "Insurance requirements",
+      "Insurance requirements (CGL, property)",
     ],
   },
   {
