@@ -40,9 +40,11 @@ import type {
   RevisionDecision,
   AnalysisComment,
   DocumentType,
+  DocxImportResult,
 } from "@/lib/lease-redline/types";
 import {
   Shield,
+  ShieldAlert,
   Scale,
   AlertTriangle,
   Loader2,
@@ -165,7 +167,8 @@ export default function LeaseRedline() {
   }, [response]);
 
   // Get learned rules once for the current session
-  const learnedRulesPrompt = useMemo(() => learning.getRulesForPrompt(), [learning]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const learnedRulesPrompt = useMemo(() => learning.getRulesForPrompt(), [learning.rules]);
 
   // Chat options with learning integration
   const chatOptions = useMemo(
@@ -213,6 +216,8 @@ export default function LeaseRedline() {
     setShowClauseLibrary(false);
     setShowTrackChangesImport(false);
     setShowConsistency(false);
+    setShowDealBoard(false);
+    setSelectedDealId(null);
     setComments([]);
     shortcuts.clearFocus();
     reset();
@@ -287,6 +292,13 @@ export default function LeaseRedline() {
     }
     timer.endPhase();
   }, [response, documentText, decisions, timer, audit, analysisId]);
+
+  // Track changes import handler
+  const handleTrackChangesImported = useCallback((result: DocxImportResult) => {
+    if (result.plainText) {
+      setDocumentText(result.plainText);
+    }
+  }, []);
 
   const contextualSuggestions = getContextualSuggestions();
   const currentVersions = versionHistory.getVersions(analysisId);
@@ -403,6 +415,15 @@ export default function LeaseRedline() {
               <FileUp className="h-3.5 w-3.5" />
               Import Changes
             </Button>
+            <Button
+              variant={showConsistency ? "default" : "outline"}
+              size="sm"
+              className="text-xs gap-1"
+              onClick={() => setShowConsistency(!showConsistency)}
+            >
+              <ShieldAlert className="h-3.5 w-3.5" />
+              Consistency
+            </Button>
             {response && documentText && (
               <>
                 <Button
@@ -495,6 +516,7 @@ export default function LeaseRedline() {
           {showTrackChangesImport && (
             <div className="mb-6">
               <TrackChangesImport
+                onImportComplete={handleTrackChangesImported}
                 onClose={() => setShowTrackChangesImport(false)}
               />
             </div>

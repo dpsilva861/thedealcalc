@@ -59,6 +59,7 @@ export function BulkActionsToolbar({
   const pendingCount = decisions.filter((d) => d === "pending").length;
   const acceptedCount = decisions.filter((d) => d === "accepted").length;
   const rejectedCount = decisions.filter((d) => d === "rejected").length;
+  const modifiedCount = decisions.filter((d) => d === "modified").length;
 
   // Unique categories and risk levels from revisions
   const categories = [...new Set(revisions.map((r) => r.category).filter(Boolean))] as string[];
@@ -79,6 +80,11 @@ export function BulkActionsToolbar({
         <Badge className="text-xs bg-red-100 text-red-800 hover:bg-red-100">
           {rejectedCount} rejected
         </Badge>
+        {modifiedCount > 0 && (
+          <Badge className="text-xs bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+            {modifiedCount} modified
+          </Badge>
+        )}
       </div>
 
       <div className="h-4 w-px bg-border" />

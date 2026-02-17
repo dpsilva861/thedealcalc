@@ -1268,8 +1268,9 @@ export async function exportWithTrackChanges(
         }
       }
 
-      // The replacement itself
-      const trackId = rep.revisionIndex + 1;
+      // Use unique IDs: even for deletions, odd for insertions
+      const deleteId = (rep.revisionIndex + 1) * 2;
+      const insertId = (rep.revisionIndex + 1) * 2 + 1;
 
       // Deleted text (original language, marked as deletion)
       const deletedText = originalText.slice(
@@ -1280,7 +1281,7 @@ export async function exportWithTrackChanges(
         children.push(
           new DeletedTextRun({
             text: deletedText,
-            id: trackId,
+            id: deleteId,
             author,
             date: dateStr,
             size: 22,
@@ -1295,7 +1296,7 @@ export async function exportWithTrackChanges(
         children.push(
           new InsertedTextRun({
             text: rep.replacement,
-            id: trackId + 1000, // Offset to avoid ID collision
+            id: insertId,
             author,
             date: dateStr,
             size: 22,

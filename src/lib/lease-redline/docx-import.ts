@@ -21,7 +21,7 @@ export async function importDocxTrackChanges(
 ): Promise<DocxImportResult> {
   // Minimal ZIP reader — extract word/document.xml
   const bytes = new Uint8Array(buffer);
-  const xmlContent = extractDocumentXml(bytes);
+  const xmlContent = await extractDocumentXml(bytes);
 
   if (!xmlContent) {
     throw new Error("Could not find word/document.xml in the DOCX file");
@@ -99,7 +99,7 @@ export async function importDocxTrackChanges(
 
 // ── Internal helpers ──────────────────────────────────────────────────────
 
-function extractDocumentXml(bytes: Uint8Array): string | null {
+async function extractDocumentXml(bytes: Uint8Array): Promise<string | null> {
   // Simple ZIP file reader — find the local file header for word/document.xml
   const target = "word/document.xml";
   let offset = 0;
@@ -134,17 +134,10 @@ function extractDocumentXml(bytes: Uint8Array): string | null {
           const data = bytes.slice(dataStart, dataStart + compressedSize);
           return new TextDecoder().decode(data);
         } else if (compressionMethod === 8) {
-          // Deflate — use DecompressionStream if available
+          // Deflate — use DecompressionStream (async)
           try {
             const data = bytes.slice(dataStart, dataStart + compressedSize);
-            const ds = new DecompressionStream("raw");
-            const writer = ds.writable.getWriter();
-            writer.write(data);
-            writer.close();
-
-            // Read the decompressed data synchronously using a workaround
-            // Since we can't await here in the main function, we'll try a basic approach
-            return decompressSync(data);
+            return await decompressRaw(data);
           } catch {
             return null;
           }
@@ -160,26 +153,12 @@ function extractDocumentXml(bytes: Uint8Array): string | null {
   return null;
 }
 
-function decompressSync(data: Uint8Array): string | null {
-  // Try to decompress using a basic inflate approach
-  // In browsers that support DecompressionStream, this should work
-  try {
-    // Use the Blob/Response approach for sync-like decompression
-    const blob = new Blob([data]);
-    const ds = new DecompressionStream("raw");
-    const stream = blob.stream().pipeThrough(ds);
-    const reader = stream.getReader();
-
-    // Collect chunks
-    let result = "";
-    const decoder = new TextDecoder();
-
-    // We need to handle this asynchronously despite the function name
-    // The caller wraps this in async anyway
-    return null; // Will be handled by the async path
-  } catch {
-    return null;
-  }
+async function decompressRaw(data: Uint8Array): Promise<string> {
+  const ds = new DecompressionStream("raw");
+  const blob = new Blob([data]);
+  const decompressedStream = blob.stream().pipeThrough(ds);
+  const response = new Response(decompressedStream);
+  return response.text();
 }
 
 function extractPlainText(doc: Document): string {

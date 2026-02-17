@@ -27,41 +27,6 @@ interface Props {
   onClose: () => void;
 }
 
-function buildRedlinedText(
-  original: string,
-  revisions: LeaseRedlineRevision[],
-  decisions: RevisionDecision[]
-): string {
-  // Build a map of replacements from accepted revisions
-  const replacements: { original: string; replacement: string; index: number }[] = [];
-
-  revisions.forEach((rev, i) => {
-    if (decisions[i] === "accepted") {
-      replacements.push({
-        original: rev.originalLanguage,
-        replacement: rev.cleanReplacement,
-        index: i,
-      });
-    }
-  });
-
-  // Sort by length descending to replace longest matches first
-  replacements.sort((a, b) => b.original.length - a.original.length);
-
-  let result = original;
-  for (const rep of replacements) {
-    // Replace first occurrence only
-    const idx = result.indexOf(rep.original);
-    if (idx >= 0) {
-      result =
-        result.slice(0, idx) +
-        rep.replacement +
-        result.slice(idx + rep.original.length);
-    }
-  }
-  return result;
-}
-
 function buildMarkupText(
   original: string,
   revisions: LeaseRedlineRevision[],
@@ -121,11 +86,6 @@ export function SideBySideView({
 }: Props) {
   const { segments } = useMemo(
     () => buildMarkupText(originalText, revisions, decisions),
-    [originalText, revisions, decisions]
-  );
-
-  const redlinedText = useMemo(
-    () => buildRedlinedText(originalText, revisions, decisions),
     [originalText, revisions, decisions]
   );
 

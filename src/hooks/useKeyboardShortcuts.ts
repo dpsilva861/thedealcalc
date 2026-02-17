@@ -9,7 +9,7 @@
  * Escape     — Clear focus
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { RevisionDecision } from "@/lib/lease-redline/types";
 
 export interface KeyboardShortcutsOptions {
@@ -36,8 +36,11 @@ export function useKeyboardShortcuts({
   const decisionsRef = useRef(decisions);
   decisionsRef.current = decisions;
 
-  // Effective list of navigable indices
-  const indices = visibleIndices ?? Array.from({ length: revisionCount }, (_, i) => i);
+  // Effective list of navigable indices (memoized to avoid new reference every render)
+  const indices = useMemo(
+    () => visibleIndices ?? Array.from({ length: revisionCount }, (_, i) => i),
+    [visibleIndices, revisionCount]
+  );
 
   const positionInList = focusedIndex !== null ? indices.indexOf(focusedIndex) : -1;
 
@@ -200,25 +203,25 @@ export function useKeyboardShortcuts({
           e.preventDefault();
           navigatePrev();
           break;
+        case "A": // Shift+A (e.key is uppercase when Shift held)
+          e.preventDefault();
+          bulkAcceptVisible();
+          break;
+        case "R": // Shift+R
+          e.preventDefault();
+          bulkRejectVisible();
+          break;
         case "a":
-          if (e.shiftKey) {
-            e.preventDefault();
-            bulkAcceptVisible();
-          } else if (focusedIndex !== null) {
+          if (focusedIndex !== null) {
             e.preventDefault();
             acceptRevision(focusedIndex);
-            // Auto-advance to next
             navigateNext();
           }
           break;
         case "r":
-          if (e.shiftKey) {
-            e.preventDefault();
-            bulkRejectVisible();
-          } else if (focusedIndex !== null) {
+          if (focusedIndex !== null) {
             e.preventDefault();
             rejectRevision(focusedIndex);
-            // Auto-advance to next
             navigateNext();
           }
           break;

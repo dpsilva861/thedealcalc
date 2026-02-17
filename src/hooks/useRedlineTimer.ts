@@ -39,6 +39,7 @@ function saveSessions(sessions: TimerSession[]): void {
 
 export function useRedlineTimer() {
   const [phases, setPhases] = useState<TimerPhaseDuration[]>([]);
+  const phasesRef = useRef<TimerPhaseDuration[]>([]);
   const [currentPhase, setCurrentPhase] = useState<TimerPhase | null>(null);
   const sessionStartRef = useRef<number | null>(null);
   const analysisIdRef = useRef<string>("");
@@ -49,6 +50,7 @@ export function useRedlineTimer() {
     analysisIdRef.current = analysisId;
     docTypeRef.current = documentType;
     sessionStartRef.current = Date.now();
+    phasesRef.current = [];
     setPhases([]);
     setCurrentPhase(null);
   }, []);
@@ -64,6 +66,7 @@ export function useRedlineTimer() {
         return p;
       });
       updated.push({ phase, startedAt: now });
+      phasesRef.current = updated;
       return updated;
     });
     setCurrentPhase(phase);
@@ -72,14 +75,16 @@ export function useRedlineTimer() {
   /** End the current phase without starting a new one */
   const endPhase = useCallback(() => {
     const now = Date.now();
-    setPhases((prev) =>
-      prev.map((p) => {
+    setPhases((prev) => {
+      const updated = prev.map((p) => {
         if (!p.endedAt) {
           return { ...p, endedAt: now, durationMs: now - p.startedAt };
         }
         return p;
-      })
-    );
+      });
+      phasesRef.current = updated;
+      return updated;
+    });
     setCurrentPhase(null);
   }, []);
 
@@ -87,53 +92,55 @@ export function useRedlineTimer() {
   const completeSession = useCallback((revisionCount: number) => {
     const now = Date.now();
 
-    // Close any open phase
-    const finalPhases = phases.map((p) => {
-      if (!p.endedAt) {
-        return { ...p, endedAt: now, durationMs: now - p.startedAt };
-      }
-      return p;
+    // Use functional updater to read latest phases (avoids stale closure)
+    setPhases((prev) => {
+      const finalPhases = prev.map((p) => {
+        if (!p.endedAt) {
+          return { ...p, endedAt: now, durationMs: now - p.startedAt };
+        }
+        return p;
+      });
+
+      const totalDurationMs = sessionStartRef.current
+        ? now - sessionStartRef.current
+        : finalPhases.reduce((sum, p) => sum + (p.durationMs || 0), 0);
+
+      const humanReview = finalPhases.find((p) => p.phase === "human_review");
+      const humanMs = humanReview?.durationMs || 0;
+      const decisionsPerMinute =
+        humanMs > 0 && revisionCount > 0
+          ? (revisionCount / humanMs) * 60000
+          : 0;
+
+      const session: TimerSession = {
+        id: `timer_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        analysisId: analysisIdRef.current,
+        documentType: docTypeRef.current,
+        phases: finalPhases,
+        totalDurationMs,
+        revisionCount,
+        decisionsPerMinute: Math.round(decisionsPerMinute * 10) / 10,
+        startedAt: sessionStartRef.current
+          ? new Date(sessionStartRef.current).toISOString()
+          : new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+      };
+
+      const existing = loadSessions();
+      saveSessions([session, ...existing]);
+
+      phasesRef.current = finalPhases;
+      return finalPhases;
     });
-
-    const totalDurationMs = sessionStartRef.current
-      ? now - sessionStartRef.current
-      : finalPhases.reduce((sum, p) => sum + (p.durationMs || 0), 0);
-
-    const humanReview = finalPhases.find((p) => p.phase === "human_review");
-    const humanMs = humanReview?.durationMs || 0;
-    const decisionsPerMinute =
-      humanMs > 0 && revisionCount > 0
-        ? (revisionCount / humanMs) * 60000
-        : 0;
-
-    const session: TimerSession = {
-      id: `timer_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      analysisId: analysisIdRef.current,
-      documentType: docTypeRef.current,
-      phases: finalPhases,
-      totalDurationMs,
-      revisionCount,
-      decisionsPerMinute: Math.round(decisionsPerMinute * 10) / 10,
-      startedAt: sessionStartRef.current
-        ? new Date(sessionStartRef.current).toISOString()
-        : new Date().toISOString(),
-      completedAt: new Date().toISOString(),
-    };
-
-    const existing = loadSessions();
-    saveSessions([session, ...existing]);
-    setPhases(finalPhases);
     setCurrentPhase(null);
-
-    return session;
-  }, [phases]);
+  }, []);
 
   /** Get the elapsed time for the current phase in ms */
   const getElapsedMs = useCallback((): number => {
-    const openPhase = phases.find((p) => !p.endedAt);
+    const openPhase = phasesRef.current.find((p) => !p.endedAt);
     if (!openPhase) return 0;
     return Date.now() - openPhase.startedAt;
-  }, [phases]);
+  }, []);
 
   /** Get total session elapsed time in ms */
   const getSessionElapsedMs = useCallback((): number => {

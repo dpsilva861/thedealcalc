@@ -48,7 +48,7 @@ interface Props {
     documentType: DocumentType,
     clauses: Omit<TemplateClause, "id">[],
     jurisdiction?: string
-  ) => string;
+  ) => void;
   onDeleteTemplate: (id: string) => void;
   onCompare: (
     templateId: string,

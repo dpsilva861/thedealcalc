@@ -126,7 +126,7 @@ export function ClauseLibraryPanel({
   };
 
   const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch(() => { /* clipboard unavailable */ });
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
@@ -139,7 +139,8 @@ export function ClauseLibraryPanel({
     a.href = url;
     a.download = "clause-library.json";
     a.click();
-    URL.revokeObjectURL(url);
+    // Delay revocation to ensure download starts
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   const handleImport = () => {

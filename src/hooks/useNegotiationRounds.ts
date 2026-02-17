@@ -5,7 +5,7 @@
  * Round 3 (your counter), with timing between rounds and status tracking.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type {
   NegotiationRound,
   NegotiationSummary,
@@ -35,8 +35,11 @@ function saveAllRounds(rounds: NegotiationRound[]): void {
 
 export function useNegotiationRounds() {
   const [rounds, setRounds] = useState<NegotiationRound[]>(loadAllRounds);
+  const roundsRef = useRef(rounds);
+  roundsRef.current = rounds;
 
   const persist = useCallback((updated: NegotiationRound[]) => {
+    roundsRef.current = updated;
     setRounds(updated);
     saveAllRounds(updated);
   }, []);
@@ -58,7 +61,8 @@ export function useNegotiationRounds() {
       party: RoundParty,
       opts?: { analysisId?: string; documentText?: string; notes?: string }
     ): string => {
-      const dealRounds = rounds.filter((r) => r.dealId === dealId);
+      const current = roundsRef.current;
+      const dealRounds = current.filter((r) => r.dealId === dealId);
       if (dealRounds.length >= MAX_ROUNDS_PER_DEAL) {
         throw new Error("Maximum rounds reached for this deal");
       }
@@ -87,10 +91,10 @@ export function useNegotiationRounds() {
         updatedAt: now,
       };
 
-      persist([round, ...rounds]);
+      persist([round, ...current]);
       return id;
     },
-    [rounds, persist]
+    [persist]
   );
 
   /** Update a round's status */
@@ -98,7 +102,7 @@ export function useNegotiationRounds() {
     (roundId: string, status: RoundStatus) => {
       const now = new Date().toISOString();
       persist(
-        rounds.map((r) => {
+        roundsRef.current.map((r) => {
           if (r.id !== roundId) return r;
           return {
             ...r,
@@ -109,7 +113,7 @@ export function useNegotiationRounds() {
         })
       );
     },
-    [rounds, persist]
+    [persist]
   );
 
   /** Update round revision counts (after user accepts/rejects) */
@@ -119,7 +123,7 @@ export function useNegotiationRounds() {
       counts: { accepted: number; rejected: number; open: number }
     ) => {
       persist(
-        rounds.map((r) => {
+        roundsRef.current.map((r) => {
           if (r.id !== roundId) return r;
           return {
             ...r,
@@ -131,28 +135,28 @@ export function useNegotiationRounds() {
         })
       );
     },
-    [rounds, persist]
+    [persist]
   );
 
   /** Update round notes */
   const updateRoundNotes = useCallback(
     (roundId: string, notes: string) => {
       persist(
-        rounds.map((r) => {
+        roundsRef.current.map((r) => {
           if (r.id !== roundId) return r;
           return { ...r, notes, updatedAt: new Date().toISOString() };
         })
       );
     },
-    [rounds, persist]
+    [persist]
   );
 
   /** Delete a round */
   const deleteRound = useCallback(
     (roundId: string) => {
-      persist(rounds.filter((r) => r.id !== roundId));
+      persist(roundsRef.current.filter((r) => r.id !== roundId));
     },
-    [rounds, persist]
+    [persist]
   );
 
   /** Get a summary of the negotiation for a deal */

@@ -28,16 +28,8 @@ import {
   ChevronRight,
   Building2,
 } from "lucide-react";
-import type {
-  DealFolder,
-  DealStatus,
-  DocumentType,
-} from "@/lib/lease-redline/types";
-import {
-  DEAL_STATUS_LABELS,
-  DEAL_STATUS_COLORS,
-  DOCUMENT_TYPE_LABELS,
-} from "@/lib/lease-redline/types";
+import type { DealFolder } from "@/lib/lease-redline/types";
+import { DOCUMENT_TYPE_LABELS } from "@/lib/lease-redline/types";
 
 interface Props {
   deals: DealFolder[];
@@ -83,10 +75,14 @@ export function DealStatusBoard({
       }
       if (filterStatus !== "all") {
         // Filter based on document statuses
-        const hasAnalyzed = d.documents.some((doc) => doc.status === "analyzed");
         const hasPending = d.documents.some((doc) => doc.status === "pending");
+        const hasAnalyzed = d.documents.some((doc) => doc.status === "analyzed");
         if (filterStatus === "active" && !hasPending && !hasAnalyzed) return false;
-        if (filterStatus === "completed" && hasPending) return false;
+        if (filterStatus === "completed") {
+          // A deal is completed when it has documents and none are pending
+          const allDone = d.documents.length > 0 && !hasPending;
+          if (!allDone) return false;
+        }
       }
       return true;
     });

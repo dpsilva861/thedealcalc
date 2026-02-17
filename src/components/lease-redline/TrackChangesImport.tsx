@@ -238,7 +238,7 @@ export function TrackChangesImport({ onImportComplete, onClose }: Props) {
                   </p>
                   {tc.context && (
                     <p className="text-xs text-muted-foreground mt-1 italic">
-                      Context: {tc.context.slice(0, 150)}...
+                      Context: {tc.context.length > 150 ? tc.context.slice(0, 150) + "..." : tc.context}
                     </p>
                   )}
                 </div>
