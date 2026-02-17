@@ -56,6 +56,9 @@ const AdminTaxonomy = lazy(() => import("./pages/AdminTaxonomy"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
+// Lease Redlining Agent
+const LeaseRedline = lazy(() => import("./pages/LeaseRedline"));
+
 // Internal debug pages - lazy loaded (noindex)
 const SeoDebug = lazy(() => import("./pages/SeoDebug"));
 const SitemapDebug = lazy(() => import("./pages/SitemapDebug"));
@@ -109,6 +112,8 @@ const App = () => (
                       <Route path="/about" element={<About />} />
                       <Route path="/contact" element={<Contact />} />
                       <Route path="/ad-tech-providers" element={<AdTechProviders />} />
+                      {/* Lease Redlining Agent */}
+                      <Route path="/lease-redline" element={<LeaseRedline />} />
                       {/* Blog */}
                       <Route path="/blog" element={<Blog />} />
                       <Route path="/blog/category/:slug" element={<BlogCategory />} />

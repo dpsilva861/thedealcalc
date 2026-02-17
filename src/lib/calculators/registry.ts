@@ -50,6 +50,17 @@ export const CALCULATORS: CalculatorMetadata[] = [
     path: "/npv-calculator",
   },
   {
+    id: "lease-redline",
+    name: "Lease Redlining Agent",
+    shortDescription: "AI-powered landlord lease review",
+    description:
+      "AI-powered commercial lease and LOI redlining from the landlord perspective. Covers rent, TI, CAM, use clauses, exclusives, co-tenancy, and more with institutional-grade analysis.",
+    icon: "Scale",
+    tier: "pro",
+    status: "available",
+    path: "/lease-redline",
+  },
+  {
     id: "commercial",
     name: "Commercial Underwriting",
     shortDescription: "Office, retail, and industrial properties",
