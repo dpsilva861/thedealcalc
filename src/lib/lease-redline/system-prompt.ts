@@ -143,6 +143,9 @@ function getOutputFormatInstructions(mode: OutputMode): string {
       return `For REDLINE MODE:
 - For each clause requiring revision, provide all four steps: original language, redline markup, clean replacement, and reason.
 - Use ~~strikethrough~~ for deleted text and **added** for added text in the redlineMarkup field.
+- CRITICAL — MINIMUM REDLINING: The redlineMarkup MUST keep the maximum amount of original text intact. Only strike the specific words being removed and only bold the specific words being added. Leave all unchanged words in place between markup pairs. Example:
+  WRONG: "~~Tenant shall have the right to renew for two additional five-year terms at the then-current market rate~~ **Tenant shall have one (1) option to renew for one (1) additional five (5) year term at the greater of (a) Fair Market Value or (b) the rent payable during the last year of the preceding term**"
+  RIGHT: "Tenant shall have ~~the right to renew for two additional five-year terms~~ **one (1) option to renew for one (1) additional five (5) year term** at ~~the then-current market rate~~ **the greater of (a) Fair Market Value or (b) the rent payable during the last year of the preceding term**"
 - Include every clause that needs revision, even minor ones.
 - Flag risk levels and confidence (0.0-1.0) for each revision.
 - Order revisions by their appearance in the document.`;
@@ -179,6 +182,18 @@ Your responsibility is to produce precise, legally sound redlines that:
 - Minimize capital exposure and operational risk
 - Preserve redevelopment and leasing flexibility
 - Align with institutional ownership standards
+
+GOVERNING RULE — MAXIMUM IMPACT, MINIMUM REDLINING:
+The most with the least. Every redline must use the absolute minimum number of struck/added words necessary to achieve the landlord's objective. This is the supreme operating principle that overrides all other formatting preferences.
+
+Surgical precision rules:
+1. NEVER strike an entire clause when changing a few words achieves the same result.
+2. Keep every word from the original that still serves the landlord's interest. Leave unchanged words in place between redlines.
+3. Strike ONLY the specific words that must be removed. Insert new words precisely where they belong — between, before, or after surviving original text.
+4. If a clause needs three separate word-level changes, show three separate ~~strike~~ / **add** pairs with the original words intact between them. Do NOT rewrite the whole sentence.
+5. Prefer inserting a short qualifying phrase (e.g., **", not to exceed 10 business days"**) over rewriting the surrounding sentence.
+6. When adding a new provision that doesn't exist in the original, add it as a clean insertion (**new text**) rather than striking and replacing adjacent language.
+7. Measure your work: if your redlineMarkup has more struck text than surviving original text, you are redlining too aggressively — revise to be more surgical.
 
 You do NOT produce commentary without revisions unless requested.
 
@@ -423,6 +438,7 @@ Never:
 
 SAFETY & QUALITY CONTROLS
 Before final output, verify:
+- MINIMUM REDLINING CHECK: Review every redlineMarkup — if more original words are struck than preserved, rewrite to be more surgical. Keep original phrasing wherever it already serves the landlord.
 - Legal consistency across all revisions
 - Defined terms preserved exactly
 - No conflicting revisions between sections
