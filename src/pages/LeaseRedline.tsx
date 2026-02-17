@@ -30,6 +30,7 @@ import { useDealFolders } from "@/hooks/useDealFolders";
 import { useClauseLibrary } from "@/hooks/useClauseLibrary";
 import { useTemplateComparison } from "@/hooks/useTemplateComparison";
 import { useCrossDocConsistency } from "@/hooks/useCrossDocConsistency";
+import { usePromptLearning } from "@/hooks/usePromptLearning";
 import { exportWithTrackChanges, downloadBlob } from "@/lib/lease-redline/docx-export";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
@@ -42,6 +43,7 @@ import type {
   DocumentType,
   DocxImportResult,
 } from "@/lib/lease-redline/types";
+import type { SuggestionLearningContext } from "@/lib/lease-redline/prompt-suggestions";
 import {
   Shield,
   ShieldAlert,
@@ -118,12 +120,17 @@ export default function LeaseRedline() {
   const clauseLibrary = useClauseLibrary();
   const templateComparison = useTemplateComparison();
   const crossDocConsistency = useCrossDocConsistency();
+  const promptLearning = usePromptLearning();
 
   // Lift decisions state so both RedlineOutput and ChatPanel can access it
   const [decisions, setDecisions] = useState<RevisionDecision[]>([]);
   const [documentText, setDocumentText] = useState("");
   const [analysisId] = useState(() => `analysis_${Date.now()}`);
   const [documentType, setDocumentType] = useState<DocumentType>("lease");
+
+  // Track active suggestion selections for the current analysis
+  const [activeSuggestionIds, setActiveSuggestionIds] = useState<string[]>([]);
+  const [customInstructionText, setCustomInstructionText] = useState("");
 
   // UI panel toggles
   const [showInlineView, setShowInlineView] = useState(false);
@@ -183,6 +190,33 @@ export default function LeaseRedline() {
     return `\nUSER'S STANDARD CLAUSE POSITIONS (use this language when applicable):\n${lines.join("\n")}`;
   }, [clauseLibrary.getClausesForPrompt, documentType]);
 
+  // Build learning context for prompt suggestions
+  const suggestionLearningContext = useMemo<SuggestionLearningContext>(
+    () => ({
+      getSuccessScore: promptLearning.getSuccessScore,
+      getUsageCount: promptLearning.getUsageCount,
+      learnedSuggestions: promptLearning.customSuggestions,
+    }),
+    [promptLearning.getSuccessScore, promptLearning.getUsageCount, promptLearning.customSuggestions]
+  );
+
+  // Callback for when LeaseInput submits with selected suggestions
+  const handleSuggestionsSubmitted = useCallback(
+    (selectedIds: string[], customInstruction: string) => {
+      setActiveSuggestionIds(selectedIds);
+      setCustomInstructionText(customInstruction);
+      // Record selections in learning system
+      if (selectedIds.length > 0) {
+        promptLearning.recordSuggestionSelections(selectedIds);
+      }
+      // Record custom instruction for pattern mining
+      if (customInstruction) {
+        promptLearning.recordCustomInstruction(customInstruction, documentType);
+      }
+    },
+    [promptLearning, documentType]
+  );
+
   // Chat options with learning integration
   const chatOptions = useMemo(
     () => ({
@@ -227,11 +261,23 @@ export default function LeaseRedline() {
         })),
         decisions
       );
+      // Feed back results to prompt suggestion learning
+      const totalRevisions = response.revisions.length;
+      const acceptedCount = decisions.filter((d) => d === "accepted").length;
+      promptLearning.recordAnalysisResults(
+        activeSuggestionIds,
+        totalRevisions,
+        acceptedCount,
+        customInstructionText || undefined,
+        documentType
+      );
       saveToHistory(response, decisions, chat.messages);
     }
     chat.clearChat();
     setDecisions([]);
     setDocumentText("");
+    setActiveSuggestionIds([]);
+    setCustomInstructionText("");
     setShowInlineView(false);
     setShowShare(false);
     setShowVersionHistory(false);
@@ -248,7 +294,7 @@ export default function LeaseRedline() {
     setComments([]);
     shortcuts.clearFocus();
     reset();
-  }, [response, decisions, chat, learning, saveToHistory, reset, timer, shortcuts]);
+  }, [response, decisions, chat, learning, saveToHistory, reset, timer, shortcuts, promptLearning, activeSuggestionIds, customInstructionText, documentType]);
 
   // Version save handler
   const handleSaveVersion = useCallback(() => {
@@ -580,9 +626,18 @@ export default function LeaseRedline() {
           )}
 
           {/* Learning indicator */}
-          {learning.rules.length > 0 && !response && !isLoading && (
-            <div className="mb-4 text-xs text-muted-foreground text-center">
-              Agent has learned {learning.rules.length} rule{learning.rules.length !== 1 ? "s" : ""} from your feedback
+          {(learning.rules.length > 0 || promptLearning.customSuggestions.length > 0) && !response && !isLoading && (
+            <div className="mb-4 text-xs text-muted-foreground text-center space-y-0.5">
+              {learning.rules.length > 0 && (
+                <div>
+                  Agent has learned {learning.rules.length} rule{learning.rules.length !== 1 ? "s" : ""} from your feedback
+                </div>
+              )}
+              {promptLearning.customSuggestions.length > 0 && (
+                <div>
+                  {promptLearning.customSuggestions.length} custom suggestion{promptLearning.customSuggestions.length !== 1 ? "s" : ""} learned from your instructions
+                </div>
+              )}
             </div>
           )}
 
@@ -690,7 +745,12 @@ export default function LeaseRedline() {
               />
             </div>
           ) : (
-            <LeaseInput onSubmit={handleSubmit} isLoading={isLoading} />
+            <LeaseInput
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              suggestionLearning={suggestionLearningContext}
+              onSuggestionsSubmitted={handleSuggestionsSubmitted}
+            />
           )}
         </div>
       </section>

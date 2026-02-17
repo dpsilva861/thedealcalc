@@ -17,6 +17,29 @@ export interface PromptSuggestion {
   reason: string;
   /** Category for grouping */
   category: "risk" | "financial" | "operations" | "legal" | "strategy";
+  /** Source: "detected" from document scanning, "base" from document type, "learned" from user behavior */
+  source?: "detected" | "base" | "learned";
+  /** Usage count from learning data */
+  usageCount?: number;
+  /** Success score from learning data (0-1) */
+  successScore?: number;
+}
+
+/** Learning context passed into suggestion generation for ranking */
+export interface SuggestionLearningContext {
+  /** Get success score for a built-in suggestion id */
+  getSuccessScore: (id: string) => number;
+  /** Get usage count for a built-in suggestion id */
+  getUsageCount: (id: string) => number;
+  /** Learned suggestions from custom instruction mining */
+  learnedSuggestions: {
+    id: string;
+    label: string;
+    instruction: string;
+    category: PromptSuggestion["category"];
+    usageCount: number;
+    successScore: number;
+  }[];
 }
 
 interface PatternRule {
@@ -289,11 +312,13 @@ const PATTERN_RULES: PatternRule[] = [
 
 /**
  * Scan document text and document type to generate contextual prompt suggestions.
- * Returns suggestions sorted by relevance (number of pattern matches).
+ * When learning context is provided, suggestions are ranked by a blend of
+ * document relevance (pattern matches) and historical success scores.
  */
 export function generatePromptSuggestions(
   documentText: string,
-  documentType: DocumentType
+  documentType: DocumentType,
+  learning?: SuggestionLearningContext
 ): PromptSuggestion[] {
   if (!documentText || documentText.length < 100) return [];
 
@@ -320,15 +345,38 @@ export function generatePromptSuggestions(
 
     const minRequired = rule.minMatches ?? 1;
     if (matchCount >= minRequired) {
+      const id = rule.suggestion.label.toLowerCase().replace(/[^a-z0-9]/g, "_");
+
+      // Blend relevance score with learning data
+      let score = matchCount;
+      let usageCount: number | undefined;
+      let successScore: number | undefined;
+
+      if (learning) {
+        const success = learning.getSuccessScore(id);
+        const usage = learning.getUsageCount(id);
+        usageCount = usage;
+        successScore = success;
+        // Boost score by success history: up to 2x for proven suggestions
+        score = matchCount * (1 + success);
+        // Small boost for frequently used suggestions even without success data yet
+        if (usage > 0 && success === 0) {
+          score += usage * 0.5;
+        }
+      }
+
       results.push({
-        id: rule.suggestion.label.toLowerCase().replace(/[^a-z0-9]/g, "_"),
+        id,
         ...rule.suggestion,
-        score: matchCount,
+        source: "detected",
+        usageCount,
+        successScore,
+        score,
       });
     }
   }
 
-  // Sort by score descending — most relevant first
+  // Sort by blended score descending — most relevant + proven first
   results.sort((a, b) => b.score - a.score);
 
   // Return top 8 suggestions to avoid overwhelming the UI
@@ -336,10 +384,38 @@ export function generatePromptSuggestions(
 }
 
 /**
+ * Convert learned suggestions from the learning hook into PromptSuggestion format.
+ * These are user's custom instructions that have been promoted to suggestions.
+ */
+export function getLearnedPromptSuggestions(
+  learning?: SuggestionLearningContext
+): PromptSuggestion[] {
+  if (!learning || learning.learnedSuggestions.length === 0) return [];
+
+  return learning.learnedSuggestions
+    .sort((a, b) => b.successScore - a.successScore)
+    .slice(0, 4)
+    .map((s) => ({
+      id: s.id,
+      label: s.label,
+      instruction: s.instruction,
+      reason: `Learned from your past instructions (used ${s.usageCount}x, ${Math.round(s.successScore * 100)}% success)`,
+      category: s.category,
+      source: "learned" as const,
+      usageCount: s.usageCount,
+      successScore: s.successScore,
+    }));
+}
+
+/**
  * Get always-available base prompts for a document type
  * (shown even when no specific patterns are detected).
+ * When learning context is provided, base prompts also get success scores.
  */
-export function getBasePrompts(documentType: DocumentType): PromptSuggestion[] {
+export function getBasePrompts(
+  documentType: DocumentType,
+  learning?: SuggestionLearningContext
+): PromptSuggestion[] {
   const base: PromptSuggestion[] = [];
 
   switch (documentType) {
@@ -351,6 +427,7 @@ export function getBasePrompts(documentType: DocumentType): PromptSuggestion[] {
           instruction: "Analyze from an aggressive landlord perspective. Propose the strongest possible landlord-favorable revisions for every clause. Prioritize protecting NOI and limiting tenant flexibility.",
           reason: "General landlord-favorable analysis",
           category: "strategy",
+          source: "base",
         },
         {
           id: "balanced_review",
@@ -358,6 +435,7 @@ export function getBasePrompts(documentType: DocumentType): PromptSuggestion[] {
           instruction: "Provide a balanced analysis identifying risks on both sides. Flag provisions that are outside market norms in either direction. Suggest language that would be acceptable to both parties.",
           reason: "Market-balanced analysis",
           category: "strategy",
+          source: "base",
         }
       );
       break;
@@ -368,6 +446,7 @@ export function getBasePrompts(documentType: DocumentType): PromptSuggestion[] {
         instruction: "Identify any key deal terms that are missing from this LOI that should be addressed before lease drafting. Flag vague or ambiguous business terms that could lead to disputes during lease negotiation.",
         reason: "LOI completeness check",
         category: "strategy",
+        source: "base",
       });
       break;
     case "amendment":
@@ -377,6 +456,7 @@ export function getBasePrompts(documentType: DocumentType): PromptSuggestion[] {
         instruction: "Flag any provisions in this amendment that may conflict with or create ambiguity when read together with a standard lease. Pay special attention to defined terms and cross-references.",
         reason: "Amendment consistency check",
         category: "legal",
+        source: "base",
       });
       break;
     case "guaranty":
@@ -386,6 +466,7 @@ export function getBasePrompts(documentType: DocumentType): PromptSuggestion[] {
         instruction: "Carefully evaluate the scope of the guaranty. Is it full, limited, or good-guy? Analyze burn-off provisions, cap amounts, and whether the guaranty survives assignment. Propose the strongest enforceable guaranty structure.",
         reason: "Guaranty-specific analysis",
         category: "risk",
+        source: "base",
       });
       break;
     case "work_letter":
@@ -395,10 +476,19 @@ export function getBasePrompts(documentType: DocumentType): PromptSuggestion[] {
         instruction: "Focus on the allocation of construction costs, scope of landlord vs. tenant work, approval timelines, change order procedures, and contractor requirements. Flag any provisions that shift construction risk to landlord.",
         reason: "Work letter-specific analysis",
         category: "financial",
+        source: "base",
       });
       break;
     default:
       break;
+  }
+
+  // Enrich base prompts with learning data if available
+  if (learning) {
+    for (const prompt of base) {
+      prompt.usageCount = learning.getUsageCount(prompt.id);
+      prompt.successScore = learning.getSuccessScore(prompt.id);
+    }
   }
 
   return base;

@@ -28,18 +28,24 @@ import { extractPdfText } from "@/lib/lease-redline/pdf-parser";
 import {
   generatePromptSuggestions,
   getBasePrompts,
+  getLearnedPromptSuggestions,
   type PromptSuggestion,
+  type SuggestionLearningContext,
 } from "@/lib/lease-redline/prompt-suggestions";
 
 interface LeaseInputProps {
   onSubmit: (request: LeaseRedlineRequest) => void;
   isLoading: boolean;
+  /** Learning context for ranking suggestions by past success */
+  suggestionLearning?: SuggestionLearningContext;
+  /** Called when analysis is submitted with the selected suggestion IDs */
+  onSuggestionsSubmitted?: (selectedIds: string[], customInstruction: string) => void;
 }
 
 const MAX_CHARS = 200_000;
 const MIN_CHARS = 100;
 
-export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
+export function LeaseInput({ onSubmit, isLoading, suggestionLearning, onSuggestionsSubmitted }: LeaseInputProps) {
   const [documentText, setDocumentText] = useState("");
   const [documentType, setDocumentType] = useState<DocumentType>("lease");
   const [outputMode, setOutputMode] = useState<OutputMode>("redline");
@@ -54,16 +60,25 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
 
   const charCount = documentText.length;
 
-  // Generate contextual prompt suggestions based on document content
+  // Generate contextual prompt suggestions based on document content + learning
   const suggestions = useMemo<PromptSuggestion[]>(() => {
     if (charCount < MIN_CHARS) return [];
-    const detected = generatePromptSuggestions(documentText, documentType);
-    const base = getBasePrompts(documentType);
-    // Merge: detected first (content-specific), then base prompts not already covered
+    const detected = generatePromptSuggestions(documentText, documentType, suggestionLearning);
+    const base = getBasePrompts(documentType, suggestionLearning);
+    const learned = getLearnedPromptSuggestions(suggestionLearning);
+    // Merge: detected first (content-specific), then learned, then base — deduped
     const ids = new Set(detected.map((s) => s.id));
-    const merged = [...detected, ...base.filter((b) => !ids.has(b.id))];
+    const withLearned = [
+      ...detected,
+      ...learned.filter((l) => !ids.has(l.id)),
+    ];
+    const allIds = new Set(withLearned.map((s) => s.id));
+    const merged = [
+      ...withLearned,
+      ...base.filter((b) => !allIds.has(b.id)),
+    ];
     return merged;
-  }, [documentText, documentType, charCount]);
+  }, [documentText, documentType, charCount, suggestionLearning]);
   const canSubmit =
     documentText.trim().length >= MIN_CHARS &&
     charCount <= MAX_CHARS &&
@@ -71,6 +86,27 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
 
   const handleSubmit = () => {
     if (!canSubmit) return;
+
+    // Report which suggestions were selected + any custom instruction text
+    if (onSuggestionsSubmitted) {
+      // Extract custom instruction text (text not from suggestion buttons)
+      const suggestionTexts = new Set(
+        suggestions
+          .filter((s) => selectedSuggestionIds.has(s.id))
+          .map((s) => s.instruction.trim())
+      );
+      const customParts = additionalInstructions
+        .split("\n")
+        .filter((line) => line.trim() && !suggestionTexts.has(line.trim()))
+        .join("\n")
+        .trim();
+
+      onSuggestionsSubmitted(
+        Array.from(selectedSuggestionIds),
+        customParts
+      );
+    }
+
     onSubmit({
       documentText: documentText.trim(),
       documentType,
@@ -408,9 +444,17 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
                 <Badge variant="secondary" className="text-[10px] ml-1">
                   {suggestions.length} detected
                 </Badge>
+                {suggestions.some((s) => s.source === "learned") && (
+                  <Badge className="text-[10px] ml-0.5 bg-blue-100 text-blue-800 hover:bg-blue-100">
+                    + learned
+                  </Badge>
+                )}
               </Label>
               <p className="text-xs text-muted-foreground">
-                Click to add focus areas based on your document content. Selected items will be included in the analysis instructions.
+                Click to add focus areas based on your document content.
+                {suggestions.some((s) => (s.usageCount || 0) > 0) && (
+                  <> Suggestions improve over time based on your feedback.</>
+                )}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {suggestions.map((s) => {
@@ -422,13 +466,25 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
                     legal: "border-purple-200 hover:border-purple-400",
                     strategy: "border-orange-200 hover:border-orange-400",
                   };
+                  const hasUsageData = (s.usageCount || 0) > 0;
+                  const successPct = s.successScore ? Math.round(s.successScore * 100) : 0;
+                  const isProven = successPct >= 60 && (s.usageCount || 0) >= 2;
+                  // Build enhanced tooltip
+                  let tooltip = s.reason;
+                  if (hasUsageData) {
+                    tooltip += ` | Used ${s.usageCount}x`;
+                    if (successPct > 0) tooltip += `, ${successPct}% success`;
+                  }
+                  if (s.source === "learned") {
+                    tooltip += " | Auto-learned from your instructions";
+                  }
                   return (
                     <button
                       key={s.id}
                       type="button"
                       onClick={() => handleSuggestionClick(s)}
                       disabled={isLoading}
-                      title={s.reason}
+                      title={tooltip}
                       className={`
                         inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs
                         border transition-all duration-150
@@ -436,6 +492,7 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
                           ? "bg-primary text-primary-foreground border-primary"
                           : `bg-card hover:bg-muted/50 ${categoryColors[s.category] || "border-border"}`
                         }
+                        ${isProven && !isSelected ? "ring-1 ring-green-400/50" : ""}
                         disabled:opacity-50
                       `}
                     >
@@ -444,11 +501,24 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
                       ) : (
                         <Plus className="h-3 w-3" />
                       )}
+                      {s.source === "learned" && (
+                        <span className="text-[9px] opacity-70">*</span>
+                      )}
                       {s.label}
+                      {isProven && !isSelected && (
+                        <span className="text-[9px] text-green-600 font-medium ml-0.5">
+                          {successPct}%
+                        </span>
+                      )}
                     </button>
                   );
                 })}
               </div>
+              {suggestions.some((s) => s.source === "learned") && (
+                <p className="text-[10px] text-muted-foreground/70 italic">
+                  * Learned suggestions are auto-created from your past instructions
+                </p>
+              )}
             </div>
           )}
 
