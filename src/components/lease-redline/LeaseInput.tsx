@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Send, Loader2, Upload, X, MapPin } from "lucide-react";
+import { FileText, Send, Loader2, Upload, X, MapPin, Lightbulb, Check, Plus } from "lucide-react";
 import type {
   DocumentType,
   OutputMode,
@@ -24,6 +25,11 @@ import {
   US_JURISDICTIONS,
 } from "@/lib/lease-redline/types";
 import { extractPdfText } from "@/lib/lease-redline/pdf-parser";
+import {
+  generatePromptSuggestions,
+  getBasePrompts,
+  type PromptSuggestion,
+} from "@/lib/lease-redline/prompt-suggestions";
 
 interface LeaseInputProps {
   onSubmit: (request: LeaseRedlineRequest) => void;
@@ -43,9 +49,21 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
   const [fileError, setFileError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
+  const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const charCount = documentText.length;
+
+  // Generate contextual prompt suggestions based on document content
+  const suggestions = useMemo<PromptSuggestion[]>(() => {
+    if (charCount < MIN_CHARS) return [];
+    const detected = generatePromptSuggestions(documentText, documentType);
+    const base = getBasePrompts(documentType);
+    // Merge: detected first (content-specific), then base prompts not already covered
+    const ids = new Set(detected.map((s) => s.id));
+    const merged = [...detected, ...base.filter((b) => !ids.has(b.id))];
+    return merged;
+  }, [documentText, documentType, charCount]);
   const canSubmit =
     documentText.trim().length >= MIN_CHARS &&
     charCount <= MAX_CHARS &&
@@ -59,6 +77,32 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
       outputMode,
       additionalInstructions: additionalInstructions.trim() || undefined,
       jurisdiction: jurisdiction || undefined,
+    });
+  };
+
+  const handleSuggestionClick = (suggestion: PromptSuggestion) => {
+    setSelectedSuggestionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(suggestion.id)) {
+        // Deselect — remove the instruction from additionalInstructions
+        next.delete(suggestion.id);
+        setAdditionalInstructions((current) => {
+          const lines = current
+            .split("\n")
+            .filter((line) => line.trim() !== suggestion.instruction.trim());
+          return lines.join("\n").trim();
+        });
+      } else {
+        // Select — append the instruction
+        next.add(suggestion.id);
+        setAdditionalInstructions((current) => {
+          const trimmed = current.trim();
+          return trimmed
+            ? `${trimmed}\n${suggestion.instruction}`
+            : suggestion.instruction;
+        });
+      }
+      return next;
     });
   };
 
@@ -147,6 +191,7 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
     setFileName(null);
     setDocumentText("");
     setFileError(null);
+    setSelectedSuggestionIds(new Set());
   };
 
   // ── Drag and drop ──
@@ -354,6 +399,59 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
             </div>
           </div>
 
+          {/* Prompt Suggestions */}
+          {suggestions.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Lightbulb className="h-3.5 w-3.5 text-yellow-500" />
+                Suggested Focus Areas
+                <Badge variant="secondary" className="text-[10px] ml-1">
+                  {suggestions.length} detected
+                </Badge>
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Click to add focus areas based on your document content. Selected items will be included in the analysis instructions.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {suggestions.map((s) => {
+                  const isSelected = selectedSuggestionIds.has(s.id);
+                  const categoryColors: Record<string, string> = {
+                    risk: "border-red-200 hover:border-red-400",
+                    financial: "border-green-200 hover:border-green-400",
+                    operations: "border-blue-200 hover:border-blue-400",
+                    legal: "border-purple-200 hover:border-purple-400",
+                    strategy: "border-orange-200 hover:border-orange-400",
+                  };
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => handleSuggestionClick(s)}
+                      disabled={isLoading}
+                      title={s.reason}
+                      className={`
+                        inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs
+                        border transition-all duration-150
+                        ${isSelected
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : `bg-card hover:bg-muted/50 ${categoryColors[s.category] || "border-border"}`
+                        }
+                        disabled:opacity-50
+                      `}
+                    >
+                      {isSelected ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <Plus className="h-3 w-3" />
+                      )}
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Additional Instructions */}
           <div className="space-y-2">
             <Label htmlFor="additional-instructions">
@@ -363,7 +461,11 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
               id="additional-instructions"
               value={additionalInstructions}
               onChange={(e) => setAdditionalInstructions(e.target.value)}
-              placeholder="Any specific focus areas, deal-specific context, property type, or special considerations..."
+              placeholder={
+                suggestions.length > 0
+                  ? "Click suggestions above or type your own instructions..."
+                  : "Any specific focus areas, deal-specific context, property type, or special considerations..."
+              }
               className="min-h-[80px] text-sm"
               disabled={isLoading}
               maxLength={2000}
@@ -408,19 +510,12 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
 
 /**
  * Extract plain text from a .docx file (OOXML format).
- * Uses the browser's built-in zip support via the Blob/Response APIs
+ * Uses the browser's built-in DecompressionStream API for deflate
  * and parses the XML to extract text from <w:t> elements.
  */
 async function extractDocxText(arrayBuffer: ArrayBuffer): Promise<string> {
-  // docx is a zip file; we need to find word/document.xml
-  const blob = new Blob([arrayBuffer]);
-
-  // Use JSZip-like approach with DecompressionStream if available
-  // Fallback: parse as XML directly from the raw zip
-  // For simplicity, use a manual zip entry finder
-
   const bytes = new Uint8Array(arrayBuffer);
-  const xmlContent = findZipEntry(bytes, "word/document.xml");
+  const xmlContent = await findZipEntryAsync(bytes, "word/document.xml");
   if (!xmlContent) {
     throw new Error("Could not find document.xml in docx file");
   }
@@ -443,7 +538,6 @@ async function extractDocxText(arrayBuffer: ArrayBuffer): Promise<string> {
     if (texts.length > 0) {
       paragraphs.push(texts.join(""));
     } else {
-      // Empty paragraph = line break
       paragraphs.push("");
     }
   }
@@ -452,13 +546,13 @@ async function extractDocxText(arrayBuffer: ArrayBuffer): Promise<string> {
 }
 
 /**
- * Minimal zip entry finder — locates and decompresses a file within a zip archive.
- * Supports both stored (no compression) and deflated entries.
+ * Minimal async zip entry finder — locates and decompresses a file within a zip archive.
+ * Supports both stored (no compression) and deflated entries via DecompressionStream.
  */
-function findZipEntry(
+async function findZipEntryAsync(
   data: Uint8Array,
   targetName: string
-): Uint8Array | null {
+): Promise<Uint8Array | null> {
   let offset = 0;
   const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 
@@ -484,9 +578,10 @@ function findZipEntry(
         return rawData;
       }
       if (compressionMethod === 8) {
-        // Deflated — use DecompressionStream
+        // Deflated — use async DecompressionStream
         try {
-          return decompressSync(rawData);
+          const decompressed = await decompressRaw(rawData);
+          return new TextEncoder().encode(decompressed);
         } catch {
           return null;
         }
@@ -501,32 +596,12 @@ function findZipEntry(
 }
 
 /**
- * Decompress deflate-compressed data using a synchronous approach.
- * Falls back to returning null if the browser doesn't support DecompressionStream.
+ * Decompress raw deflate data using the browser's DecompressionStream API.
  */
-function decompressSync(data: Uint8Array): Uint8Array | null {
-  // Wrap raw deflate data with a minimal zlib header so DecompressionStream can handle it
-  // Actually, we'll use a Response + DecompressionStream approach
-  // But since this needs to be sync-ish for the zip parser, we use a different approach
-
-  // Attempt with pako-style manual inflate using browser APIs
-  // For now, try wrapping in zlib header (78 01) for "no compression" level
-  const zlibWrapped = new Uint8Array(data.length + 6);
-  zlibWrapped[0] = 0x78;
-  zlibWrapped[1] = 0x01;
-  zlibWrapped.set(data, 2);
-  // Adler32 checksum placeholder (4 bytes at end — not validated by most parsers)
-  zlibWrapped[data.length + 2] = 0;
-  zlibWrapped[data.length + 3] = 0;
-  zlibWrapped[data.length + 4] = 0;
-  zlibWrapped[data.length + 5] = 0;
-
-  // Use the synchronous DecompressionStream if available
-  if (typeof DecompressionStream !== "undefined") {
-    // DecompressionStream is async, but we called this from an async context
-    // This won't work synchronously — return null and let caller handle
-    return null;
-  }
-
-  return null;
+async function decompressRaw(data: Uint8Array): Promise<string> {
+  const ds = new DecompressionStream("raw");
+  const blob = new Blob([data]);
+  const decompressedStream = blob.stream().pipeThrough(ds);
+  const response = new Response(decompressedStream);
+  return response.text();
 }
