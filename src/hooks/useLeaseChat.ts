@@ -31,10 +31,16 @@ function buildRevisionsSummary(
     .join("\n");
 }
 
+interface UseLeaseChatOptions {
+  learnedRules?: string;
+  onCorrectionDetected?: (userMessage: string, previousAssistantMessage?: string) => void;
+}
+
 export function useLeaseChat(
   response: LeaseRedlineResponse | null,
   decisions: RevisionDecision[],
-  userPreferences?: UserPreferences
+  userPreferences?: UserPreferences,
+  options?: UseLeaseChatOptions
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +60,12 @@ export function useLeaseChat(
         timestamp: Date.now(),
       };
 
+      // Check for correction signals in the user message
+      if (options?.onCorrectionDetected) {
+        const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+        options.onCorrectionDetected(userMessage.trim(), lastAssistant?.content);
+      }
+
       setMessages((prev) => [...prev, userMsg]);
       setIsLoading(true);
 
@@ -71,7 +83,13 @@ export function useLeaseChat(
 
         const { data, error: fnError } = await supabase.functions.invoke(
           "lease-redline-chat",
-          { body: { message: userMessage.trim(), context } }
+          {
+            body: {
+              message: userMessage.trim(),
+              context,
+              learnedRules: options?.learnedRules,
+            },
+          }
         );
 
         if (fnError) {
@@ -117,7 +135,7 @@ export function useLeaseChat(
         inflightRef.current = false;
       }
     },
-    [response, decisions, messages, userPreferences]
+    [response, decisions, messages, userPreferences, options]
   );
 
   const clearChat = useCallback(() => {

@@ -6,6 +6,10 @@ import type {
   LeaseRedlineState,
 } from "@/lib/lease-redline/types";
 
+interface AnalyzeOptions {
+  learnedRules?: string;
+}
+
 const MAX_RETRIES = 2;
 const RETRY_DELAYS = [2000, 4000];
 
@@ -19,7 +23,7 @@ export function useLeaseRedline() {
   // Guard against rapid double-submissions
   const inflightRef = useRef(false);
 
-  const analyze = useCallback(async (request: LeaseRedlineRequest) => {
+  const analyze = useCallback(async (request: LeaseRedlineRequest, options?: AnalyzeOptions) => {
     if (inflightRef.current) return null;
     inflightRef.current = true;
     setState({ isLoading: true, error: null, response: null });
@@ -36,6 +40,7 @@ export function useLeaseRedline() {
               documentType: request.documentType,
               outputMode: request.outputMode,
               additionalInstructions: request.additionalInstructions,
+              learnedRules: options?.learnedRules,
             },
           }
         );

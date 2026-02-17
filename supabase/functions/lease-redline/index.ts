@@ -560,7 +560,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { documentText, documentType, outputMode, additionalInstructions } = body;
+    const { documentText, documentType, outputMode, additionalInstructions, learnedRules } = body;
 
     // ── Validate inputs ──
     if (!documentText || typeof documentText !== "string") {
@@ -601,7 +601,12 @@ serve(async (req) => {
     }
 
     // ── Build prompt ──
-    const systemPrompt = buildSystemPrompt(documentType, outputMode);
+    let systemPrompt = buildSystemPrompt(documentType, outputMode);
+
+    // Inject learned rules from user feedback history
+    if (learnedRules && typeof learnedRules === "string" && learnedRules.trim().length > 0) {
+      systemPrompt += `\n\n${learnedRules.trim().slice(0, 3000)}`;
+    }
 
     let userMessage = `Review and redline the following ${documentType} document from the landlord's perspective.\n\n---BEGIN DOCUMENT---\n\n${documentText}\n\n---END DOCUMENT---`;
 

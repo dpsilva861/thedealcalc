@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { LeaseInput } from "@/components/lease-redline/LeaseInput";
@@ -7,10 +7,14 @@ import { ChatPanel } from "@/components/lease-redline/ChatPanel";
 import { useLeaseRedline } from "@/hooks/useLeaseRedline";
 import { useLeaseChat } from "@/hooks/useLeaseChat";
 import { useLeaseMemory } from "@/hooks/useLeaseMemory";
+import { useLeaseLearning } from "@/hooks/useLeaseLearning";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import type { RevisionDecision } from "@/lib/lease-redline/types";
+import type {
+  LeaseRedlineRequest,
+  RevisionDecision,
+} from "@/lib/lease-redline/types";
 import {
   Shield,
   Scale,
@@ -69,6 +73,7 @@ function AnalysisProgress() {
 export default function LeaseRedline() {
   const { isLoading, error, response, analyze, reset } = useLeaseRedline();
   const { preferences, saveToHistory, getContextualSuggestions } = useLeaseMemory();
+  const learning = useLeaseLearning();
 
   // Lift decisions state so both RedlineOutput and ChatPanel can access it
   const [decisions, setDecisions] = useState<RevisionDecision[]>([]);
@@ -80,17 +85,38 @@ export default function LeaseRedline() {
     }
   }, [response]);
 
-  const chat = useLeaseChat(response, decisions, preferences);
+  // Get learned rules once for the current session
+  const learnedRulesPrompt = useMemo(() => learning.getRulesForPrompt(), [learning]);
+
+  // Chat options with learning integration
+  const chatOptions = useMemo(
+    () => ({
+      learnedRules: learnedRulesPrompt,
+      onCorrectionDetected: learning.learnFromChat,
+    }),
+    [learnedRulesPrompt, learning.learnFromChat]
+  );
+
+  const chat = useLeaseChat(response, decisions, preferences, chatOptions);
+
+  // Submit handler that injects learned rules
+  const handleSubmit = useCallback(
+    async (request: LeaseRedlineRequest) => {
+      return analyze(request, { learnedRules: learnedRulesPrompt });
+    },
+    [analyze, learnedRulesPrompt]
+  );
 
   const handleReset = useCallback(() => {
-    // Save to memory before resetting
+    // Learn from decisions before resetting
     if (response) {
+      learning.learnFromDecisions(response, decisions);
       saveToHistory(response, decisions, chat.messages);
     }
     chat.clearChat();
     setDecisions([]);
     reset();
-  }, [response, decisions, chat, saveToHistory, reset]);
+  }, [response, decisions, chat, learning, saveToHistory, reset]);
 
   const contextualSuggestions = getContextualSuggestions();
 
@@ -161,6 +187,13 @@ export default function LeaseRedline() {
             </Alert>
           )}
 
+          {/* Learning indicator */}
+          {learning.rules.length > 0 && !response && !isLoading && (
+            <div className="mb-4 text-xs text-muted-foreground text-center">
+              Agent has learned {learning.rules.length} rule{learning.rules.length !== 1 ? "s" : ""} from your feedback
+            </div>
+          )}
+
           {/* Progress indicator while loading */}
           {isLoading && (
             <div className="mb-6">
@@ -189,7 +222,7 @@ export default function LeaseRedline() {
               />
             </div>
           ) : (
-            <LeaseInput onSubmit={analyze} isLoading={isLoading} />
+            <LeaseInput onSubmit={handleSubmit} isLoading={isLoading} />
           )}
         </div>
       </section>

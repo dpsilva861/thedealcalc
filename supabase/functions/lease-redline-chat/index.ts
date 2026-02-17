@@ -135,7 +135,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { message, context } = body;
+    const { message, context, learnedRules } = body;
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       return new Response(
@@ -177,7 +177,7 @@ serve(async (req) => {
     // Add current user message
     messages.push({ role: "user", content: message.trim().slice(0, 4000) });
 
-    const systemPrompt = buildChatSystemPrompt({
+    let systemPrompt = buildChatSystemPrompt({
       documentType: context.documentType,
       outputMode: context.outputMode || "redline",
       revisionsSummary: context.revisionsSummary || "No revisions available",
@@ -186,6 +186,11 @@ serve(async (req) => {
       decisions: context.decisions || [],
       userPreferences: context.userPreferences || undefined,
     });
+
+    // Inject learned rules from user feedback history
+    if (learnedRules && typeof learnedRules === "string" && learnedRules.trim().length > 0) {
+      systemPrompt += `\n\n${learnedRules.trim().slice(0, 3000)}`;
+    }
 
     console.log(`[lease-redline-chat] Processing message (${message.length} chars) with ${history.length} history messages`);
 
