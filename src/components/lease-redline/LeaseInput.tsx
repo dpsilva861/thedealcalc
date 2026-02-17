@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Send, Loader2, Upload, X } from "lucide-react";
+import { FileText, Send, Loader2, Upload, X, MapPin } from "lucide-react";
 import type {
   DocumentType,
   OutputMode,
@@ -21,7 +21,9 @@ import {
   DOCUMENT_TYPE_DESCRIPTIONS,
   OUTPUT_MODE_LABELS,
   OUTPUT_MODE_DESCRIPTIONS,
+  US_JURISDICTIONS,
 } from "@/lib/lease-redline/types";
+import { extractPdfText } from "@/lib/lease-redline/pdf-parser";
 
 interface LeaseInputProps {
   onSubmit: (request: LeaseRedlineRequest) => void;
@@ -36,9 +38,11 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
   const [documentType, setDocumentType] = useState<DocumentType>("lease");
   const [outputMode, setOutputMode] = useState<OutputMode>("redline");
   const [additionalInstructions, setAdditionalInstructions] = useState("");
+  const [jurisdiction, setJurisdiction] = useState<string>("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const charCount = documentText.length;
@@ -54,6 +58,7 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
       documentType,
       outputMode,
       additionalInstructions: additionalInstructions.trim() || undefined,
+      jurisdiction: jurisdiction || undefined,
     });
   };
 
@@ -100,8 +105,34 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
       return;
     }
 
+    // .pdf files
+    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+      try {
+        setIsExtractingPdf(true);
+        const arrayBuffer = await file.arrayBuffer();
+        const text = await extractPdfText(arrayBuffer);
+        if (text.length > MAX_CHARS) {
+          setFileError(`File content exceeds ${MAX_CHARS.toLocaleString()} character limit`);
+          return;
+        }
+        if (text.trim().length < MIN_CHARS) {
+          setFileError("Could not extract sufficient text from this PDF. It may be a scanned document — try a .docx version instead.");
+          return;
+        }
+        setDocumentText(text);
+        setFileName(file.name);
+      } catch {
+        setFileError(
+          "Could not read this PDF file. Try a .docx file or paste the text directly."
+        );
+      } finally {
+        setIsExtractingPdf(false);
+      }
+      return;
+    }
+
     setFileError(
-      "Unsupported file type. Please upload a .txt or .docx file, or paste text directly."
+      "Unsupported file type. Please upload a .pdf, .docx, or .txt file, or paste text directly."
     );
   }, []);
 
@@ -197,6 +228,35 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
             </div>
           </div>
 
+          {/* Jurisdiction (Optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="jurisdiction" className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              Jurisdiction (Optional)
+            </Label>
+            <Select
+              value={jurisdiction}
+              onValueChange={setJurisdiction}
+            >
+              <SelectTrigger id="jurisdiction">
+                <SelectValue placeholder="Select state for jurisdiction-specific rules" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None — General analysis</SelectItem>
+                {US_JURISDICTIONS.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {jurisdiction && (
+              <p className="text-xs text-muted-foreground">
+                Agent will apply {jurisdiction}-specific commercial lease law considerations.
+              </p>
+            )}
+          </div>
+
           {/* File Upload Zone */}
           <div
             onDragOver={handleDragOver}
@@ -208,7 +268,12 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
                 : "border-border hover:border-primary/50"
             }`}
           >
-            {fileName ? (
+            {isExtractingPdf ? (
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span className="text-sm font-medium text-muted-foreground">Extracting text from PDF...</span>
+              </div>
+            ) : fileName ? (
               <div className="flex items-center justify-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium">{fileName}</span>
@@ -224,7 +289,7 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
               <div className="space-y-2">
                 <Upload className="h-6 w-6 text-muted-foreground mx-auto" />
                 <p className="text-sm text-muted-foreground">
-                  Drag & drop a .docx or .txt file, or{" "}
+                  Drag & drop a .pdf, .docx, or .txt file, or{" "}
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -238,7 +303,7 @@ export function LeaseInput({ onSubmit, isLoading }: LeaseInputProps) {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt,.docx"
+              accept=".txt,.docx,.pdf"
               onChange={handleFileSelect}
               className="hidden"
               aria-label="Upload document file"

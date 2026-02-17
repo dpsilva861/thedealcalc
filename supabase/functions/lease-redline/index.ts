@@ -560,7 +560,29 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { documentText, documentType, outputMode, additionalInstructions, learnedRules } = body;
+    const { documentText, documentType, outputMode, additionalInstructions, learnedRules, jurisdiction, stream: requestStream } = body;
+
+    // ── Rate limiting (per IP, 20 requests per 10 minutes) ──
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const rateLimitKey = `lease-redline:${clientIp}`;
+    const now = Date.now();
+    const windowMs = 10 * 60 * 1000; // 10 minutes
+
+    if (!globalThis.__rateLimitStore) {
+      globalThis.__rateLimitStore = new Map();
+    }
+    const store = globalThis.__rateLimitStore as Map<string, number[]>;
+    const timestamps = store.get(rateLimitKey) || [];
+    const recentTimestamps = timestamps.filter((t: number) => now - t < windowMs);
+
+    if (recentTimestamps.length >= 20) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Please wait a few minutes before submitting another document." }),
+        { status: 429, headers: cors }
+      );
+    }
+    recentTimestamps.push(now);
+    store.set(rateLimitKey, recentTimestamps);
 
     // ── Validate inputs ──
     if (!documentText || typeof documentText !== "string") {
@@ -608,6 +630,11 @@ serve(async (req) => {
       systemPrompt += `\n\n${learnedRules.trim().slice(0, 3000)}`;
     }
 
+    // Inject jurisdiction-specific rules
+    if (jurisdiction && typeof jurisdiction === "string" && jurisdiction.trim().length > 0) {
+      systemPrompt += `\n\nJURISDICTION: ${jurisdiction.trim()}\nApply ${jurisdiction.trim()}-specific commercial lease law considerations. Flag any provisions that may conflict with or require special treatment under ${jurisdiction.trim()} law. Reference specific statutes where applicable.`;
+    }
+
     let userMessage = `Review and redline the following ${documentType} document from the landlord's perspective.\n\n---BEGIN DOCUMENT---\n\n${documentText}\n\n---END DOCUMENT---`;
 
     if (additionalInstructions && typeof additionalInstructions === "string") {
@@ -621,7 +648,47 @@ serve(async (req) => {
       `[lease-redline] Processing ${documentType} (${documentText.length} chars) in ${outputMode} mode`
     );
 
-    // ── Call Anthropic Claude API ──
+    // ── Streaming mode ──
+    if (requestStream === true) {
+      const streamResponse = await fetch(
+        "https://api.anthropic.com/v1/messages",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": anthropicApiKey,
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 16384,
+            temperature: 0,
+            stream: true,
+            system: systemPrompt,
+            messages: [{ role: "user", content: userMessage }],
+          }),
+        }
+      );
+
+      if (!streamResponse.ok || !streamResponse.body) {
+        return new Response(
+          JSON.stringify({ error: "Streaming request failed" }),
+          { status: 502, headers: cors }
+        );
+      }
+
+      // Proxy the SSE stream to the client
+      const sseHeaders = {
+        ...cors,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      };
+
+      return new Response(streamResponse.body, { headers: sseHeaders });
+    }
+
+    // ── Non-streaming: Call Anthropic Claude API ──
     const anthropicResponse = await fetch(
       "https://api.anthropic.com/v1/messages",
       {

@@ -137,6 +137,25 @@ serve(async (req) => {
     const body = await req.json();
     const { message, context, learnedRules } = body;
 
+    // ── Rate limiting (per IP, 60 chat messages per 10 minutes) ──
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const rateLimitKey = `lease-chat:${clientIp}`;
+    const now = Date.now();
+    const windowMs = 10 * 60 * 1000;
+    if (!globalThis.__chatRateLimitStore) {
+      globalThis.__chatRateLimitStore = new Map();
+    }
+    const chatStore = globalThis.__chatRateLimitStore as Map<string, number[]>;
+    const chatTimestamps = (chatStore.get(rateLimitKey) || []).filter((t: number) => now - t < windowMs);
+    if (chatTimestamps.length >= 60) {
+      return new Response(
+        JSON.stringify({ error: "Chat rate limit exceeded. Please wait a few minutes." }),
+        { status: 429, headers: cors }
+      );
+    }
+    chatTimestamps.push(now);
+    chatStore.set(rateLimitKey, chatTimestamps);
+
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       return new Response(
         JSON.stringify({ error: "Message is required" }),

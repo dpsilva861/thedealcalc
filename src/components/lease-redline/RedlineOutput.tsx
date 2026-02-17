@@ -22,7 +22,13 @@ import {
   CheckCircle2,
   XCircle,
   BookOpen,
+  FileDown,
+  Share2,
+  History,
+  Eye,
+  MessageSquare,
 } from "lucide-react";
+import { exportRedlineDocx, downloadBlob } from "@/lib/lease-redline/docx-export";
 import type {
   LeaseRedlineResponse,
   LeaseRedlineRevision,
@@ -36,6 +42,11 @@ interface RedlineOutputProps {
   onReset: () => void;
   decisions: RevisionDecision[];
   onDecisionsChange: (decisions: RevisionDecision[]) => void;
+  onShare?: () => void;
+  onSaveVersion?: () => void;
+  onViewInline?: () => void;
+  onViewHistory?: () => void;
+  onOpenComments?: () => void;
 }
 
 const RISK_COLORS: Record<string, string> = {
@@ -294,7 +305,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   );
 }
 
-export function RedlineOutput({ response, onReset, decisions, onDecisionsChange }: RedlineOutputProps) {
+export function RedlineOutput({ response, onReset, decisions, onDecisionsChange, onShare, onSaveVersion, onViewInline, onViewHistory, onOpenComments }: RedlineOutputProps) {
   const { revisions, summary, riskFlags, definedTerms, documentType, tokenUsage } = response;
 
   // Severity filter: 0=all, 1=medium+, 2=high+, 3=critical only
@@ -387,11 +398,32 @@ export function RedlineOutput({ response, onReset, decisions, onDecisionsChange 
                 onClick={() => downloadTextFile(fullExportText, `lease-redline-${documentType}-${new Date().toISOString().slice(0, 10)}.txt`)}
               >
                 <Download className="h-3.5 w-3.5" />
-                Download
+                .txt
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    const blob = await exportRedlineDocx(response, decisions);
+                    downloadBlob(blob, `lease-redline-${documentType}-${new Date().toISOString().slice(0, 10)}.docx`);
+                  } catch {
+                    // Export failed silently
+                  }
+                }}
+              >
+                <FileDown className="h-3.5 w-3.5" />
+                .docx
+              </Button>
+              {onShare && (
+                <Button variant="outline" size="sm" onClick={onShare}>
+                  <Share2 className="h-3.5 w-3.5" />
+                  Share
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={onReset}>
                 <RotateCcw className="h-3.5 w-3.5" />
-                New Analysis
+                New
               </Button>
             </div>
           </div>
@@ -444,6 +476,34 @@ export function RedlineOutput({ response, onReset, decisions, onDecisionsChange 
               <span>{decisionCounts.pending} pending</span>
             </div>
           )}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 flex-wrap border-t pt-3">
+            {onViewInline && (
+              <Button variant="outline" size="sm" onClick={onViewInline} className="text-xs">
+                <Eye className="h-3 w-3" />
+                Inline View
+              </Button>
+            )}
+            {onSaveVersion && (
+              <Button variant="outline" size="sm" onClick={onSaveVersion} className="text-xs">
+                <History className="h-3 w-3" />
+                Save Version
+              </Button>
+            )}
+            {onViewHistory && (
+              <Button variant="outline" size="sm" onClick={onViewHistory} className="text-xs">
+                <History className="h-3 w-3" />
+                Compare Versions
+              </Button>
+            )}
+            {onOpenComments && (
+              <Button variant="outline" size="sm" onClick={onOpenComments} className="text-xs">
+                <MessageSquare className="h-3 w-3" />
+                Comments
+              </Button>
+            )}
+          </div>
 
           {/* Token usage */}
           {tokenUsage && (

@@ -40,6 +40,7 @@ export function useLeaseRedline() {
               documentType: request.documentType,
               outputMode: request.outputMode,
               additionalInstructions: request.additionalInstructions,
+              jurisdiction: request.jurisdiction,
               learnedRules: options?.learnedRules,
             },
           }

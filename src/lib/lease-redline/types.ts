@@ -1,4 +1,4 @@
-// Lease Redline Agent Types — v3 (chat, financial models, memory)
+// Lease Redline Agent Types — v4 (deal folders, clause library, versions, collaboration, audit)
 
 export type DocumentType =
   | "lease"
@@ -21,6 +21,9 @@ export interface LeaseRedlineRequest {
   documentType: DocumentType;
   outputMode: OutputMode;
   additionalInstructions?: string;
+  jurisdiction?: string;
+  templateId?: string;
+  dealId?: string;
 }
 
 export interface LeaseRedlineRevision {
@@ -121,14 +124,14 @@ export interface ChatMessage {
   reasoning?: string[];
   financialModel?: FinancialModelResult;
   suggestions?: string[];
-  revisionRef?: number; // clauseNumber reference
+  revisionRef?: number;
 }
 
 export interface ChatContext {
   analysisId?: string;
   documentType: DocumentType;
   outputMode: OutputMode;
-  revisionsSummary: string; // compact summary of revisions for context
+  revisionsSummary: string;
   riskFlags: string[];
   definedTerms: string[];
   decisions: RevisionDecision[];
@@ -154,9 +157,9 @@ export interface ChatResponse {
 export interface RentEscalationInputs {
   baseRentPSF: number;
   squareFeet: number;
-  leaseTerm: number; // years
+  leaseTerm: number;
   escalationType: "fixed_pct" | "cpi" | "flat" | "stepped";
-  escalationRate: number; // e.g., 0.03 for 3%
+  escalationRate: number;
   cpiFloor?: number;
   cpiCap?: number;
   freeRentMonths?: number;
@@ -171,8 +174,8 @@ export interface RentEscalationResult {
 
 export interface TIAmortizationInputs {
   tiAmount: number;
-  interestRate: number; // e.g., 0.08 for 8%
-  leaseTerm: number; // years
+  interestRate: number;
+  leaseTerm: number;
   earlyTerminationYear?: number;
 }
 
@@ -186,9 +189,9 @@ export interface TIAmortizationResult {
 
 export interface NOIImpactInputs {
   currentNOI: number;
-  revisionImpact: number; // dollar amount or percentage
+  revisionImpact: number;
   impactIsPercentage: boolean;
-  capRate: number; // e.g., 0.065 for 6.5%
+  capRate: number;
 }
 
 export interface NOIImpactResult {
@@ -223,9 +226,9 @@ export interface EffectiveRentResult {
 
 export interface CoTenancyImpactInputs {
   baseAnnualRent: number;
-  reducedRentPct: number; // e.g., 0.50 for 50% of base
+  reducedRentPct: number;
   curePeriodMonths: number;
-  probabilityOfTrigger: number; // 0-1
+  probabilityOfTrigger: number;
   leaseTerm: number;
 }
 
@@ -278,5 +281,170 @@ export interface SavedAnalysis {
   revisionsCount: number;
   criticalCount: number;
   chatMessageCount: number;
+  createdAt: string;
+}
+
+// ── Deal Folder Types ─────────────────────────────────────────────────
+
+export interface DealFolder {
+  id: string;
+  name: string;
+  propertyAddress?: string;
+  tenantName?: string;
+  documents: DealDocument[];
+  createdAt: string;
+  updatedAt: string;
+  jurisdiction?: string;
+  notes?: string;
+}
+
+export interface DealDocument {
+  id: string;
+  dealId: string;
+  documentType: DocumentType;
+  fileName: string;
+  analysisId?: string;
+  uploadedAt: string;
+  status: "pending" | "analyzed" | "reviewed";
+}
+
+// ── Version History Types ──────────────────────────────────────────────
+
+export interface AnalysisVersion {
+  id: string;
+  analysisId: string;
+  versionNumber: number;
+  revisions: LeaseRedlineRevision[];
+  decisions: RevisionDecision[];
+  summary?: string;
+  riskFlags: string[];
+  createdAt: string;
+  label?: string;
+}
+
+// ── Custom Clause Library Types ────────────────────────────────────────
+
+export interface CustomClause {
+  id: string;
+  category: string;
+  label: string;
+  language: string;
+  jurisdiction?: string;
+  documentTypes: DocumentType[];
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Collaboration Types ─────────────────────────────────────────────────
+
+export interface Collaborator {
+  userId: string;
+  email: string;
+  role: "owner" | "editor" | "viewer";
+  addedAt: string;
+}
+
+export interface AnalysisComment {
+  id: string;
+  analysisId: string;
+  revisionIndex?: number;
+  userId: string;
+  userEmail: string;
+  content: string;
+  createdAt: string;
+  resolvedAt?: string;
+}
+
+// ── Audit Trail Types ────────────────────────────────────────────────────
+
+export type AuditAction =
+  | "analysis_created"
+  | "analysis_viewed"
+  | "revision_accepted"
+  | "revision_rejected"
+  | "revision_modified"
+  | "analysis_shared"
+  | "analysis_exported"
+  | "comment_added"
+  | "clause_saved"
+  | "template_compared";
+
+export interface AuditEntry {
+  id: string;
+  analysisId?: string;
+  userId: string;
+  action: AuditAction;
+  details?: Record<string, unknown>;
+  createdAt: string;
+}
+
+// ── Template Comparison Types ─────────────────────────────────────────
+
+export interface LeaseTemplate {
+  id: string;
+  name: string;
+  documentType: DocumentType;
+  jurisdiction?: string;
+  clauses: TemplateClause[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TemplateClause {
+  id: string;
+  category: string;
+  label: string;
+  standardLanguage: string;
+  order: number;
+}
+
+export interface TemplateDeviation {
+  templateClauseId: string;
+  templateClauseLabel: string;
+  category: string;
+  standardLanguage: string;
+  incomingLanguage: string;
+  deviationType: "missing" | "modified" | "added";
+  severity: RiskLevel;
+  explanation: string;
+}
+
+// ── Jurisdiction ──────────────────────────────────────────────────────
+
+export const US_JURISDICTIONS = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California",
+  "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
+  "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+  "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri",
+  "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+  "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+  "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+  "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming",
+  "District of Columbia",
+] as const;
+
+export type USJurisdiction = typeof US_JURISDICTIONS[number];
+
+// ── Share/Email Types ─────────────────────────────────────────────────
+
+export interface ShareOptions {
+  recipientEmail: string;
+  includeChat: boolean;
+  includeFinancials: boolean;
+  message?: string;
+  expiresInDays?: number;
+}
+
+export interface ShareLink {
+  id: string;
+  analysisId: string;
+  token: string;
+  createdBy: string;
+  recipientEmail?: string;
+  expiresAt: string;
+  viewCount: number;
   createdAt: string;
 }

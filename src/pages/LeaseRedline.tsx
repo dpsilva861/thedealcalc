@@ -4,16 +4,23 @@ import { Layout } from "@/components/layout/Layout";
 import { LeaseInput } from "@/components/lease-redline/LeaseInput";
 import { RedlineOutput } from "@/components/lease-redline/RedlineOutput";
 import { ChatPanel } from "@/components/lease-redline/ChatPanel";
+import { InlineRedlineViewer } from "@/components/lease-redline/InlineRedlineViewer";
+import { ShareDialog } from "@/components/lease-redline/ShareDialog";
+import { VersionComparisonView } from "@/components/lease-redline/VersionComparisonView";
+import { CollaborationPanel } from "@/components/lease-redline/CollaborationPanel";
 import { useLeaseRedline } from "@/hooks/useLeaseRedline";
 import { useLeaseChat } from "@/hooks/useLeaseChat";
 import { useLeaseMemory } from "@/hooks/useLeaseMemory";
 import { useLeaseLearning } from "@/hooks/useLeaseLearning";
+import { useVersionHistory } from "@/hooks/useVersionHistory";
+import { useAuditTrail } from "@/hooks/useAuditTrail";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import type {
   LeaseRedlineRequest,
   RevisionDecision,
+  AnalysisComment,
 } from "@/lib/lease-redline/types";
 import {
   Shield,
@@ -74,15 +81,34 @@ export default function LeaseRedline() {
   const { isLoading, error, response, analyze, reset } = useLeaseRedline();
   const { preferences, saveToHistory, getContextualSuggestions } = useLeaseMemory();
   const learning = useLeaseLearning();
+  const versionHistory = useVersionHistory();
+  const audit = useAuditTrail();
 
   // Lift decisions state so both RedlineOutput and ChatPanel can access it
   const [decisions, setDecisions] = useState<RevisionDecision[]>([]);
+  const [documentText, setDocumentText] = useState("");
+  const [analysisId] = useState(() => `analysis_${Date.now()}`);
+
+  // UI panel toggles
+  const [showInlineView, setShowInlineView] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+
+  // Local comments (localStorage-based for now)
+  const [comments, setComments] = useState<AnalysisComment[]>([]);
 
   // Initialize decisions when response arrives
   useEffect(() => {
     if (response) {
       setDecisions(response.revisions.map(() => "pending" as RevisionDecision));
+      audit.logAction("analysis_created", analysisId, {
+        documentType: response.documentType,
+        outputMode: response.outputMode,
+        revisionCount: response.revisions.length,
+      });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
   // Get learned rules once for the current session
@@ -102,6 +128,7 @@ export default function LeaseRedline() {
   // Submit handler that injects learned rules
   const handleSubmit = useCallback(
     async (request: LeaseRedlineRequest) => {
+      setDocumentText(request.documentText);
       return analyze(request, { learnedRules: learnedRulesPrompt });
     },
     [analyze, learnedRulesPrompt]
@@ -115,10 +142,70 @@ export default function LeaseRedline() {
     }
     chat.clearChat();
     setDecisions([]);
+    setDocumentText("");
+    setShowInlineView(false);
+    setShowShare(false);
+    setShowVersionHistory(false);
+    setShowComments(false);
+    setComments([]);
     reset();
   }, [response, decisions, chat, learning, saveToHistory, reset]);
 
+  // Version save handler
+  const handleSaveVersion = useCallback(() => {
+    if (!response) return;
+    const versions = versionHistory.getVersions(analysisId);
+    versionHistory.saveVersion(
+      analysisId,
+      response.revisions,
+      decisions,
+      response.summary,
+      response.riskFlags,
+      `Round ${versions.length + 1}`
+    );
+    audit.logAction("analysis_viewed", analysisId, { action: "version_saved" });
+  }, [response, decisions, analysisId, versionHistory, audit]);
+
+  // Comment handlers
+  const handleAddComment = useCallback(
+    (content: string, revisionIndex?: number) => {
+      const comment: AnalysisComment = {
+        id: `comment_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        analysisId,
+        revisionIndex,
+        userId: "local",
+        userEmail: "You",
+        content,
+        createdAt: new Date().toISOString(),
+      };
+      setComments((prev) => [...prev, comment]);
+      audit.logAction("comment_added", analysisId, { revisionIndex });
+    },
+    [analysisId, audit]
+  );
+
+  const handleResolveComment = useCallback(
+    (commentId: string) => {
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId
+            ? { ...c, resolvedAt: new Date().toISOString() }
+            : c
+        )
+      );
+    },
+    []
+  );
+
+  // Export audit
+  const handleShare = useCallback(() => {
+    setShowShare(true);
+    audit.logAction("analysis_shared", analysisId);
+  }, [analysisId, audit]);
+
   const contextualSuggestions = getContextualSuggestions();
+
+  const currentVersions = versionHistory.getVersions(analysisId);
 
   return (
     <Layout>
@@ -201,7 +288,7 @@ export default function LeaseRedline() {
             </div>
           )}
 
-          {/* Show input or output + chat */}
+          {/* Show input or output + panels */}
           {response ? (
             <div className="space-y-6">
               <RedlineOutput
@@ -209,7 +296,51 @@ export default function LeaseRedline() {
                 onReset={handleReset}
                 decisions={decisions}
                 onDecisionsChange={setDecisions}
+                onShare={handleShare}
+                onSaveVersion={handleSaveVersion}
+                onViewInline={() => setShowInlineView(!showInlineView)}
+                onViewHistory={() => setShowVersionHistory(!showVersionHistory)}
+                onOpenComments={() => setShowComments(!showComments)}
               />
+
+              {/* Inline Document View */}
+              {showInlineView && documentText && (
+                <InlineRedlineViewer
+                  originalText={documentText}
+                  revisions={response.revisions}
+                  decisions={decisions}
+                />
+              )}
+
+              {/* Version Comparison */}
+              {showVersionHistory && (
+                <VersionComparisonView
+                  versions={currentVersions}
+                  onCompare={(a, b) => versionHistory.compareVersions(analysisId, a, b)}
+                  onClose={() => setShowVersionHistory(false)}
+                />
+              )}
+
+              {/* Share Dialog */}
+              {showShare && (
+                <ShareDialog
+                  response={response}
+                  decisions={decisions}
+                  onClose={() => setShowShare(false)}
+                />
+              )}
+
+              {/* Comments */}
+              {showComments && (
+                <CollaborationPanel
+                  comments={comments}
+                  currentUserEmail="You"
+                  onAddComment={handleAddComment}
+                  onResolveComment={handleResolveComment}
+                  onClose={() => setShowComments(false)}
+                  revisionCount={response.revisions.length}
+                />
+              )}
 
               {/* Chat Panel — appears after analysis */}
               <ChatPanel
