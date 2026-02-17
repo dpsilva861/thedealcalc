@@ -1,11 +1,12 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Calculator, 
-  Home, 
-  RefreshCcw, 
-  Building2, 
-  Building, 
+import {
+  Calculator,
+  Home,
+  RefreshCcw,
+  Building2,
+  Building,
   Users,
+  Scale,
   ChevronDown,
   Check,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Building,
   Users,
   Calculator,
+  Scale,
 };
 
 export function CalculatorSelector() {

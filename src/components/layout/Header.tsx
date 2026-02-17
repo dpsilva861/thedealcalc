@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Calculator, Menu, Tag, Home, RefreshCcw, Users, Building2, Building } from "lucide-react";
+import { Calculator, Menu, Tag, Home, RefreshCcw, Users, Building2, Building, Scale } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CalculatorSelector } from "@/components/calculators/CalculatorSelector";
@@ -20,6 +20,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Calculator,
   Building2,
   Building,
+  Scale,
 };
 
 export function Header() {
