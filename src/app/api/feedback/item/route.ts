@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
+import { processModifiedRecommendation } from "@/lib/learning/explicit-collector";
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,6 +66,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Failed to store feedback" },
         { status: 500 }
+      );
+    }
+
+    // When user modifies a recommendation, feed it into the learning system
+    if (action === "modified" && modifiedText && redlineItem?.category) {
+      const originalText =
+        (outputJson?.redlines?.[itemIndex] as { recommendation?: string } | undefined)
+          ?.recommendation || "";
+      processModifiedRecommendation(
+        jobId,
+        itemIndex,
+        redlineItem.category,
+        originalText,
+        modifiedText
+      ).catch((err: unknown) =>
+        console.error("Error in explicit collector:", err)
       );
     }
 
