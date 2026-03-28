@@ -7,9 +7,16 @@ import type {
   RedlineResult,
 } from "@/types";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+let _anthropic: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  return _anthropic;
+}
 
 /**
  * Build a dynamic system prompt by appending high-confidence learned patterns
@@ -186,7 +193,7 @@ ${loiText}`;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const response = await anthropic.messages.create({
+      const response = await getAnthropicClient().messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 8000,
         system: systemPrompt,
