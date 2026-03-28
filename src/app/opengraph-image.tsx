@@ -56,8 +56,8 @@ export default async function Image() {
               letterSpacing: "-0.02em",
             }}
           >
-            Redline
-            <span style={{ color: "#3B82F6" }}>IQ</span>
+            CRE
+            <span style={{ color: "#3B82F6" }}>agentic</span>
           </span>
         </div>
 
