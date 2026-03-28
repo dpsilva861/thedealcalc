@@ -51,6 +51,16 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        navy: {
+          DEFAULT: "#0B1221",
+          light: "#1A2332",
+          lighter: "#253347",
+        },
+        electric: {
+          DEFAULT: "#3B82F6",
+          hover: "#60A5FA",
+          dim: "#2563EB",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -66,10 +76,15 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "float": "float 3s ease-in-out infinite",
       },
     },
   },
