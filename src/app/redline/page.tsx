@@ -6,6 +6,7 @@ import { UploadZone, type UploadResult } from "@/components/redline/UploadZone";
 import { OptionsPanel, type RedlineOptions } from "@/components/redline/OptionsPanel";
 import { ProcessingView } from "@/components/redline/ProcessingView";
 import { FileText, CreditCard, ArrowRight } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 type FlowState = "upload" | "processing" | "error";
 
@@ -154,6 +155,7 @@ function RedlineFlow() {
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
     if (sessionId) {
+      trackEvent("payment_completed");
       triggerRedline(sessionId);
     }
   }, [searchParams, triggerRedline]);

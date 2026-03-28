@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Upload, FileText, X, ClipboardPaste, File } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 export interface UploadResult {
   text: string;
@@ -45,6 +46,7 @@ export function UploadZone({ onUploadComplete, onClear, uploadResult }: UploadZo
           return;
         }
 
+        trackEvent("upload_started", { method: "file", filename: data.data.filename });
         onUploadComplete({
           text: data.data.text,
           filename: data.data.filename,
@@ -93,6 +95,7 @@ export function UploadZone({ onUploadComplete, onClear, uploadResult }: UploadZo
   const handlePasteSubmit = useCallback(() => {
     if (!pasteText.trim()) return;
     setError(null);
+    trackEvent("upload_started", { method: "paste", char_count: pasteText.trim().length });
     onUploadComplete({
       text: pasteText.trim(),
       filename: "pasted-text.txt",

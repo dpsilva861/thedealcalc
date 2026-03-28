@@ -17,6 +17,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   entries.push({ url: `${BASE_URL}/redline`, lastModified: now, changeFrequency: "monthly", priority: 0.9 });
   entries.push({ url: `${BASE_URL}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.8 });
   entries.push({ url: `${BASE_URL}/glossary`, lastModified: now, changeFrequency: "monthly", priority: 0.7 });
+  entries.push({ url: `${BASE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.5 });
+  entries.push({ url: `${BASE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 });
+  entries.push({ url: `${BASE_URL}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 });
   entries.push({ url: `${BASE_URL}/dashboard`, lastModified: now, changeFrequency: "weekly", priority: 0.3 });
 
   // State pages

@@ -3,25 +3,24 @@ import { FileText } from "lucide-react";
 
 const footerLinks = {
   Product: [
-    { label: "How It Works", href: "#how-it-works" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Features", href: "#self-learning" },
+    { label: "How It Works", href: "/#how-it-works" },
+    { label: "Pricing", href: "/pricing" },
     { label: "Upload LOI", href: "/redline" },
+    { label: "Dashboard", href: "/dashboard" },
   ],
   Resources: [
     { label: "Blog", href: "/blog" },
     { label: "CRE Glossary", href: "/glossary" },
-    { label: "FAQ", href: "#faq" },
-    { label: "LOI Guide", href: "/blog/what-is-a-letter-of-intent" },
+    { label: "LOI Guide", href: "/blog/what-is-loi-redlining" },
+    { label: "LOI Checklist", href: "/blog/loi-checklist-provisions" },
   ],
   Legal: [
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Service", href: "/terms" },
-    { label: "Cookie Policy", href: "/cookies" },
   ],
   Company: [
     { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
+    { label: "Contact", href: "/about" },
   ],
 };
 

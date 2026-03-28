@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { trackEvent } from "@/lib/analytics";
 import {
   Download,
   FileText,
@@ -51,6 +52,7 @@ export default function ResultsPage() {
         const data = await res.json();
         if (data.success) {
           setJob(data.data);
+          trackEvent("redline_completed", { job_id: jobId as string });
         } else {
           setError(data.error || "Failed to load results");
         }
@@ -90,6 +92,8 @@ export default function ResultsPage() {
   }, [result]);
 
   const handleDownload = (dataUrl: string, filename: string) => {
+    const isDocx = filename.endsWith(".docx");
+    trackEvent(isDocx ? "docx_downloaded" : "pdf_downloaded", { job_id: jobId as string });
     const link = document.createElement("a");
     link.href = dataUrl;
     link.download = filename;

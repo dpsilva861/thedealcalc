@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Star, ThumbsUp, ThumbsDown } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 interface FeedbackWidgetProps {
   jobId: string;
@@ -33,6 +34,7 @@ export function FeedbackWidget({ jobId, userId }: FeedbackWidgetProps) {
         }),
       });
       setSubmitted(true);
+      trackEvent("feedback_submitted", { job_id: jobId, rating });
     } catch {
       // Silently fail
     } finally {
