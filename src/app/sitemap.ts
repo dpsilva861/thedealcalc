@@ -3,6 +3,7 @@ import { states, TOP_STATES } from "@/data/states";
 import { propertyTypes } from "@/data/property-types";
 import { dealTypes } from "@/data/deal-types";
 import { competitors } from "@/data/competitors";
+import { blogPosts } from "@/data/blog-posts";
 
 const BASE_URL = "https://redlineiq.com";
 
@@ -43,6 +44,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Comparison pages
   for (const c of competitors) {
     entries.push({ url: `${BASE_URL}/compare/${c.slug}`, lastModified: now, changeFrequency: "monthly", priority: 0.6 });
+  }
+
+  // Blog pages
+  entries.push({ url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.7 });
+  for (const post of blogPosts) {
+    entries.push({ url: `${BASE_URL}/blog/${post.slug}`, lastModified: post.publishedDate, changeFrequency: "monthly", priority: 0.7 });
   }
 
   return entries;
