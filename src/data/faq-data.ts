@@ -45,6 +45,11 @@ export const faqData = [
       "RedlineIQ is trained on commercial real estate industry standards and thousands of deal patterns. The analysis is designed to catch issues that even experienced professionals might miss under time pressure. We recommend using it as a first pass that your team then reviews, not as a replacement for legal counsel.",
   },
   {
+    question: "Does RedlineIQ replace my attorney?",
+    answer:
+      "No. RedlineIQ is not a law firm and does not provide legal advice or legal representation. It is an AI-powered analysis tool that gives you a faster, more thorough starting point for LOI negotiations. All redline suggestions, deal scores, and negotiation recommendations should be reviewed by qualified legal and real estate professionals before implementation. Think of RedlineIQ as a first pass that helps you and your attorney work more efficiently.",
+  },
+  {
     question: "Do you offer bulk pricing?",
     answer:
       "We are developing volume pricing for firms and brokerages that process a high number of LOIs. If you are interested in bulk pricing, please reach out through our contact page and we will work with you on a custom arrangement.",

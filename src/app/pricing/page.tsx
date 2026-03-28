@@ -106,6 +106,12 @@ export default function PricingPage() {
           </div>
         </div>
 
+        {/* Legal note */}
+        <p className="text-[11px] text-slate-600 text-center mb-16 -mt-6 max-w-lg mx-auto leading-relaxed">
+          RedlineIQ is not a law firm and does not provide legal advice. All redline analysis and recommendations are automated suggestions based on industry benchmarks. See our{" "}
+          <a href="/terms" className="text-electric hover:underline">Terms of Service</a>.
+        </p>
+
         {/* Coming Soon */}
         <div className="mb-20">
           <h2 className="text-2xl font-bold text-white text-center mb-8">

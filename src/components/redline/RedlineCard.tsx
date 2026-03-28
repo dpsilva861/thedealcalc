@@ -231,6 +231,11 @@ export function RedlineCard({ item, jobId, onFeedback }: RedlineCardProps) {
           )}
         </div>
       )}
+
+      {/* Legal disclaimer */}
+      <p className="text-[10px] text-slate-600 leading-tight mt-3">
+        Not legal advice. Review all suggestions with qualified professionals.
+      </p>
     </div>
   );
 }

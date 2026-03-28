@@ -73,6 +73,11 @@ export function Footer() {
             RedlineIQ: AI-Powered CRE LOI Analysis
           </p>
         </div>
+        <div className="mt-4 text-center">
+          <p className="text-[11px] text-slate-700 leading-relaxed">
+            RedlineIQ is not a law firm and does not provide legal advice. All analysis and recommendations are automated suggestions. Consult qualified professionals before acting on any findings.
+          </p>
+        </div>
       </div>
     </footer>
   );

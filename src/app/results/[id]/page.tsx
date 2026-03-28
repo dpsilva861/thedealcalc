@@ -146,6 +146,13 @@ export default function ResultsPage() {
           Upload Another LOI
         </Link>
 
+        {/* Legal Disclaimer Banner */}
+        <div className="mb-6 p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/20">
+          <p className="text-xs text-yellow-400/90 leading-relaxed">
+            <span className="font-semibold">Disclaimer:</span> RedlineIQ is not a law firm and does not provide legal advice. All analysis, scores, and recommendations are automated suggestions based on industry benchmarks. Consult qualified legal and real estate professionals before acting on any findings.
+          </p>
+        </div>
+
         {/* ============== DEAL OVERVIEW ============== */}
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 sm:p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-8">

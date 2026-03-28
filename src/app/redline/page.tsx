@@ -212,6 +212,11 @@ function RedlineFlow() {
             <p className="text-2xl font-bold text-white">$2.00</p>
           </div>
 
+          <p className="text-[11px] text-slate-500 leading-relaxed mb-4">
+            By proceeding, you acknowledge that RedlineIQ is not a law firm and does not provide legal advice. All results are automated suggestions. See our{" "}
+            <a href="/terms" className="text-electric hover:underline">Terms of Service</a>.
+          </p>
+
           <button
             onClick={handleCheckout}
             disabled={!uploadResult || isCheckingOut}
