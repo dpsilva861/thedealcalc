@@ -11,6 +11,7 @@ export async function collectImplicitSignals(
   jobId: string,
   result: RedlineResult
 ): Promise<void> {
+  try {
   const supabase = createServerClient();
 
   // 1. Extract clause variants into clause_library
@@ -143,5 +144,8 @@ export async function collectImplicitSignals(
         source_job_ids: [jobId],
       });
     }
+  }
+  } catch (error) {
+    console.error("Error in implicit collector:", error);
   }
 }

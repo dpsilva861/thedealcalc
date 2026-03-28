@@ -25,6 +25,7 @@ export async function runNightlyAggregation(): Promise<AggregationSummary> {
   // ========================================================
   // STEP 1: RECALCULATE ACCEPTANCE RATES
   // ========================================================
+  try {
   const { data: activePatterns } = await supabase
     .from("learned_patterns")
     .select("id, category, frequency")
@@ -64,9 +65,14 @@ export async function runNightlyAggregation(): Promise<AggregationSummary> {
     }
   }
 
+  } catch (error) {
+    console.error("[aggregation] Step 1 (acceptance rates) failed:", error);
+  }
+
   // ========================================================
   // STEP 2: DISCOVER NEW PATTERNS
   // ========================================================
+  try {
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const { data: recentJobs } = await supabase
@@ -131,9 +137,14 @@ export async function runNightlyAggregation(): Promise<AggregationSummary> {
     }
   }
 
+  } catch (error) {
+    console.error("[aggregation] Step 2 (discover patterns) failed:", error);
+  }
+
   // ========================================================
   // STEP 3: EXTRACT BEST LANGUAGE FROM USER MODIFICATIONS
   // ========================================================
+  try {
   const sevenDaysAgo = new Date(
     Date.now() - 7 * 24 * 60 * 60 * 1000
   ).toISOString();
@@ -205,9 +216,14 @@ export async function runNightlyAggregation(): Promise<AggregationSummary> {
     }
   }
 
+  } catch (error) {
+    console.error("[aggregation] Step 3 (best language) failed:", error);
+  }
+
   // ========================================================
   // STEP 4: REGIONAL TRENDS
   // ========================================================
+  try {
   const { data: patternsWithRegions } = await supabase
     .from("learned_patterns")
     .select("id, regions, property_types")
@@ -258,9 +274,14 @@ export async function runNightlyAggregation(): Promise<AggregationSummary> {
     }
   }
 
+  } catch (error) {
+    console.error("[aggregation] Step 4 (regional trends) failed:", error);
+  }
+
   // ========================================================
   // STEP 5: PRUNE LOW PERFORMERS
   // ========================================================
+  try {
   const { data: pruned } = await supabase
     .from("learned_patterns")
     .update({ is_active: false, updated_at: new Date().toISOString() })
@@ -270,6 +291,9 @@ export async function runNightlyAggregation(): Promise<AggregationSummary> {
     .select("id");
 
   patternsPruned = pruned?.length || 0;
+  } catch (error) {
+    console.error("[aggregation] Step 5 (prune) failed:", error);
+  }
 
   // ========================================================
   // STEP 6: LOG RESULTS
