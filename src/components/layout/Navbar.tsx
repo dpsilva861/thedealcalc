@@ -37,7 +37,7 @@ export function Navbar() {
               <FileText className="w-4 h-4 text-electric" />
             </div>
             <span className="text-lg font-bold text-white tracking-tight">
-              Redline<span className="text-electric">IQ</span>
+              CRE<span className="text-electric">agentic</span>
             </span>
           </Link>
 

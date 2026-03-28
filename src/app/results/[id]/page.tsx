@@ -149,7 +149,7 @@ export default function ResultsPage() {
         {/* Legal Disclaimer Banner */}
         <div className="mb-6 p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/20">
           <p className="text-xs text-yellow-400/90 leading-relaxed">
-            <span className="font-semibold">Disclaimer:</span> RedlineIQ is not a law firm and does not provide legal advice. All analysis, scores, and recommendations are automated suggestions based on industry benchmarks. Consult qualified legal and real estate professionals before acting on any findings.
+            <span className="font-semibold">Disclaimer:</span> CREagentic is not a law firm and does not provide legal advice. All analysis, scores, and recommendations are automated suggestions based on industry benchmarks. Consult qualified legal and real estate professionals before acting on any findings.
           </p>
         </div>
 

@@ -24,7 +24,7 @@ export const competitors: CompetitorData[] = [
       "Requires significant setup and template configuration",
       "Pricing designed for law firms, not individual CRE professionals",
     ],
-    redlineiqAdvantage: "RedlineIQ is purpose-built for CRE LOI redlining with industry-specific benchmarks, market-standard comparisons, and a self-learning engine that improves with every LOI analyzed. No setup required, just upload and get results for $2 per document.",
+    redlineiqAdvantage: "CREagentic is purpose-built for CRE LOI redlining with industry-specific benchmarks, market-standard comparisons, and a self-learning engine that improves with every LOI analyzed. No setup required, just upload and get results for $2 per document.",
   },
   {
     name: "Spellbook",
@@ -41,7 +41,7 @@ export const competitors: CompetitorData[] = [
       "Monthly subscription cost adds up for occasional users",
       "Generic AI suggestions lack property-type-specific context",
     ],
-    redlineiqAdvantage: "RedlineIQ provides CRE-specific analysis that understands the difference between retail co-tenancy requirements and industrial clear height standards. Our self-learning engine continuously improves from real CRE transactions, not generic contract data.",
+    redlineiqAdvantage: "CREagentic provides CRE-specific analysis that understands the difference between retail co-tenancy requirements and industrial clear height standards. Our self-learning engine continuously improves from real CRE transactions, not generic contract data.",
   },
   {
     name: "Manual Review",
@@ -58,7 +58,7 @@ export const competitors: CompetitorData[] = [
       "Turnaround time is typically 2 to 5 business days",
       "Quality varies significantly between individual reviewers",
     ],
-    redlineiqAdvantage: "RedlineIQ delivers institutional-grade redlines in 60 seconds for $2, making it 250x to 1,000x more cost-effective than manual review. Use RedlineIQ for first-pass analysis, then bring your attorney in for final negotiation strategy.",
+    redlineiqAdvantage: "CREagentic delivers institutional-grade redlines in 60 seconds for $2, making it 250x to 1,000x more cost-effective than manual review. Use CREagentic for first-pass analysis, then bring your attorney in for final negotiation strategy.",
   },
   {
     name: "CoCounsel",
@@ -75,7 +75,7 @@ export const competitors: CompetitorData[] = [
       "General-purpose AI lacks CRE-specific market benchmarks",
       "No self-learning from commercial real estate transaction data",
     ],
-    redlineiqAdvantage: "RedlineIQ costs $2 per document with zero subscription commitment. Our AI is trained specifically on CRE LOI provisions with benchmarks for every property type, and gets smarter with every document processed through our self-learning engine.",
+    redlineiqAdvantage: "CREagentic costs $2 per document with zero subscription commitment. Our AI is trained specifically on CRE LOI provisions with benchmarks for every property type, and gets smarter with every document processed through our self-learning engine.",
   },
   {
     name: "In-House Legal",
@@ -92,6 +92,6 @@ export const competitors: CompetitorData[] = [
       "Single person creates bottleneck and vacation/illness coverage gaps",
       "Limited exposure to diverse deal structures across markets",
     ],
-    redlineiqAdvantage: "RedlineIQ provides institutional-grade LOI analysis at a fraction of the cost. At $2 per document, a team could analyze 75,000 LOIs per year for the cost of one junior associate. RedlineIQ also learns from thousands of transactions across markets, providing broader benchmarking than any single reviewer.",
+    redlineiqAdvantage: "CREagentic provides institutional-grade LOI analysis at a fraction of the cost. At $2 per document, a team could analyze 75,000 LOIs per year for the cost of one junior associate. CREagentic also learns from thousands of transactions across markets, providing broader benchmarking than any single reviewer.",
   },
 ];

@@ -14,7 +14,7 @@ export const post: BlogPost = {
     },
     {
       question: "How long does it take to redline a commercial LOI?",
-      answer: "Traditional manual redlining by an attorney or experienced broker takes 2 to 5 business days depending on complexity. AI-powered tools like RedlineIQ can deliver institutional-grade redlines in approximately 60 seconds, allowing deal teams to respond to LOIs the same day they receive them."
+      answer: "Traditional manual redlining by an attorney or experienced broker takes 2 to 5 business days depending on complexity. AI-powered tools like CREagentic can deliver institutional-grade redlines in approximately 60 seconds, allowing deal teams to respond to LOIs the same day they receive them."
     },
     {
       question: "Should landlords or tenants redline the LOI first?",
@@ -169,11 +169,11 @@ The key advantage of AI in LOI redlining is consistency. A human reviewer's qual
 
 This does not replace professional judgment. Complex deals with unusual structures, multiple tenants, or significant development components still benefit from experienced human review. But for the vast majority of commercial LOIs, AI provides a comprehensive first pass that catches the same issues a human reviewer would identify, and it does so at a price point that makes professional review accessible to every deal, not just the large ones.
 
-RedlineIQ was built specifically for this purpose. Unlike general-purpose contract review tools, RedlineIQ focuses exclusively on commercial real estate LOIs, with property-type-specific benchmarks, state-level regulatory awareness, and a self-learning engine that improves with every document processed. Upload your LOI and get a complete redline analysis in 60 seconds for $2.
+CREagentic was built specifically for this purpose. Unlike general-purpose contract review tools, CREagentic focuses exclusively on commercial real estate LOIs, with property-type-specific benchmarks, state-level regulatory awareness, and a self-learning engine that improves with every document processed. Upload your LOI and get a complete redline analysis in 60 seconds for $2.
 
 ## The Bottom Line
 
 LOI redlining is not a formality. It is the single most impactful step in the commercial lease negotiation process. The terms you accept or reject at the LOI stage define the economics of the deal for years to come. Whether you are a landlord protecting your investment, a tenant securing favorable terms, or a broker representing either side, thorough LOI redlining is how you ensure the deal works for your client.
 
-Every LOI deserves professional analysis. With tools like RedlineIQ making that analysis accessible at $2 per document, there is no longer a reason to send back an LOI without reviewing every provision against market standards.`
+Every LOI deserves professional analysis. With tools like CREagentic making that analysis accessible at $2 per document, there is no longer a reason to send back an LOI without reviewing every provision against market standards.`
 };

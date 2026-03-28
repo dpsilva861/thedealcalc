@@ -2,22 +2,22 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About | RedlineIQ",
+  title: "About | CREagentic",
   description:
-    "RedlineIQ brings institutional-grade LOI analysis to every CRE professional. Learn about our mission and self-learning AI engine.",
+    "CREagentic brings institutional-grade LOI analysis to every CRE professional. Learn about our mission and self-learning AI engine.",
 };
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-navy">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <h1 className="text-4xl font-bold text-white mb-8">About RedlineIQ</h1>
+        <h1 className="text-4xl font-bold text-white mb-8">About CREagentic</h1>
 
         <div className="space-y-12 text-slate-300 leading-relaxed">
           {/* The Problem */}
           <section>
             <p className="text-lg text-slate-300">
-              RedlineIQ was built to solve a simple problem: LOI review in
+              CREagentic was built to solve a simple problem: LOI review in
               commercial real estate takes too long, costs too much, and often
               misses critical issues.
             </p>
@@ -47,7 +47,7 @@ export default function AboutPage() {
               At $2 per document, there is no longer a reason to send back an
               LOI without reviewing every provision against market standards.
               Whether you are a solo broker handling 5 deals a month or a
-              property management firm processing 100, RedlineIQ delivers the
+              property management firm processing 100, CREagentic delivers the
               same institutional-grade analysis on every document.
             </p>
           </section>
@@ -58,7 +58,7 @@ export default function AboutPage() {
               The Self-Learning Engine
             </h2>
             <p>
-              Every LOI we analyze makes RedlineIQ better. Our AI continuously
+              Every LOI we analyze makes CREagentic better. Our AI continuously
               learns from real deal patterns, user feedback, and market trends.
               When users accept, reject, or modify our recommendations, those
               signals feed into a nightly aggregation engine that identifies
@@ -76,18 +76,18 @@ export default function AboutPage() {
           {/* What We Are Not */}
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">
-              What RedlineIQ is Not
+              What CREagentic is Not
             </h2>
             <p>
               We are not a law firm. We do not provide legal advice. We do not
               represent landlords, tenants, or brokers in any transaction.
-              RedlineIQ is a technology tool that helps CRE professionals work
+              CREagentic is a technology tool that helps CRE professionals work
               faster and catch issues they might otherwise miss.
             </p>
             <p className="mt-4">
               Every redline suggestion, deal score, and negotiation
               recommendation should be reviewed by qualified legal and real
-              estate professionals before implementation. RedlineIQ gives you a
+              estate professionals before implementation. CREagentic gives you a
               faster, more consistent starting point. The final decisions are
               yours.
             </p>
@@ -101,10 +101,10 @@ export default function AboutPage() {
             <p>
               Questions, feedback, or partnership inquiries:{" "}
               <a
-                href="mailto:hello@redlineiq.com"
+                href="mailto:hello@creagentic.ai"
                 className="text-electric hover:text-electric-hover underline"
               >
-                hello@redlineiq.com
+                hello@creagentic.ai
               </a>
             </p>
           </section>
@@ -115,7 +115,7 @@ export default function AboutPage() {
               href="/redline"
               className="inline-flex items-center justify-center px-8 py-3 bg-electric hover:bg-electric-hover text-white font-semibold rounded-lg transition-colors"
             >
-              Try RedlineIQ for $2
+              Try CREagentic for $2
             </Link>
           </div>
         </div>

@@ -106,5 +106,5 @@ Local tenants deserve fair terms, but they must provide stronger credit support 
 
 For a complete list of provisions to review in every LOI, regardless of tenant type, see our [LOI checklist](/blog/loi-checklist-provisions). And if you are negotiating deposit terms specifically, our [security deposit guide](/blog/security-deposit-negotiation) covers the full range of structures and strategies.
 
-RedlineIQ evaluates every LOI against benchmarks calibrated to the tenant's credit profile, flagging provisions that need tighter controls for local tenants or identifying where you may be over-restricting a credit tenant. Upload your LOI and get a complete analysis in 60 seconds for $2.`
+CREagentic evaluates every LOI against benchmarks calibrated to the tenant's credit profile, flagging provisions that need tighter controls for local tenants or identifying where you may be over-restricting a credit tenant. Upload your LOI and get a complete analysis in 60 seconds for $2.`
 };

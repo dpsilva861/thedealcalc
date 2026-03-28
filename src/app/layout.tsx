@@ -13,7 +13,7 @@ const geistSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "RedlineIQ | AI-Powered LOI Redlining for Commercial Real Estate",
+  title: "CREagentic | AI-Powered LOI Redlining for Commercial Real Estate",
   description:
     "Redline any commercial real estate LOI in 60 seconds. AI-powered analysis with tracked changes output. $2 per document. No subscription.",
   keywords: [
@@ -26,17 +26,17 @@ export const metadata: Metadata = {
     "LOI review",
     "deal analysis",
   ],
-  authors: [{ name: "RedlineIQ" }],
+  authors: [{ name: "CREagentic" }],
   openGraph: {
-    title: "RedlineIQ | AI-Powered LOI Redlining for Commercial Real Estate",
+    title: "CREagentic | AI-Powered LOI Redlining for Commercial Real Estate",
     description:
       "Redline any commercial real estate LOI in 60 seconds. AI-powered analysis with tracked changes output. $2 per document.",
     type: "website",
-    siteName: "RedlineIQ",
+    siteName: "CREagentic",
   },
   twitter: {
     card: "summary_large_image",
-    title: "RedlineIQ | AI-Powered CRE LOI Redlining",
+    title: "CREagentic | AI-Powered CRE LOI Redlining",
     description:
       "Redline any commercial real estate LOI in 60 seconds. $2 per document. No subscription.",
   },

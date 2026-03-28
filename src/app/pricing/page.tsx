@@ -4,9 +4,9 @@ import { Check, Clock, Users, Code2 } from "lucide-react";
 import { SchemaMarkup } from "@/components/seo/SchemaMarkup";
 
 export const metadata: Metadata = {
-  title: "Pricing | RedlineIQ",
+  title: "Pricing | CREagentic",
   description:
-    "RedlineIQ costs $2 per LOI. No subscription, no hidden fees. Get institutional-grade CRE LOI redlining in 60 seconds.",
+    "CREagentic costs $2 per LOI. No subscription, no hidden fees. Get institutional-grade CRE LOI redlining in 60 seconds.",
 };
 
 const features = [
@@ -29,7 +29,7 @@ const faqs = [
   {
     question: "Is there a subscription option?",
     answer:
-      "Not currently. RedlineIQ operates on a simple per-document model. Pay only when you need an analysis. Bulk pricing packages are coming soon for teams that process high volumes of LOIs.",
+      "Not currently. CREagentic operates on a simple per-document model. Pay only when you need an analysis. Bulk pricing packages are coming soon for teams that process high volumes of LOIs.",
   },
   {
     question: "What payment methods are accepted?",
@@ -44,7 +44,7 @@ const faqs = [
   {
     question: "What if the analysis fails or produces an error?",
     answer:
-      "If RedlineIQ is unable to complete your analysis due to a system error, your payment will not be processed. If you believe an analysis was incomplete or inaccurate, contact us at support@redlineiq.com and we will review it promptly.",
+      "If CREagentic is unable to complete your analysis due to a system error, your payment will not be processed. If you believe an analysis was incomplete or inaccurate, contact us at support@creagentic.ai and we will review it promptly.",
   },
 ];
 
@@ -108,7 +108,7 @@ export default function PricingPage() {
 
         {/* Legal note */}
         <p className="text-[11px] text-slate-600 text-center mb-16 -mt-6 max-w-lg mx-auto leading-relaxed">
-          RedlineIQ is not a law firm and does not provide legal advice. All redline analysis and recommendations are automated suggestions based on industry benchmarks. See our{" "}
+          CREagentic is not a law firm and does not provide legal advice. All redline analysis and recommendations are automated suggestions based on industry benchmarks. See our{" "}
           <a href="/terms" className="text-electric hover:underline">Terms of Service</a>.
         </p>
 
@@ -155,7 +155,7 @@ export default function PricingPage() {
                 API Access
               </h3>
               <p className="text-sm text-slate-400">
-                Integrate RedlineIQ directly into your deal management workflow.
+                Integrate CREagentic directly into your deal management workflow.
                 RESTful API with programmatic LOI submission and results
                 retrieval.
               </p>

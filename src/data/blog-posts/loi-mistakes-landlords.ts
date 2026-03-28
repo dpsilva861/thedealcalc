@@ -14,7 +14,7 @@ export const post: BlogPost = {
     },
     {
       question: "Should landlords hire an attorney to review every LOI?",
-      answer: "For large or complex deals, attorney review is strongly recommended. For smaller deals where full legal review may not be cost-effective, landlords should at minimum use a professional LOI analysis tool like RedlineIQ to benchmark their terms against market standards. The goal is to ensure that every LOI, regardless of deal size, receives a systematic review that catches missing provisions and below-market terms before the lease is drafted."
+      answer: "For large or complex deals, attorney review is strongly recommended. For smaller deals where full legal review may not be cost-effective, landlords should at minimum use a professional LOI analysis tool like CREagentic to benchmark their terms against market standards. The goal is to ensure that every LOI, regardless of deal size, receives a systematic review that catches missing provisions and below-market terms before the lease is drafted."
     },
     {
       question: "How can landlords protect themselves from tenant defaults at the LOI stage?",
@@ -189,7 +189,7 @@ Every provision in your LOI should be supportable with market data. What is the 
 
 ### Use Technology to Catch What You Miss
 
-AI-powered tools like RedlineIQ analyze your LOI against thousands of comparable deals and flag missing provisions, below-market terms, and language weaknesses in about 60 seconds. At $2 per analysis, it is the most cost-effective insurance policy in your deal toolkit.
+AI-powered tools like CREagentic analyze your LOI against thousands of comparable deals and flag missing provisions, below-market terms, and language weaknesses in about 60 seconds. At $2 per analysis, it is the most cost-effective insurance policy in your deal toolkit.
 
 ### Do Not Rush to Sign
 

@@ -1,5 +1,5 @@
 -- =============================================
--- RedlineIQ Initial Database Schema
+-- CREagentic Initial Database Schema
 -- =============================================
 
 -- System prompt version control (created first for FK reference)

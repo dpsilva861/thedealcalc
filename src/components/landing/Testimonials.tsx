@@ -36,7 +36,7 @@ export function Testimonials() {
             Trusted by CRE Professionals
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto">
-            See how teams across commercial real estate use RedlineIQ to streamline their LOI review process.
+            See how teams across commercial real estate use CREagentic to streamline their LOI review process.
           </p>
         </div>
 

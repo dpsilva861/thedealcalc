@@ -26,14 +26,14 @@ export async function generateMetadata({
   if (!post) return { title: "Not Found" };
 
   return {
-    title: `${post.title} | RedlineIQ Blog`,
+    title: `${post.title} | CREagentic Blog`,
     description: post.metaDescription,
     openGraph: {
       title: post.title,
       description: post.metaDescription,
       type: "article",
       publishedTime: post.publishedDate,
-      authors: ["RedlineIQ"],
+      authors: ["CREagentic"],
     },
   };
 }
@@ -268,7 +268,7 @@ export default async function BlogPostPage({
         data={{
           headline: post.title,
           datePublished: post.publishedDate,
-          author: "RedlineIQ",
+          author: "CREagentic",
         }}
       />
       {post.faqs.length > 0 && (
@@ -346,7 +346,7 @@ export default async function BlogPostPage({
                 href="/redline"
                 className="inline-flex items-center justify-center rounded-lg bg-electric hover:bg-electric-hover text-white px-8 py-3 text-lg font-medium transition-colors"
               >
-                Try RedlineIQ for $2
+                Try CREagentic for $2
               </Link>
             </div>
 

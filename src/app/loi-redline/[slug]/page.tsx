@@ -66,13 +66,13 @@ export function generateStaticParams() {
 function pageTitle(page: PageType): string {
   switch (page.kind) {
     case "state":
-      return `LOI Redlining in ${page.state.name} | RedlineIQ`;
+      return `LOI Redlining in ${page.state.name} | CREagentic`;
     case "propertyType":
-      return `${page.pt.name} LOI Redlining | RedlineIQ`;
+      return `${page.pt.name} LOI Redlining | CREagentic`;
     case "dealType":
-      return `${page.dt.name} LOI Review | RedlineIQ`;
+      return `${page.dt.name} LOI Review | CREagentic`;
     case "cross":
-      return `${page.pt.name} LOI in ${page.state.name} | RedlineIQ`;
+      return `${page.pt.name} LOI in ${page.state.name} | CREagentic`;
   }
 }
 
@@ -125,29 +125,29 @@ function buildFaqs(page: PageType): { question: string; answer: string }[] {
   switch (page.kind) {
     case "state":
       return [
-        { question: `What should I look for in a ${page.state.name} commercial LOI?`, answer: `${page.state.context} RedlineIQ analyzes every provision against ${page.state.name}-relevant market standards and flags issues automatically.` },
-        { question: `How much does LOI redlining cost in ${page.state.name}?`, answer: `RedlineIQ charges $2 per document regardless of location. Traditional attorney review in ${page.state.name} typically costs $500 to $2,000+ per LOI.` },
-        { question: `Does RedlineIQ understand ${page.state.name} commercial lease regulations?`, answer: `Yes. RedlineIQ's AI engine is trained on CRE lease provisions across all 50 states and flags state-specific considerations for ${page.state.name} properties.` },
-        { question: `How fast is LOI analysis for ${page.state.name} properties?`, answer: `RedlineIQ delivers comprehensive redline analysis in approximately 60 seconds, compared to 2 to 5 business days for traditional manual review.` },
+        { question: `What should I look for in a ${page.state.name} commercial LOI?`, answer: `${page.state.context} CREagentic analyzes every provision against ${page.state.name}-relevant market standards and flags issues automatically.` },
+        { question: `How much does LOI redlining cost in ${page.state.name}?`, answer: `CREagentic charges $2 per document regardless of location. Traditional attorney review in ${page.state.name} typically costs $500 to $2,000+ per LOI.` },
+        { question: `Does CREagentic understand ${page.state.name} commercial lease regulations?`, answer: `Yes. CREagentic's AI engine is trained on CRE lease provisions across all 50 states and flags state-specific considerations for ${page.state.name} properties.` },
+        { question: `How fast is LOI analysis for ${page.state.name} properties?`, answer: `CREagentic delivers comprehensive redline analysis in approximately 60 seconds, compared to 2 to 5 business days for traditional manual review.` },
       ];
     case "propertyType":
       return [
-        { question: `What are the most important provisions in a ${page.pt.name.toLowerCase()} LOI?`, answer: `Key provisions include ${page.pt.keyChecklist.slice(0, 3).join(", ").toLowerCase()}. RedlineIQ checks all of these automatically.` },
-        { question: `Can AI accurately review ${page.pt.name.toLowerCase()} LOIs?`, answer: `Yes. RedlineIQ's AI is specifically trained on CRE lease provisions including ${page.pt.name.toLowerCase()}-specific benchmarks, market standards, and common issues.` },
-        { question: `What does a ${page.pt.name.toLowerCase()} LOI redline include?`, answer: `RedlineIQ provides severity-rated findings, suggested alternative language, market benchmarks, missing provision alerts, and a negotiation strategy tailored to ${page.pt.name.toLowerCase()} deals.` },
+        { question: `What are the most important provisions in a ${page.pt.name.toLowerCase()} LOI?`, answer: `Key provisions include ${page.pt.keyChecklist.slice(0, 3).join(", ").toLowerCase()}. CREagentic checks all of these automatically.` },
+        { question: `Can AI accurately review ${page.pt.name.toLowerCase()} LOIs?`, answer: `Yes. CREagentic's AI is specifically trained on CRE lease provisions including ${page.pt.name.toLowerCase()}-specific benchmarks, market standards, and common issues.` },
+        { question: `What does a ${page.pt.name.toLowerCase()} LOI redline include?`, answer: `CREagentic provides severity-rated findings, suggested alternative language, market benchmarks, missing provision alerts, and a negotiation strategy tailored to ${page.pt.name.toLowerCase()} deals.` },
       ];
     case "dealType":
       return [
-        { question: `What makes a ${page.dt.name.toLowerCase()} LOI different from other LOIs?`, answer: `${page.dt.description} RedlineIQ's analysis is tailored to these specific dynamics.` },
-        { question: `What are the key risks in a ${page.dt.name.toLowerCase()} LOI?`, answer: `Critical considerations include ${page.dt.keyConsiderations.slice(0, 3).join("; ").toLowerCase()}. RedlineIQ flags all of these automatically.` },
-        { question: `How does RedlineIQ handle ${page.dt.name.toLowerCase()} LOIs?`, answer: `RedlineIQ identifies the deal type from the LOI text and applies deal-specific analysis criteria, benchmarks, and risk factors relevant to ${page.dt.name.toLowerCase()} transactions.` },
+        { question: `What makes a ${page.dt.name.toLowerCase()} LOI different from other LOIs?`, answer: `${page.dt.description} CREagentic's analysis is tailored to these specific dynamics.` },
+        { question: `What are the key risks in a ${page.dt.name.toLowerCase()} LOI?`, answer: `Critical considerations include ${page.dt.keyConsiderations.slice(0, 3).join("; ").toLowerCase()}. CREagentic flags all of these automatically.` },
+        { question: `How does CREagentic handle ${page.dt.name.toLowerCase()} LOIs?`, answer: `CREagentic identifies the deal type from the LOI text and applies deal-specific analysis criteria, benchmarks, and risk factors relevant to ${page.dt.name.toLowerCase()} transactions.` },
       ];
     case "cross":
       return [
         { question: `What are ${page.pt.name.toLowerCase()} LOI considerations specific to ${page.state.name}?`, answer: `${page.state.context} For ${page.pt.name.toLowerCase()} properties specifically, this means paying attention to ${page.pt.keyChecklist[0].toLowerCase()} and ${page.pt.keyChecklist[1].toLowerCase()}.` },
-        { question: `How much does a ${page.pt.name.toLowerCase()} LOI review cost in ${page.state.name}?`, answer: `RedlineIQ analyzes any commercial LOI for $2, including ${page.pt.name.toLowerCase()} properties in ${page.state.name}. Attorney review typically costs $500 to $2,000+.` },
-        { question: `Does RedlineIQ cover ${page.pt.name.toLowerCase()} lease provisions in ${page.state.name}?`, answer: `Yes. RedlineIQ combines ${page.state.name}-specific regulatory knowledge with ${page.pt.name.toLowerCase()} property type analysis, covering provisions like ${page.pt.keyChecklist[2].toLowerCase()}.` },
-        { question: `How quickly can I get ${page.pt.name.toLowerCase()} LOI redlines for a ${page.state.name} property?`, answer: `RedlineIQ delivers comprehensive analysis in approximately 60 seconds. Upload your LOI and receive institutional-grade redlines immediately.` },
+        { question: `How much does a ${page.pt.name.toLowerCase()} LOI review cost in ${page.state.name}?`, answer: `CREagentic analyzes any commercial LOI for $2, including ${page.pt.name.toLowerCase()} properties in ${page.state.name}. Attorney review typically costs $500 to $2,000+.` },
+        { question: `Does CREagentic cover ${page.pt.name.toLowerCase()} lease provisions in ${page.state.name}?`, answer: `Yes. CREagentic combines ${page.state.name}-specific regulatory knowledge with ${page.pt.name.toLowerCase()} property type analysis, covering provisions like ${page.pt.keyChecklist[2].toLowerCase()}.` },
+        { question: `How quickly can I get ${page.pt.name.toLowerCase()} LOI redlines for a ${page.state.name} property?`, answer: `CREagentic delivers comprehensive analysis in approximately 60 seconds. Upload your LOI and receive institutional-grade redlines immediately.` },
       ];
   }
 }
@@ -183,29 +183,29 @@ function buildContent(page: PageType): string[] {
     case "state":
       return [
         `Commercial real estate transactions in ${page.state.name} require careful LOI review to ensure lease provisions comply with state regulations and reflect local market standards. ${page.state.context}`,
-        `RedlineIQ analyzes every provision in your ${page.state.name} LOI against institutional-grade benchmarks, flagging issues from security deposit structures to operating expense pass-throughs. Our AI engine understands the nuances of ${page.state.name}'s commercial lease environment and identifies provisions that need attention before you sign.`,
-        `Whether you are a landlord, tenant representative, broker, or attorney working on ${page.state.name} commercial properties, RedlineIQ delivers comprehensive redline analysis in 60 seconds for $2 per document. Upload your LOI and receive severity-rated findings, suggested alternative language, and a complete negotiation strategy.`,
+        `CREagentic analyzes every provision in your ${page.state.name} LOI against institutional-grade benchmarks, flagging issues from security deposit structures to operating expense pass-throughs. Our AI engine understands the nuances of ${page.state.name}'s commercial lease environment and identifies provisions that need attention before you sign.`,
+        `Whether you are a landlord, tenant representative, broker, or attorney working on ${page.state.name} commercial properties, CREagentic delivers comprehensive redline analysis in 60 seconds for $2 per document. Upload your LOI and receive severity-rated findings, suggested alternative language, and a complete negotiation strategy.`,
         `Our self-learning engine continuously improves its analysis by incorporating feedback from real CRE transactions across ${page.state.name} and all 50 states, ensuring you always get the most current and relevant recommendations.`,
       ];
     case "propertyType":
       return [
         `${page.pt.name} leases involve specialized provisions that generic contract review tools often miss. ${page.pt.description}`,
-        `RedlineIQ is built specifically for commercial real estate LOI analysis, with deep knowledge of ${page.pt.name.toLowerCase()} lease benchmarks and industry standards. Our AI flags missing provisions, identifies below-market terms, and provides specific alternative language for every issue found.`,
-        `Every ${page.pt.name.toLowerCase()} LOI is different, but the critical provisions remain consistent. RedlineIQ checks each LOI against a comprehensive framework covering rent structure, operating expenses, build-out provisions, use restrictions, and more, all calibrated for ${page.pt.name.toLowerCase()} properties.`,
-        `Upload your ${page.pt.name.toLowerCase()} LOI and receive institutional-grade redlines in 60 seconds. RedlineIQ costs $2 per document with no subscription required.`,
+        `CREagentic is built specifically for commercial real estate LOI analysis, with deep knowledge of ${page.pt.name.toLowerCase()} lease benchmarks and industry standards. Our AI flags missing provisions, identifies below-market terms, and provides specific alternative language for every issue found.`,
+        `Every ${page.pt.name.toLowerCase()} LOI is different, but the critical provisions remain consistent. CREagentic checks each LOI against a comprehensive framework covering rent structure, operating expenses, build-out provisions, use restrictions, and more, all calibrated for ${page.pt.name.toLowerCase()} properties.`,
+        `Upload your ${page.pt.name.toLowerCase()} LOI and receive institutional-grade redlines in 60 seconds. CREagentic costs $2 per document with no subscription required.`,
       ];
     case "dealType":
       return [
         `${page.dt.name} LOIs present unique challenges that require specialized analysis. ${page.dt.description}`,
-        `RedlineIQ automatically identifies the deal type from your LOI text and applies the appropriate analysis framework. For ${page.dt.name.toLowerCase()} transactions, this means evaluating provisions through the lens of ${page.dt.keyConsiderations[0].toLowerCase()} and ${page.dt.keyConsiderations[1].toLowerCase()}.`,
-        `Traditional manual review of a ${page.dt.name.toLowerCase()} LOI costs $500 to $2,000+ and takes 2 to 5 business days. RedlineIQ delivers the same institutional-grade analysis in 60 seconds for $2 per document, making professional LOI review accessible to every CRE professional.`,
-        `Our AI engine learns from thousands of real ${page.dt.name.toLowerCase()} transactions, continuously improving its benchmarks and recommendations. Every LOI RedlineIQ processes makes the next analysis smarter.`,
+        `CREagentic automatically identifies the deal type from your LOI text and applies the appropriate analysis framework. For ${page.dt.name.toLowerCase()} transactions, this means evaluating provisions through the lens of ${page.dt.keyConsiderations[0].toLowerCase()} and ${page.dt.keyConsiderations[1].toLowerCase()}.`,
+        `Traditional manual review of a ${page.dt.name.toLowerCase()} LOI costs $500 to $2,000+ and takes 2 to 5 business days. CREagentic delivers the same institutional-grade analysis in 60 seconds for $2 per document, making professional LOI review accessible to every CRE professional.`,
+        `Our AI engine learns from thousands of real ${page.dt.name.toLowerCase()} transactions, continuously improving its benchmarks and recommendations. Every LOI CREagentic processes makes the next analysis smarter.`,
       ];
     case "cross":
       return [
         `${page.pt.name} properties in ${page.state.name} require LOI analysis that combines property-type expertise with state-specific regulatory knowledge. ${page.state.context}`,
-        `For ${page.pt.name.toLowerCase()} leases specifically, ${page.state.name} presents considerations around ${page.pt.keyChecklist[0].toLowerCase()} and ${page.pt.keyChecklist[1].toLowerCase()}. RedlineIQ evaluates every provision against both ${page.pt.name.toLowerCase()} industry standards and ${page.state.name}-specific benchmarks.`,
-        `RedlineIQ's AI engine has analyzed commercial LOIs across all 50 states and every major property type. This cross-market knowledge base means your ${page.pt.name.toLowerCase()} LOI in ${page.state.name} benefits from insights gathered across thousands of similar transactions nationwide.`,
+        `For ${page.pt.name.toLowerCase()} leases specifically, ${page.state.name} presents considerations around ${page.pt.keyChecklist[0].toLowerCase()} and ${page.pt.keyChecklist[1].toLowerCase()}. CREagentic evaluates every provision against both ${page.pt.name.toLowerCase()} industry standards and ${page.state.name}-specific benchmarks.`,
+        `CREagentic's AI engine has analyzed commercial LOIs across all 50 states and every major property type. This cross-market knowledge base means your ${page.pt.name.toLowerCase()} LOI in ${page.state.name} benefits from insights gathered across thousands of similar transactions nationwide.`,
         `Upload your ${page.state.name} ${page.pt.name.toLowerCase()} LOI and get comprehensive redlines in 60 seconds for just $2. No subscription, no setup, no minimum commitment.`,
       ];
   }
@@ -284,7 +284,7 @@ export default async function LOIRedlinePage({
         type="HowTo"
         data={{
           howToName: `How to Redline a ${page.kind === "propertyType" ? page.pt.name : page.kind === "state" ? page.state.name : page.kind === "dealType" ? page.dt.name : `${page.pt.name} ${page.state.name}`} LOI`,
-          howToDescription: `Use RedlineIQ to analyze your commercial real estate LOI in 60 seconds.`,
+          howToDescription: `Use CREagentic to analyze your commercial real estate LOI in 60 seconds.`,
           steps: [
             { name: "Upload Your LOI", text: "Upload your LOI as a DOCX, PDF, or paste the text directly." },
             { name: "Select Options", text: "Choose your perspective (landlord or tenant), property type, and analysis mode." },

@@ -133,5 +133,5 @@ The use clause in a restaurant LOI must be specific enough to protect the landlo
 
 For more on how tenant credit affects your negotiation approach on all of these provisions, see our guide on [national credit vs local tenant strategies](/blog/national-credit-vs-local-tenant).
 
-Restaurant LOIs have more moving parts than any other property type. Missing even one of these provisions can result in code violations, tenant disputes, or unrecoverable expenses. RedlineIQ flags restaurant-specific provisions automatically, benchmarking your LOI against industry standards for food service tenants in 60 seconds for $2 per document.`
+Restaurant LOIs have more moving parts than any other property type. Missing even one of these provisions can result in code violations, tenant disputes, or unrecoverable expenses. CREagentic flags restaurant-specific provisions automatically, benchmarking your LOI against industry standards for food service tenants in 60 seconds for $2 per document.`
 };

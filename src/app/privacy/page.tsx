@@ -1,9 +1,9 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | RedlineIQ",
+  title: "Privacy Policy | CREagentic",
   description:
-    "How RedlineIQ collects, uses, and protects your data. Learn about document processing, retention, and your privacy rights.",
+    "How CREagentic collects, uses, and protects your data. Learn about document processing, retention, and your privacy rights.",
 };
 
 export default function PrivacyPage() {
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
               1. Information We Collect
             </h2>
             <p className="mb-4">
-              When you use RedlineIQ, we collect the following information:
+              When you use CREagentic, we collect the following information:
             </p>
             <ul className="list-disc list-outside ml-6 space-y-2">
               <li>
@@ -89,10 +89,10 @@ export default function PrivacyPage() {
               automatically deleted. You may request earlier deletion at any time
               by contacting us at{" "}
               <a
-                href="mailto:privacy@redlineiq.com"
+                href="mailto:privacy@creagentic.ai"
                 className="text-electric hover:text-electric-hover underline"
               >
-                privacy@redlineiq.com
+                privacy@creagentic.ai
               </a>
               .
             </p>
@@ -119,7 +119,7 @@ export default function PrivacyPage() {
               5. Payment Processing
             </h2>
             <p>
-              All payments are processed by Stripe. RedlineIQ never sees, stores,
+              All payments are processed by Stripe. CREagentic never sees, stores,
               or has access to your full credit card number, CVV, or other
               sensitive payment details. Stripe is PCI DSS Level 1 certified,
               the highest level of payment security certification. For more
@@ -142,7 +142,7 @@ export default function PrivacyPage() {
             </h2>
             <p className="mb-4">
               We use the following analytics tools to understand how users
-              interact with RedlineIQ:
+              interact with CREagentic:
             </p>
             <ul className="list-disc list-outside ml-6 space-y-2">
               <li>
@@ -164,7 +164,7 @@ export default function PrivacyPage() {
               7. Cookies
             </h2>
             <p>
-              RedlineIQ uses the following cookies:
+              CREagentic uses the following cookies:
             </p>
             <ul className="list-disc list-outside ml-6 space-y-2 mt-4">
               <li>
@@ -187,7 +187,7 @@ export default function PrivacyPage() {
             <p>
               We do not sell, rent, or share your personal data or uploaded
               documents with third parties. Ever. We share data only with service
-              providers necessary to operate RedlineIQ (Stripe for payments,
+              providers necessary to operate CREagentic (Stripe for payments,
               cloud infrastructure for hosting), and only to the extent required
               for those services to function.
             </p>
@@ -198,7 +198,7 @@ export default function PrivacyPage() {
               9. Data Security
             </h2>
             <p>
-              All data transmitted between your browser and RedlineIQ is
+              All data transmitted between your browser and CREagentic is
               encrypted in transit using HTTPS (TLS 1.2 or higher). Data stored
               on our servers is encrypted at rest. We implement industry-standard
               security measures including access controls, monitoring, and
@@ -214,10 +214,10 @@ export default function PrivacyPage() {
               You have the right to request deletion of your account and all
               associated data at any time. To exercise this right, email{" "}
               <a
-                href="mailto:privacy@redlineiq.com"
+                href="mailto:privacy@creagentic.ai"
                 className="text-electric hover:text-electric-hover underline"
               >
-                privacy@redlineiq.com
+                privacy@creagentic.ai
               </a>{" "}
               with the subject line &quot;Data Deletion Request.&quot; We will
               process your request within 30 days and confirm deletion by email.
@@ -231,7 +231,7 @@ export default function PrivacyPage() {
             <p>
               We may update this Privacy Policy from time to time. If we make
               material changes, we will notify you by email or by posting a
-              notice on the site. Your continued use of RedlineIQ after any
+              notice on the site. Your continued use of CREagentic after any
               changes constitutes acceptance of the updated policy.
             </p>
           </section>
@@ -243,10 +243,10 @@ export default function PrivacyPage() {
             <p>
               For questions about this Privacy Policy or your data, contact us at{" "}
               <a
-                href="mailto:privacy@redlineiq.com"
+                href="mailto:privacy@creagentic.ai"
                 className="text-electric hover:text-electric-hover underline"
               >
-                privacy@redlineiq.com
+                privacy@creagentic.ai
               </a>
               .
             </p>

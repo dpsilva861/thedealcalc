@@ -213,7 +213,7 @@ function RedlineFlow() {
           </div>
 
           <p className="text-[11px] text-slate-500 leading-relaxed mb-4">
-            By proceeding, you acknowledge that RedlineIQ is not a law firm and does not provide legal advice. All results are automated suggestions. See our{" "}
+            By proceeding, you acknowledge that CREagentic is not a law firm and does not provide legal advice. All results are automated suggestions. See our{" "}
             <a href="/terms" className="text-electric hover:underline">Terms of Service</a>.
           </p>
 

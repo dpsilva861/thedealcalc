@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Analysis Results | RedlineIQ",
+  title: "Analysis Results | CREagentic",
   description: "View your LOI redline analysis results, download DOCX with tracked changes, and get negotiation strategy recommendations.",
 };
 

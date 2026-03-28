@@ -50,7 +50,7 @@ export function FeedbackWidget({ jobId, userId }: FeedbackWidgetProps) {
         </div>
         <h3 className="text-lg font-semibold text-white mb-2">Thank You!</h3>
         <p className="text-sm text-slate-400">
-          Your feedback helps RedlineIQ get smarter with every analysis.
+          Your feedback helps CREagentic get smarter with every analysis.
         </p>
       </div>
     );
@@ -92,7 +92,7 @@ export function FeedbackWidget({ jobId, userId }: FeedbackWidgetProps) {
 
       {/* Would Recommend */}
       <div>
-        <p className="text-sm text-slate-400 mb-3">Would you recommend RedlineIQ?</p>
+        <p className="text-sm text-slate-400 mb-3">Would you recommend CREagentic?</p>
         <div className="flex gap-3">
           <button
             onClick={() => setWouldRecommend(true)}

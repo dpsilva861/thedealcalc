@@ -36,7 +36,7 @@ export function Footer() {
                 <FileText className="w-4 h-4 text-electric" />
               </div>
               <span className="text-lg font-bold text-white tracking-tight">
-                Redline<span className="text-electric">IQ</span>
+                CRE<span className="text-electric">agentic</span>
               </span>
             </Link>
             <p className="text-sm text-slate-500 leading-relaxed">
@@ -67,15 +67,15 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-slate-600">
-            &copy; {new Date().getFullYear()} RedlineIQ. All rights reserved.
+            &copy; {new Date().getFullYear()} CREagentic. All rights reserved.
           </p>
           <p className="text-sm text-slate-600">
-            RedlineIQ: AI-Powered CRE LOI Analysis
+            CREagentic: AI-Powered CRE LOI Analysis
           </p>
         </div>
         <div className="mt-4 text-center">
           <p className="text-[11px] text-slate-700 leading-relaxed">
-            RedlineIQ is not a law firm and does not provide legal advice. All analysis and recommendations are automated suggestions. Consult qualified professionals before acting on any findings.
+            CREagentic is not a law firm and does not provide legal advice. All analysis and recommendations are automated suggestions. Consult qualified professionals before acting on any findings.
           </p>
         </div>
       </div>

@@ -4,7 +4,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const SITE_URL = Deno.env.get("SITE_URL") || "https://redlineiq.com";
+const SITE_URL = Deno.env.get("SITE_URL") || "https://creagentic.ai";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 serve(async () => {

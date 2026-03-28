@@ -2,7 +2,7 @@ export const faqData = [
   {
     question: "What types of documents can I upload?",
     answer:
-      "RedlineIQ accepts PDF, DOCX, and plain text files. You can upload any commercial real estate letter of intent regardless of format or template. The system automatically detects the document structure and extracts the relevant provisions.",
+      "CREagentic accepts PDF, DOCX, and plain text files. You can upload any commercial real estate letter of intent regardless of format or template. The system automatically detects the document structure and extracts the relevant provisions.",
   },
   {
     question: "How does the AI analyze my LOI?",
@@ -27,12 +27,12 @@ export const faqData = [
   {
     question: "How does the self-learning engine work?",
     answer:
-      "Every LOI that passes through RedlineIQ contributes anonymized patterns to our knowledge base. The system tracks clause variants, negotiation outcomes, and market-specific trends. Over time, this means the analysis gets sharper and the recommended language gets more refined.",
+      "Every LOI that passes through CREagentic contributes anonymized patterns to our knowledge base. The system tracks clause variants, negotiation outcomes, and market-specific trends. Over time, this means the analysis gets sharper and the recommended language gets more refined.",
   },
   {
     question: "Can I use this for full lease documents?",
     answer:
-      "RedlineIQ is currently optimized for letters of intent and term sheets. Full lease analysis is on our roadmap. LOIs are the critical first step in any CRE negotiation, and getting the terms right at the LOI stage saves significant time and legal costs downstream.",
+      "CREagentic is currently optimized for letters of intent and term sheets. Full lease analysis is on our roadmap. LOIs are the critical first step in any CRE negotiation, and getting the terms right at the LOI stage saves significant time and legal costs downstream.",
   },
   {
     question: "What is the output format?",
@@ -42,12 +42,12 @@ export const faqData = [
   {
     question: "How accurate is the analysis?",
     answer:
-      "RedlineIQ is trained on commercial real estate industry standards and thousands of deal patterns. The analysis is designed to catch issues that even experienced professionals might miss under time pressure. We recommend using it as a first pass that your team then reviews, not as a replacement for legal counsel.",
+      "CREagentic is trained on commercial real estate industry standards and thousands of deal patterns. The analysis is designed to catch issues that even experienced professionals might miss under time pressure. We recommend using it as a first pass that your team then reviews, not as a replacement for legal counsel.",
   },
   {
-    question: "Does RedlineIQ replace my attorney?",
+    question: "Does CREagentic replace my attorney?",
     answer:
-      "No. RedlineIQ is not a law firm and does not provide legal advice or legal representation. It is an AI-powered analysis tool that gives you a faster, more thorough starting point for LOI negotiations. All redline suggestions, deal scores, and negotiation recommendations should be reviewed by qualified legal and real estate professionals before implementation. Think of RedlineIQ as a first pass that helps you and your attorney work more efficiently.",
+      "No. CREagentic is not a law firm and does not provide legal advice or legal representation. It is an AI-powered analysis tool that gives you a faster, more thorough starting point for LOI negotiations. All redline suggestions, deal scores, and negotiation recommendations should be reviewed by qualified legal and real estate professionals before implementation. Think of CREagentic as a first pass that helps you and your attorney work more efficiently.",
   },
   {
     question: "Do you offer bulk pricing?",

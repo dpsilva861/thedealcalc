@@ -1,6 +1,6 @@
-# RedlineIQ
+# CREagentic
 
-AI-powered LOI redlining for commercial real estate. RedlineIQ analyzes Letters of Intent against institutional-grade benchmarks and delivers severity-rated findings, suggested alternative language, and negotiation strategy recommendations in 60 seconds for $2 per document.
+AI-powered LOI redlining for commercial real estate. CREagentic analyzes Letters of Intent against institutional-grade benchmarks and delivers severity-rated findings, suggested alternative language, and negotiation strategy recommendations in 60 seconds for $2 per document.
 
 The platform includes a self-learning AI engine that continuously improves its analysis through user feedback, nightly aggregation of deal patterns, and weekly prompt evolution with A/B testing. Over 130 pages of SEO content cover every U.S. state, property type, deal type, and key CRE topics.
 
@@ -121,4 +121,4 @@ supabase/
 
 ## Legal
 
-The Terms of Service at `/terms` contains a required legal disclaimer stating that RedlineIQ is not legal advice, is not a law firm, and that users should consult qualified professionals. This disclaimer is a critical legal protection for the product and must not be removed or obscured.
+The Terms of Service at `/terms` contains a required legal disclaimer stating that CREagentic is not legal advice, is not a law firm, and that users should consult qualified professionals. This disclaimer is a critical legal protection for the product and must not be removed or obscured.

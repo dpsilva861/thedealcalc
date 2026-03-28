@@ -137,7 +137,7 @@ A retail LOI needs to cover percentage rent, co-tenancy, exclusive use, and sign
 
 ### Use AI to Benchmark and Validate
 
-Tools like RedlineIQ can analyze your LOI against market standards for the specific property type and geography in about 60 seconds. This gives you an instant baseline to identify provisions that are below market, above market, or missing entirely. At $2 per analysis, there is no reason to send or sign an LOI without running it through a professional review first.
+Tools like CREagentic can analyze your LOI against market standards for the specific property type and geography in about 60 seconds. This gives you an instant baseline to identify provisions that are below market, above market, or missing entirely. At $2 per analysis, there is no reason to send or sign an LOI without running it through a professional review first.
 
 ## The Bottom Line
 

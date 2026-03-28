@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Upload LOI | RedlineIQ",
+  title: "Upload LOI | CREagentic",
   description:
     "Upload your commercial real estate LOI for AI-powered redline analysis. Get institutional-grade results in 60 seconds for $2.",
 };

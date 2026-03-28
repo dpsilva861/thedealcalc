@@ -5,7 +5,7 @@ import { dealTypes } from "@/data/deal-types";
 import { competitors } from "@/data/competitors";
 import { blogPosts } from "@/data/blog-posts";
 
-const BASE_URL = "https://redlineiq.com";
+const BASE_URL = "https://creagentic.ai";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString();

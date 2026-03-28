@@ -4,7 +4,7 @@ import { glossaryTerms } from "@/data/glossary-terms";
 import { SchemaMarkup } from "@/components/seo/SchemaMarkup";
 
 export const metadata: Metadata = {
-  title: "CRE Glossary: 50+ Commercial Real Estate Terms | RedlineIQ",
+  title: "CRE Glossary: 50+ Commercial Real Estate Terms | CREagentic",
   description: "Complete glossary of commercial real estate lease terms. LOI, NNN, CAM, TI, SNDA, and 50+ more terms explained clearly.",
 };
 

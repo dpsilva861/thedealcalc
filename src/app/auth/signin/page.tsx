@@ -50,7 +50,7 @@ export default function SignInPage() {
               <FileText className="w-5 h-5 text-electric" />
             </div>
             <span className="text-xl font-bold text-white tracking-tight">
-              Redline<span className="text-electric">IQ</span>
+              CRE<span className="text-electric">agentic</span>
             </span>
           </Link>
           <h1 className="text-2xl font-bold text-white mb-2">Welcome back</h1>

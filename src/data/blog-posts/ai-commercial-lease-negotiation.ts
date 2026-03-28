@@ -10,11 +10,11 @@ export const post: BlogPost = {
   faqs: [
     {
       question: "Can AI replace attorneys in commercial lease negotiation?",
-      answer: "No. AI tools like RedlineIQ handle the analytical heavy lifting of LOI review, including benchmarking, provision identification, and risk flagging. But strategic negotiation decisions, relationship management, and creative deal structuring still require human judgment. AI is best used as a first-pass analysis tool that frees professionals to focus on higher-value work."
+      answer: "No. AI tools like CREagentic handle the analytical heavy lifting of LOI review, including benchmarking, provision identification, and risk flagging. But strategic negotiation decisions, relationship management, and creative deal structuring still require human judgment. AI is best used as a first-pass analysis tool that frees professionals to focus on higher-value work."
     },
     {
       question: "How accurate is AI for CRE document analysis?",
-      answer: "Modern AI tools trained specifically on commercial real estate documents achieve high accuracy in identifying provisions, flagging missing clauses, and benchmarking terms against market standards. The key differentiator is specialization. A general-purpose AI tool will miss CRE-specific nuances that a purpose-built tool like RedlineIQ catches consistently."
+      answer: "Modern AI tools trained specifically on commercial real estate documents achieve high accuracy in identifying provisions, flagging missing clauses, and benchmarking terms against market standards. The key differentiator is specialization. A general-purpose AI tool will miss CRE-specific nuances that a purpose-built tool like CREagentic catches consistently."
     },
     {
       question: "What types of CRE documents can AI analyze?",
@@ -95,7 +95,7 @@ While AI cannot replace human judgment, there are specific areas where it consis
 
 The most effective use of AI in commercial lease negotiation is not replacement but augmentation. Here is what the modern workflow looks like:
 
-1. **AI handles the first pass.** Upload the LOI to a tool like RedlineIQ. In 60 seconds, you get a comprehensive analysis covering every provision, identifying missing clauses, benchmarking terms against market data, and flagging risk areas with severity ratings.
+1. **AI handles the first pass.** Upload the LOI to a tool like CREagentic. In 60 seconds, you get a comprehensive analysis covering every provision, identifying missing clauses, benchmarking terms against market data, and flagging risk areas with severity ratings.
 
 2. **Professionals handle the strategy.** With the analytical work complete, the broker, attorney, or asset manager spends their time on what humans do best: deciding which issues to push on, which to concede, and how to structure the response to move the deal forward.
 
@@ -137,5 +137,5 @@ Despite the clear benefits, AI adoption in commercial real estate faces several 
 
 The CRE professionals who thrive in this environment will be the ones who use AI to handle the analytical foundation while focusing their own energy on relationships, strategy, and creative problem-solving. The tools are getting smarter, but the deals still belong to the people who understand them.
 
-If you want to see what AI-powered LOI analysis looks like in practice, [start with the basics](/blog/what-is-loi-redlining) or try RedlineIQ on your next LOI.`
+If you want to see what AI-powered LOI analysis looks like in practice, [start with the basics](/blog/what-is-loi-redlining) or try CREagentic on your next LOI.`
 };

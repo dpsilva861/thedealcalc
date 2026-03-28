@@ -50,11 +50,11 @@ function buildSchema(type: SchemaType, data: SchemaMarkupProps["data"] = {}) {
       return {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        name: data.name || "RedlineIQ",
+        name: data.name || "CREagentic",
         description:
           data.description ||
           "AI-powered LOI redlining for commercial real estate. Upload any LOI and get institutional-grade redlines in 60 seconds.",
-        url: data.url || "https://redlineiq.com",
+        url: data.url || "https://creagentic.ai",
         applicationCategory: data.applicationCategory || "BusinessApplication",
         operatingSystem: data.operatingSystem || "Web",
         offers: {
@@ -82,7 +82,7 @@ function buildSchema(type: SchemaType, data: SchemaMarkupProps["data"] = {}) {
       return {
         "@context": "https://schema.org",
         "@type": "HowTo",
-        name: data.howToName || "How to Redline a CRE LOI with RedlineIQ",
+        name: data.howToName || "How to Redline a CRE LOI with CREagentic",
         description:
           data.howToDescription ||
           "Upload your LOI, let AI analyze every provision, and download professional redlines.",
@@ -103,12 +103,12 @@ function buildSchema(type: SchemaType, data: SchemaMarkupProps["data"] = {}) {
         dateModified: data.dateModified || data.datePublished,
         author: {
           "@type": "Organization",
-          name: data.author || "RedlineIQ",
+          name: data.author || "CREagentic",
         },
         image: data.image,
         publisher: {
           "@type": "Organization",
-          name: "RedlineIQ",
+          name: "CREagentic",
         },
       };
 
@@ -120,7 +120,7 @@ function buildSchema(type: SchemaType, data: SchemaMarkupProps["data"] = {}) {
         description: data.pageDescription,
         publisher: {
           "@type": "Organization",
-          name: "RedlineIQ",
+          name: "CREagentic",
         },
       };
   }

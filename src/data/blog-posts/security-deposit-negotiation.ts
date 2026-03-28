@@ -167,5 +167,5 @@ For landlords who want to avoid the [costly mistakes](/blog/loi-mistakes-landlor
 
 Security deposit negotiation is not a one-size-fits-all exercise. The right structure depends on the tenant's credit profile, the concession package, the lease term, and the local market conditions. What remains constant is that the LOI is where the deposit structure must be established. Trying to increase a deposit or add a guaranty requirement during lease negotiation is an uphill battle that rarely succeeds without significant concessions elsewhere.
 
-Build your deposit framework into every LOI with the specificity shown in this guide. Use RedlineIQ to benchmark your deposit requirements against market standards for your property type and tenant profile. The two minutes it takes to structure the deposit correctly at the LOI stage will save weeks of negotiation and potentially tens of thousands of dollars in unrecovered losses.`
+Build your deposit framework into every LOI with the specificity shown in this guide. Use CREagentic to benchmark your deposit requirements against market standards for your property type and tenant profile. The two minutes it takes to structure the deposit correctly at the LOI stage will save weeks of negotiation and potentially tens of thousands of dollars in unrecovered losses.`
 };

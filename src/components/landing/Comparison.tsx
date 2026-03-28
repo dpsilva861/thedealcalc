@@ -67,7 +67,7 @@ export function Comparison() {
             Comparison
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            How RedlineIQ Stacks Up
+            How CREagentic Stacks Up
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto">
             Compare the speed, cost, and capabilities of different LOI review approaches.
@@ -84,7 +84,7 @@ export function Comparison() {
                 </th>
                 <th className="text-center pb-4 px-4 w-1/4">
                   <div className="inline-flex flex-col items-center">
-                    <span className="text-sm font-semibold text-electric">RedlineIQ</span>
+                    <span className="text-sm font-semibold text-electric">CREagentic</span>
                   </div>
                 </th>
                 <th className="text-center text-sm font-medium text-slate-500 pb-4 px-4 w-1/4">
@@ -127,7 +127,7 @@ export function Comparison() {
           </table>
         </div>
 
-        {/* Highlight bar for RedlineIQ column */}
+        {/* Highlight bar for CREagentic column */}
         <div className="max-w-4xl mx-auto mt-2">
           <div className="flex">
             <div className="w-1/4" />

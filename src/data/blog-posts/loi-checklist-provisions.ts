@@ -248,5 +248,5 @@ The most dangerous LOI is the one that looks clean at first glance. A short, sim
 
 For a discussion of the most costly mistakes landlords make at the LOI stage, see [10 LOI Mistakes That Cost Landlords Thousands](/blog/loi-mistakes-landlords). And if you are new to the LOI process, start with [What is LOI Redlining?](/blog/what-is-loi-redlining) for a complete overview.
 
-RedlineIQ automatically checks every LOI against all 15 of these provision categories, flagging missing provisions, below-market terms, and potential risks in 60 seconds for $2 per document.`
+CREagentic automatically checks every LOI against all 15 of these provision categories, flagging missing provisions, below-market terms, and potential risks in 60 seconds for $2 per document.`
 };

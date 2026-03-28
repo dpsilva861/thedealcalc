@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://redlineiq.com/sitemap.xml
+Sitemap: https://creagentic.ai/sitemap.xml

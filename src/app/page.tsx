@@ -25,13 +25,13 @@ export default function Home() {
       <SchemaMarkup
         type="HowTo"
         data={{
-          howToName: "How to Redline a CRE LOI with RedlineIQ",
+          howToName: "How to Redline a CRE LOI with CREagentic",
           howToDescription:
             "Upload your letter of intent, let AI analyze every provision against industry benchmarks, and download professional redlines.",
           steps: [
             {
               name: "Upload Your LOI",
-              text: "Drop a PDF, DOCX, or paste text. RedlineIQ supports any LOI format from any market.",
+              text: "Drop a PDF, DOCX, or paste text. CREagentic supports any LOI format from any market.",
             },
             {
               name: "AI Analyzes Every Provision",

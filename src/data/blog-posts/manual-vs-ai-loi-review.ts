@@ -3,7 +3,7 @@ import { BlogPost } from "./index";
 export const post: BlogPost = {
   slug: "manual-vs-ai-loi-review",
   title: "Manual LOI Review vs AI: The Real Cost Comparison",
-  metaDescription: "Compare manual and AI LOI review by cost, speed, accuracy, and scalability. Real numbers on attorney fees vs RedlineIQ for CRE professionals.",
+  metaDescription: "Compare manual and AI LOI review by cost, speed, accuracy, and scalability. Real numbers on attorney fees vs CREagentic for CRE professionals.",
   category: "AI & Technology",
   publishedDate: "2026-03-23",
   relatedSlugs: ["what-is-loi-redlining", "ai-commercial-lease-negotiation"],
@@ -35,7 +35,7 @@ Beyond the direct dollar cost, there is the time cost. Deals move fast in compet
 
 ## The AI Alternative: Speed and Consistency
 
-AI-powered LOI review, as offered by RedlineIQ, fundamentally changes both the time and cost equations. An LOI submitted to RedlineIQ returns a complete redline analysis in approximately 60 seconds. Not 60 minutes. Sixty seconds.
+AI-powered LOI review, as offered by CREagentic, fundamentally changes both the time and cost equations. An LOI submitted to CREagentic returns a complete redline analysis in approximately 60 seconds. Not 60 minutes. Sixty seconds.
 
 The analysis covers every standard LOI provision: rent structure, escalations, operating expenses, tenant improvement allowances, security deposits, personal guaranties, assignment and subletting rights, renewal and expansion options, co-tenancy clauses, exclusivity provisions, and more. Each flagged issue includes an explanation of why it matters, what the market standard is, and suggested counter-language.
 
@@ -117,7 +117,7 @@ The question is not whether to use AI or manual review. It is when to use each.
 
 The most effective workflow combines AI speed with human expertise. Here is how it works in practice:
 
-1. **LOI arrives.** Submit to RedlineIQ immediately. Within 60 seconds, you have a complete analysis identifying every issue, its risk level, and suggested counter-language.
+1. **LOI arrives.** Submit to CREagentic immediately. Within 60 seconds, you have a complete analysis identifying every issue, its risk level, and suggested counter-language.
 2. **Quick triage.** Review the AI analysis. For straightforward deals with standard terms, the AI redline may be sufficient to generate your counter-proposal without attorney involvement.
 3. **Attorney focus on strategy.** For deals that require attorney review, send the LOI along with the AI analysis. The attorney spends zero time on issue-spotting (which AI has already completed) and 100% of their time on strategy, creative structuring, and nuanced judgment calls.
 4. **Faster response.** Because the attorney is not starting from scratch, their review time drops from 2 to 4 hours to 30 to 60 minutes. The total turnaround from LOI receipt to counter-proposal drops from days to hours.

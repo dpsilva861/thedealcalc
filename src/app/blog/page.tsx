@@ -4,9 +4,9 @@ import { blogPosts } from "@/data/blog-posts";
 import { SchemaMarkup } from "@/components/seo/SchemaMarkup";
 
 export const metadata: Metadata = {
-  title: "Blog | RedlineIQ",
+  title: "Blog | CREagentic",
   description:
-    "CRE insights, LOI negotiation strategies, and AI-powered lease analysis tips from the RedlineIQ team.",
+    "CRE insights, LOI negotiation strategies, and AI-powered lease analysis tips from the CREagentic team.",
 };
 
 const CATEGORIES = [
@@ -62,7 +62,7 @@ function BlogContent() {
       <SchemaMarkup
         type="WebPage"
         data={{
-          pageTitle: "Blog | RedlineIQ",
+          pageTitle: "Blog | CREagentic",
           pageDescription:
             "CRE insights, LOI negotiation strategies, and AI-powered lease analysis tips.",
         }}
@@ -71,7 +71,7 @@ function BlogContent() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         {/* Header */}
         <h1 className="text-4xl font-bold text-white mb-4">
-          RedlineIQ Blog
+          CREagentic Blog
         </h1>
         <p className="text-lg text-slate-400 mb-12">
           Practical CRE insights, LOI negotiation strategies, and guides for

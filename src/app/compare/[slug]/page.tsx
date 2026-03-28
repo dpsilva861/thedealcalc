@@ -26,8 +26,8 @@ export async function generateMetadata({
   if (!comp) return { title: "Not Found" };
 
   return {
-    title: `RedlineIQ vs ${comp.name} | CRE LOI Comparison`,
-    description: `Compare RedlineIQ and ${comp.name} for commercial real estate LOI redlining. See pricing, features, and which tool wins.`,
+    title: `CREagentic vs ${comp.name} | CRE LOI Comparison`,
+    description: `Compare CREagentic and ${comp.name} for commercial real estate LOI redlining. See pricing, features, and which tool wins.`,
   };
 }
 
@@ -69,10 +69,10 @@ export default async function ComparePage({
 
   const features = buildFeatureRows(comp);
   const faqs = [
-    { question: `How does RedlineIQ compare to ${comp.name}?`, answer: `RedlineIQ is purpose-built for CRE LOI redlining at $2 per document with no subscription. ${comp.description} ${comp.redlineiqAdvantage}` },
-    { question: `Is RedlineIQ cheaper than ${comp.name}?`, answer: `Yes. RedlineIQ costs $2 per document with no subscription or monthly commitment. ${comp.name} costs ${comp.price}, making RedlineIQ significantly more cost-effective for CRE professionals.` },
-    { question: `Can RedlineIQ replace ${comp.name} for LOI review?`, answer: `RedlineIQ provides comprehensive first-pass LOI analysis that catches the same issues a manual review would identify. For complex negotiations, use RedlineIQ for initial analysis and bring in additional review for final strategy.` },
-    { question: "Does RedlineIQ work for all property types?", answer: "Yes. RedlineIQ supports retail, office, industrial, mixed-use, multifamily, medical, restaurant, and warehouse properties, with property-type-specific benchmarks and checklists for each." },
+    { question: `How does CREagentic compare to ${comp.name}?`, answer: `CREagentic is purpose-built for CRE LOI redlining at $2 per document with no subscription. ${comp.description} ${comp.redlineiqAdvantage}` },
+    { question: `Is CREagentic cheaper than ${comp.name}?`, answer: `Yes. CREagentic costs $2 per document with no subscription or monthly commitment. ${comp.name} costs ${comp.price}, making CREagentic significantly more cost-effective for CRE professionals.` },
+    { question: `Can CREagentic replace ${comp.name} for LOI review?`, answer: `CREagentic provides comprehensive first-pass LOI analysis that catches the same issues a manual review would identify. For complex negotiations, use CREagentic for initial analysis and bring in additional review for final strategy.` },
+    { question: "Does CREagentic work for all property types?", answer: "Yes. CREagentic supports retail, office, industrial, mixed-use, multifamily, medical, restaurant, and warehouse properties, with property-type-specific benchmarks and checklists for each." },
   ];
 
   const otherComps = competitors.filter((c) => c.slug !== slug);
@@ -85,10 +85,10 @@ export default async function ComparePage({
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* H1 */}
         <h1 className="text-4xl font-bold text-foreground mb-4">
-          RedlineIQ vs {comp.name}: CRE LOI Redlining Compared
+          CREagentic vs {comp.name}: CRE LOI Redlining Compared
         </h1>
         <p className="text-lg text-muted-foreground mb-12">
-          A detailed comparison of RedlineIQ and {comp.name} for commercial real estate LOI analysis.
+          A detailed comparison of CREagentic and {comp.name} for commercial real estate LOI analysis.
         </p>
 
         {/* Intro */}
@@ -97,7 +97,7 @@ export default async function ComparePage({
             Choosing the right tool for LOI redlining can save your team thousands of dollars and days of review time. {comp.description}
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            RedlineIQ takes a different approach. Built exclusively for commercial real estate LOI analysis, RedlineIQ delivers institutional-grade redlines in 60 seconds for $2 per document. No subscription, no setup, no minimum volume.
+            CREagentic takes a different approach. Built exclusively for commercial real estate LOI analysis, CREagentic delivers institutional-grade redlines in 60 seconds for $2 per document. No subscription, no setup, no minimum volume.
           </p>
           <p className="text-muted-foreground leading-relaxed">
             {comp.redlineiqAdvantage}
@@ -110,7 +110,7 @@ export default async function ComparePage({
             <thead>
               <tr className="bg-secondary/50">
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Feature</th>
-                <th className="text-left p-4 text-sm font-medium text-primary">RedlineIQ</th>
+                <th className="text-left p-4 text-sm font-medium text-primary">CREagentic</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">{comp.name}</th>
               </tr>
             </thead>
@@ -157,24 +157,24 @@ export default async function ComparePage({
           </div>
         </div>
 
-        {/* Why RedlineIQ */}
+        {/* Why CREagentic */}
         <div className="bg-primary/10 border border-primary/30 rounded-lg p-8 mb-12">
           <h2 className="text-2xl font-bold text-foreground mb-4">
-            Why CRE Professionals Choose RedlineIQ
+            Why CRE Professionals Choose CREagentic
           </h2>
           <div className="space-y-4 text-muted-foreground mb-6">
             <p>
-              RedlineIQ is the only AI tool built exclusively for commercial real estate LOI redlining. While {comp.name} {comp.slug === "manual-review" || comp.slug === "in-house-legal" ? "offers human expertise" : "provides general contract analysis"}, RedlineIQ combines CRE-specific benchmarks with a self-learning engine that gets smarter with every document processed.
+              CREagentic is the only AI tool built exclusively for commercial real estate LOI redlining. While {comp.name} {comp.slug === "manual-review" || comp.slug === "in-house-legal" ? "offers human expertise" : "provides general contract analysis"}, CREagentic combines CRE-specific benchmarks with a self-learning engine that gets smarter with every document processed.
             </p>
             <p>
-              At $2 per document, RedlineIQ removes cost as a barrier to professional LOI review. Every commercial lease negotiation deserves expert analysis, not just the largest deals.
+              At $2 per document, CREagentic removes cost as a barrier to professional LOI review. Every commercial lease negotiation deserves expert analysis, not just the largest deals.
             </p>
           </div>
           <Link
             href="/redline"
             className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-8 py-3 text-lg font-medium hover:bg-primary/90 transition-colors"
           >
-            Try RedlineIQ for $2
+            Try CREagentic for $2
           </Link>
         </div>
 
@@ -205,7 +205,7 @@ export default async function ComparePage({
                 href={`/compare/${c.slug}`}
                 className="text-sm text-primary hover:text-primary/80 border border-border rounded-md px-4 py-2 transition-colors hover:bg-secondary/50"
               >
-                RedlineIQ vs {c.name}
+                CREagentic vs {c.name}
               </Link>
             ))}
           </div>

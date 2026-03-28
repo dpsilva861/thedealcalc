@@ -59,7 +59,7 @@ export function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="text-slate-400">
-            Everything you need to know about RedlineIQ.
+            Everything you need to know about CREagentic.
           </p>
         </div>
 

@@ -39,7 +39,7 @@ export function SelfLearning() {
             An AI That Gets Smarter Every Day
           </h2>
           <p className="text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            RedlineIQ learns from every LOI it processes. New patterns, better language, sharper analysis. The more it works, the better it gets.
+            CREagentic learns from every LOI it processes. New patterns, better language, sharper analysis. The more it works, the better it gets.
           </p>
         </div>
 

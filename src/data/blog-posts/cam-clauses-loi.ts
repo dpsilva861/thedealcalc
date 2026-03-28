@@ -111,7 +111,7 @@ Strong CAM language in the LOI prevents expensive lease negotiations later. Here
 
 "Landlord shall provide an annual reconciliation of estimated operating expense payments against actual operating expenses within 120 days following the end of each calendar year. Tenant shall pay any shortfall or receive a credit for any overpayment within 30 days of reconciliation."
 
-## How RedlineIQ Catches CAM Issues
+## How CREagentic Catches CAM Issues
 
-When you submit an LOI to RedlineIQ, the platform analyzes every CAM-related provision against institutional standards. It flags missing gross-up language, identifies uncapped administrative fees that should be defined, highlights CAM cap proposals that lack proper exclusions for uncontrollable expenses, and notes when capital expenditure amortization language is absent. Every flagged issue includes an explanation of why it matters and suggested counter-language, so you know exactly what to push back on and how. Visit the [glossary](/glossary) for definitions of all key terms discussed in this article.`
+When you submit an LOI to CREagentic, the platform analyzes every CAM-related provision against institutional standards. It flags missing gross-up language, identifies uncapped administrative fees that should be defined, highlights CAM cap proposals that lack proper exclusions for uncontrollable expenses, and notes when capital expenditure amortization language is absent. Every flagged issue includes an explanation of why it matters and suggested counter-language, so you know exactly what to push back on and how. Visit the [glossary](/glossary) for definitions of all key terms discussed in this article.`
 };
