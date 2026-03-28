@@ -127,7 +127,7 @@ The compounding effect is what makes this mistake so costly. In Year 1, the diff
 
 ### The Fix
 
-Research the market escalation rate for comparable properties before drafting the LOI. Use CoStar data, recent comparable lease transactions, and local brokerage surveys. If the market supports 3%, start at 3.5% and negotiate down. Never accept below-market escalations without a compelling reason, such as a significantly above-market starting rent.
+Research the market escalation rate for comparable properties before drafting the LOI. Use commercial real estate databases, recent comparable lease transactions, and local brokerage surveys. If the market supports 3%, start at 3.5% and negotiate down. Never accept below-market escalations without a compelling reason, such as a significantly above-market starting rent.
 
 ## Mistake 8: Weak or Missing Exclusivity Language
 

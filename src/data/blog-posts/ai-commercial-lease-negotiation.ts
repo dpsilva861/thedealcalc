@@ -79,6 +79,18 @@ Should you accept a below-market rent escalation in exchange for a longer guaran
 
 AI can tell you that a 2% annual escalation is below the 3% market standard. It cannot tell you whether accepting that escalation is the right strategic move for your specific situation.
 
+## Where AI Outperforms Human Review
+
+While AI cannot replace human judgment, there are specific areas where it consistently outperforms manual review.
+
+**Completeness.** A human reviewer working through their fourth LOI of the day is statistically more likely to miss a provision than the AI reviewing its thousandth document. AI applies the same comprehensive checklist to every document, every time. It does not skip sections, rush through boilerplate, or assume a provision is "probably fine" because it looks similar to something seen before.
+
+**Speed of iteration.** When a negotiation involves multiple rounds of redlining, the speed advantage compounds. A manual reviewer needs hours to re-analyze each revision. AI can re-analyze an updated LOI in seconds, highlighting what changed between versions and whether the new language resolves the previously flagged issues. Over three rounds of negotiation, this saves days.
+
+**Cross-referencing provisions.** An experienced attorney mentally cross-references provisions as they read. The exclusivity clause needs to align with the use clause. The security deposit should account for the TI allowance and free rent exposure. The assignment provision should reference the guaranty requirements. AI performs these cross-references systematically, flagging conflicts or gaps between provisions that even careful human reviewers can overlook when the provisions are pages apart.
+
+**Objective benchmarking.** When a landlord asks their broker whether a 2.5% escalation is market-standard, the broker's answer is shaped by their recent deal flow, geographic focus, and client relationships. It is not wrong, but it is subjective. AI benchmarking draws from a broader dataset and provides a more objective data point. The human can then apply judgment to decide whether the objective benchmark is relevant to their specific situation.
+
 ## The Hybrid Approach
 
 The most effective use of AI in commercial lease negotiation is not replacement but augmentation. Here is what the modern workflow looks like:
@@ -110,6 +122,18 @@ AI-assisted LOI analysis is just the beginning. As the technology matures, expec
 **Market-specific intelligence** that tracks local lease terms in real time, providing benchmarks that reflect what is happening in a specific submarket right now, not what happened across a national dataset six months ago.
 
 **Integrated negotiation workflows** that connect LOI analysis to lease drafting, creating a seamless document trail from initial term sheet through executed lease.
+
+**Portfolio-level analytics** that aggregate insights across hundreds of leases in a landlord's portfolio, identifying systematic trends like which provisions generate the most disputes, which tenant profiles have the highest default rates, and where specific submarkets are moving in terms of rent escalations and concession packages. This kind of analysis is impossible to do manually at scale but straightforward for AI systems processing large volumes of transaction data.
+
+## Adoption Barriers and How to Overcome Them
+
+Despite the clear benefits, AI adoption in commercial real estate faces several practical barriers.
+
+**Skepticism from experienced professionals.** Brokers and attorneys who have reviewed LOIs for 20 years are understandably skeptical that a tool can replicate their expertise. The answer is not to position AI as a replacement but as a complement. The best adoption stories come from firms where experienced professionals used AI tools alongside their existing workflow, verified the quality of the output, and gradually shifted more of the analytical work to the tool as they built confidence in its accuracy.
+
+**Data security concerns.** Commercial LOIs contain sensitive financial information. Professionals need assurance that their documents are handled securely, that data is not shared across clients, and that analysis is performed in a compliant environment. These are legitimate concerns, and any AI tool used for CRE document analysis should provide clear documentation of its security practices.
+
+**Integration with existing workflows.** CRE professionals work across email, document management systems, and CRM platforms. AI tools that require significant changes to existing workflows face higher adoption barriers than those that integrate seamlessly. The most successful tools accept documents in the formats professionals already use (DOCX, PDF) and deliver results in formats that slot directly into existing negotiation workflows.
 
 The CRE professionals who thrive in this environment will be the ones who use AI to handle the analytical foundation while focusing their own energy on relationships, strategy, and creative problem-solving. The tools are getting smarter, but the deals still belong to the people who understand them.
 

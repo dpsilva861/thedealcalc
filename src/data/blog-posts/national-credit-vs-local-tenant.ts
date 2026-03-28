@@ -104,5 +104,7 @@ The fundamental principle is simple. Your LOI strategy should match the risk pro
 
 Local tenants deserve fair terms, but they must provide stronger credit support to compensate for the higher risk of default. The LOI is where these risk-mitigation provisions are established, and they are far easier to negotiate at this stage than during lease drafting.
 
-For a complete list of provisions to review in every LOI, regardless of tenant type, see our [LOI checklist](/blog/loi-checklist-provisions). And if you are negotiating deposit terms specifically, our [security deposit guide](/blog/security-deposit-negotiation) covers the full range of structures and strategies.`
+For a complete list of provisions to review in every LOI, regardless of tenant type, see our [LOI checklist](/blog/loi-checklist-provisions). And if you are negotiating deposit terms specifically, our [security deposit guide](/blog/security-deposit-negotiation) covers the full range of structures and strategies.
+
+RedlineIQ evaluates every LOI against benchmarks calibrated to the tenant's credit profile, flagging provisions that need tighter controls for local tenants or identifying where you may be over-restricting a credit tenant. Upload your LOI and get a complete analysis in 60 seconds for $2.`
 };

@@ -131,5 +131,7 @@ Integration with the building's fire alarm system is essential. The kitchen fire
 
 The use clause in a restaurant LOI must be specific enough to protect the landlord but flexible enough to allow the tenant to operate their concept. "Restaurant use" is too vague. "Operation of a full-service Italian restaurant with on-premises consumption of food and alcoholic beverages, takeout, and catering" is appropriately specific. This prevents the tenant from converting to a nightclub, hookah lounge, or other high-impact use without landlord consent.
 
-For more on how tenant credit affects your negotiation approach on all of these provisions, see our guide on [national credit vs local tenant strategies](/blog/national-credit-vs-local-tenant).`
+For more on how tenant credit affects your negotiation approach on all of these provisions, see our guide on [national credit vs local tenant strategies](/blog/national-credit-vs-local-tenant).
+
+Restaurant LOIs have more moving parts than any other property type. Missing even one of these provisions can result in code violations, tenant disputes, or unrecoverable expenses. RedlineIQ flags restaurant-specific provisions automatically, benchmarking your LOI against industry standards for food service tenants in 60 seconds for $2 per document.`
 };

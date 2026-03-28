@@ -77,7 +77,7 @@ Pull up your benchmarks for the property type, location, and deal size. What is 
 
 For example, [CAM](/glossary#cam) charges and [NNN](/glossary#nnn) structures vary significantly by property type. A retail LOI should address percentage rent triggers and common area maintenance caps. An industrial LOI needs to cover yard storage, dock access, and environmental compliance. Applying the wrong benchmarks leads to irrelevant redlines.
 
-Market data sources include CoStar, industry surveys, local brokerage reports, and your own deal history. If you are redlining a 4,000-square-foot retail space in a suburban power center, your benchmarks should come from comparable retail deals in that submarket within the last 6 to 12 months. National averages are useful directionally but rarely specific enough to support a persuasive redline.
+Market data sources include commercial real estate databases, industry surveys, local brokerage reports, and your own deal history. If you are redlining a 4,000-square-foot retail space in a suburban power center, your benchmarks should come from comparable retail deals in that submarket within the last 6 to 12 months. National averages are useful directionally but rarely specific enough to support a persuasive redline.
 
 ### Step 3: Flag Every Issue by Severity
 

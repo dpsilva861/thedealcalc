@@ -214,6 +214,32 @@ See [CAM Clauses in LOIs](/blog/cam-clauses-loi) for detailed guidance on struct
 - Termination option with insufficient penalty (tenant can walk away cheaply)
 - Options that survive assignment (new tenant inherits valuable rights that were negotiated based on the original tenant's creditworthiness)
 
+## How Provision Priorities Change by Property Type
+
+Not all 15 provisions carry equal weight on every deal. The property type determines which provisions need the most attention and where the highest financial risk lies.
+
+**Retail LOIs** demand the most comprehensive coverage. Exclusivity, co-tenancy, continuous operation, and use clause provisions are all critical because retail properties depend on a curated tenant mix and active storefronts. A missing continuous operation clause in a retail LOI is a far more expensive oversight than in an industrial lease. [Restaurant LOIs](/blog/restaurant-loi-redlining) add additional layers including exhaust systems, grease trap maintenance, and higher insurance minimums.
+
+**Office LOIs** place greater emphasis on the TI allowance, the measurement method (usable vs rentable square footage), and renewal terms. Office tenants typically invest heavily in their buildout, which creates leverage for longer-term renewal options. The key risk for landlords is granting renewal rights at below-market rates that lock in unfavorable economics for another 5 to 10 years.
+
+**Industrial LOIs** require careful attention to the use clause, environmental provisions, and yard storage rights. Industrial tenants may use the premises for manufacturing, distribution, or storage of hazardous materials, and each use carries different insurance, compliance, and restoration obligations. The security deposit calculation should account for the cost of environmental remediation if the tenant's operations contaminate the site, which can run into the hundreds of thousands of dollars.
+
+**Medical office LOIs** must address compliance with healthcare regulations, specialized HVAC requirements for medical environments, after-hours access for emergency practices, and signage rights for multiple practitioners within a single suite. The TI allowance for medical space is typically 50% to 100% higher than general office due to the cost of plumbing, specialized electrical, and regulatory compliance buildout.
+
+## Common Patterns in Weak LOIs
+
+After reviewing thousands of commercial LOIs, certain patterns emerge that consistently signal trouble.
+
+**The two-page LOI.** An LOI that covers only rent, term, and TI in a handful of bullet points is not efficient. It is incomplete. Every provision that is absent from the LOI becomes a negotiation point during lease drafting, where the tenant's attorney has every incentive to fill the gaps with tenant-favorable language. A thorough LOI saves time and legal fees in the long run by resolving issues upfront.
+
+**The "standard form" LOI.** When a tenant's broker sends an LOI described as their "standard template," treat it with the same scrutiny you would give any other document. Standard templates are drafted by the tenant's attorney to protect the tenant. They are a starting point for negotiation, not a final document.
+
+**The missing provision pattern.** LOIs that address the headline economics (rent, term, TI, free rent) but omit protective provisions (holdover, assignment, continuous operation, recapture) are the most dangerous. The economic terms look reasonable, so the landlord signs quickly. The missing provisions create exposure that only materializes when something goes wrong, at which point it is too late to fix.
+
+**The "subject to lease" disclaimer.** Some LOIs include language stating that all terms are "subject to negotiation of a mutually acceptable lease." While this language is technically accurate, it can undermine the LOI's effectiveness as a commitment device. If every term is subject to renegotiation, the LOI provides no real framework for the lease. Consider limiting the "subject to lease" language to non-economic terms while specifying that the economic terms in the LOI are binding on both parties.
+
+**The copy-paste from the last deal.** Landlords who reuse LOI language from previous transactions without updating the terms for the current market risk leaving money on the table or creating provisions that do not apply to the new deal. A holdover rate that was appropriate for a 2023 transaction may be below market in 2026. A TI allowance that was competitive for an office deal is completely wrong for a restaurant build-out. Every LOI should be reviewed against current market data for the specific property type, location, and tenant profile. What worked six months ago may not work today, and the only way to know is to benchmark against current market data for every new deal.
+
 ## Using This Checklist
 
 This checklist is designed to be used on every LOI, whether it is a 2-page bullet-point summary or an 8-page detailed term sheet. Not every provision will be relevant to every deal, but reviewing each category ensures you do not miss something that matters.
