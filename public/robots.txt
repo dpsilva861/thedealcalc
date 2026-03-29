@@ -1,28 +1,3 @@
-# TheDealCalc.com — Real Estate Investment Calculator
-
 User-agent: *
 Allow: /
-
-# Allow essential assets
-Allow: /*.js$
-Allow: /*.css$
-
-# Block internal API routes
-Disallow: /api/
-
-# Block admin pages
-Disallow: /admin/
-Disallow: /admin
-
-# Block results pages (noindex already set, but belt-and-suspenders)
-Disallow: /results
-Disallow: /brrrr/results
-Disallow: /syndication/results
-
-# Block internal debug tools
-Disallow: /seo-debug
-Disallow: /sitemap-debug
-Disallow: /structured-data-debug
-
-# Sitemap
-Sitemap: https://thedealcalc.com/sitemap.xml
+Sitemap: https://creagentic.ai/sitemap.xml

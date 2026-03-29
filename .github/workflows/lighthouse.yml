@@ -10,7 +10,7 @@ on:
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,15 +26,18 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: placeholder
 
       - name: Install Lighthouse CI
         run: npm install -g @lhci/cli@0.14.x
 
-      - name: Serve and run Lighthouse
+      - name: Start Next.js and run Lighthouse
         run: |
-          npm install -g serve
-          serve -s dist -l 3000 &
-          sleep 5
+          npm start &
+          sleep 10
           lhci autorun --config=lighthouserc.json
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

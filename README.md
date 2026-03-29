@@ -1,73 +1,124 @@
-# Welcome to your Lovable project
+# CREagentic
 
-## Project info
+AI-powered LOI redlining for commercial real estate. CREagentic analyzes Letters of Intent against institutional-grade benchmarks and delivers severity-rated findings, suggested alternative language, and negotiation strategy recommendations in 60 seconds for $2 per document.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+The platform includes a self-learning AI engine that continuously improves its analysis through user feedback, nightly aggregation of deal patterns, and weekly prompt evolution with A/B testing. Over 130 pages of SEO content cover every U.S. state, property type, deal type, and key CRE topics.
 
-## How can I edit this code?
+## Tech Stack
 
-There are several ways of editing your application.
+- **Framework:** Next.js 14 (App Router) with TypeScript
+- **Styling:** Tailwind CSS with custom dark theme
+- **Database:** Supabase (PostgreSQL)
+- **Authentication:** NextAuth.js
+- **Payments:** Stripe ($2 per-document checkout)
+- **AI:** Claude API (claude-sonnet-4-20250514)
+- **Analytics:** Google Analytics 4, Vercel Analytics
+- **Deployment:** Vercel
 
-**Use Lovable**
+## Setup
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+```bash
+# Clone the repository
+git clone https://github.com/dpsilva861/thedealcalc.git
+cd thedealcalc
 
-Changes made via Lovable will be committed automatically to this repo.
+# Install dependencies
+npm install
 
-**Use your preferred IDE**
+# Configure environment variables
+cp .env.example .env.local
+# Edit .env.local and fill in all required values (see Environment Variables below)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# Run Supabase migration
+npx supabase db push
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Seed the database with initial prompt version
+npx supabase db seed
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env.local` file with these values:
 
-**Use GitHub Codespaces**
+```
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Authentication
+NEXTAUTH_SECRET=your-nextauth-secret
+NEXTAUTH_URL=http://localhost:3000
 
-## What technologies are used for this project?
+# Stripe
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 
-This project is built with:
+# Claude API
+ANTHROPIC_API_KEY=sk-ant-...
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Analytics (optional for local dev)
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 
-## How can I deploy this project?
+# Admin
+ADMIN_EMAILS=admin@example.com,admin2@example.com
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Development
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+npm run dev     # Start dev server at http://localhost:3000
+npm run build   # Production build
+npm run lint    # Run linter
+```
 
-Yes, you can!
+## Deployment
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. Push to GitHub
+2. Connect the repository to Vercel
+3. Add all environment variables in Vercel project settings
+4. Deploy
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Vercel will automatically build and deploy on push to main.
+
+## Admin Access
+
+1. Add the admin user's email to the `ADMIN_EMAILS` environment variable (comma-separated)
+2. Access the learning dashboard at `/admin/learning`
+3. The dashboard shows pattern performance, A/B test results, feedback trends, and manual controls for aggregation and evolution
+
+## Cron Jobs
+
+Two scheduled jobs power the self-learning engine:
+
+| Job | Schedule | Endpoint |
+|-----|----------|----------|
+| Nightly Aggregation | Daily at 2:00 AM UTC | `POST /api/learning/aggregate` |
+| Weekly Prompt Evolution | Sunday at midnight UTC | `POST /api/learning/evolve` |
+
+These are configured in `vercel.json` and run automatically on Vercel. They can also be triggered manually from the admin dashboard.
+
+Alternatively, configure Supabase Edge Functions (see `supabase/functions/`) to call these endpoints on the same schedule.
+
+## Project Structure
+
+```
+src/
+  app/              # Next.js App Router pages and API routes
+  components/       # React components (layout, redline, SEO, UI)
+  data/             # Static data (blog posts, states, property types, glossary)
+  lib/              # Core logic (redline engine, learning system, Stripe, Supabase)
+  types/            # TypeScript interfaces
+supabase/
+  migrations/       # Database schema migrations
+  functions/        # Supabase Edge Functions for cron
+  seed.sql          # Initial prompt version seed
+```
+
+## Legal
+
+The Terms of Service at `/terms` contains a required legal disclaimer stating that CREagentic is not legal advice, is not a law firm, and that users should consult qualified professionals. This disclaimer is a critical legal protection for the product and must not be removed or obscured.
