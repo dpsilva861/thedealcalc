@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { redlineLOI } from "@/lib/redline-engine";
 import { generateRedlinedDocx, generatePdfSummary } from "@/lib/output-generator";
 import { verifyPayment } from "@/lib/stripe";
