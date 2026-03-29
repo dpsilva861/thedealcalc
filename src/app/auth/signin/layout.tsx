@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Sign In | CREagentic",
   description: "Sign in to CREagentic to access your LOI analysis dashboard and history.",

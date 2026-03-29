@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { createServerClient } from "@/lib/supabase";
 
 // Cache stats for 5 minutes
