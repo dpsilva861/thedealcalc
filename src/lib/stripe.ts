@@ -1,8 +1,15 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-03-25.dahlia",
-});
+let _stripe: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!_stripe) {
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: "2026-03-25.dahlia",
+    });
+  }
+  return _stripe;
+}
 
 /**
  * Create a Stripe Checkout Session for a $2 one-time LOI redline payment.
@@ -11,7 +18,7 @@ export async function createCheckoutSession(
   userId: string,
   returnUrl: string
 ): Promise<{ sessionId: string; url: string }> {
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card"],
     line_items: [
@@ -40,7 +47,7 @@ export async function verifyPayment(
   sessionId: string
 ): Promise<{ paid: boolean; userId: string | null }> {
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
 
     return {
       paid: session.payment_status === "paid",
@@ -58,7 +65,7 @@ export function constructWebhookEvent(
   body: string | Buffer,
   signature: string
 ): Stripe.Event {
-  return stripe.webhooks.constructEvent(
+  return getStripe().webhooks.constructEvent(
     body,
     signature,
     process.env.STRIPE_WEBHOOK_SECRET!
