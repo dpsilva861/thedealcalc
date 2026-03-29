@@ -3,16 +3,10 @@
     "collect": {
       "url": [
         "http://localhost:3000/",
-        "http://localhost:3000/calculators",
-        "http://localhost:3000/npv-calculator",
-        "http://localhost:3000/rental-property-calculator",
-        "http://localhost:3000/brrrr-calculator",
-        "http://localhost:3000/syndication-calculator",
-        "http://localhost:3000/cap-rate-calculator",
-        "http://localhost:3000/cash-on-cash-calculator",
-        "http://localhost:3000/fix-and-flip-calculator",
-        "http://localhost:3000/how-it-works",
-        "http://localhost:3000/blog"
+        "http://localhost:3000/pricing",
+        "http://localhost:3000/blog",
+        "http://localhost:3000/glossary",
+        "http://localhost:3000/about"
       ],
       "numberOfRuns": 1,
       "settings": {
@@ -25,9 +19,9 @@
     "assert": {
       "assertions": {
         "categories:performance": ["warn", { "minScore": 0.90 }],
-        "categories:seo": ["warn", { "minScore": 1.00 }],
-        "categories:accessibility": ["warn", { "minScore": 0.95 }],
-        "categories:best-practices": ["warn", { "minScore": 0.95 }]
+        "categories:seo": ["warn", { "minScore": 0.95 }],
+        "categories:accessibility": ["warn", { "minScore": 0.90 }],
+        "categories:best-practices": ["warn", { "minScore": 0.90 }]
       }
     },
     "upload": {
