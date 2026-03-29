@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { extractText, detectPropertyType, detectDealType } from "@/lib/file-processor";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB

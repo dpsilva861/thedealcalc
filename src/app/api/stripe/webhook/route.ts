@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { constructWebhookEvent } from "@/lib/stripe";
 import { createServerClient } from "@/lib/supabase";
 
