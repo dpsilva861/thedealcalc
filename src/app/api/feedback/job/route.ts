@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { createServerClient } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
@@ -6,7 +8,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { jobId, userId, rating, feedbackText, wouldRecommend } = body;
 
-    // Validate required fields
     if (!jobId || typeof jobId !== "string") {
       return NextResponse.json(
         { success: false, error: "jobId is required" },
@@ -23,7 +24,6 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerClient();
 
-    // Store feedback
     const { data, error } = await supabase
       .from("job_feedback")
       .insert({
@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update prompt version's running average score
     const { data: job } = await supabase
       .from("redline_jobs")
       .select("prompt_version_id")

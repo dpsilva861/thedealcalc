@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { runNightlyAggregation } from "@/lib/learning/aggregation-engine";
 
 function isAdminAuthorized(request: NextRequest): boolean {
@@ -6,12 +8,10 @@ function isAdminAuthorized(request: NextRequest): boolean {
   const authHeader = request.headers.get("x-admin-email");
   const secretHeader = request.headers.get("x-admin-secret");
 
-  // Allow access via shared secret (for cron jobs / edge functions)
   if (secretHeader && secretHeader === process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return true;
   }
 
-  // Allow access via admin email
   if (authHeader && adminEmails.includes(authHeader)) {
     return true;
   }
