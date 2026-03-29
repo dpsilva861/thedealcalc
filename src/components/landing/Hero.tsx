@@ -74,18 +74,23 @@ export function Hero() {
 
         {/* Headline */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] tracking-tight mb-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-          Redline Any CRE LOI{" "}
+          AI Agents for{" "}
           <br className="hidden sm:block" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-electric to-electric-hover">
-            in 60 Seconds
+            Commercial Real Estate
           </span>
         </h1>
 
         {/* Subhead */}
-        <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-          AI-powered LOI analysis purpose-built for commercial real estate.
-          Upload your LOI, get institutional-grade redlines back instantly.
-          $2 per document.
+        <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+          Powerful AI tools purpose-built for CRE professionals.
+          Upload a document, get institutional-grade analysis back in seconds.
+          Starting at $2 per use.
+        </p>
+
+        {/* Secondary line */}
+        <p className="text-sm text-slate-500 mb-10 animate-fade-in-up" style={{ animationDelay: "0.25s" }}>
+          Our first tool: AI-powered LOI redlining. More agents coming soon.
         </p>
 
         {/* CTAs */}
@@ -94,7 +99,7 @@ export function Hero() {
             href="/redline"
             className="group inline-flex items-center gap-2 px-8 py-3.5 bg-electric hover:bg-electric-hover text-white font-semibold rounded-xl transition-all shadow-lg shadow-electric/20 hover:shadow-electric/30"
           >
-            Upload Your LOI
+            Try LOI Redlining
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
           <a

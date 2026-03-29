@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "CREagentic - AI-Powered LOI Redlining for Commercial Real Estate";
+export const alt = "CREagentic - AI Agents for Commercial Real Estate";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -72,7 +72,7 @@ export default async function Image() {
             marginBottom: "48px",
           }}
         >
-          AI-Powered LOI Redlining for Commercial Real Estate
+          AI Agents for Commercial Real Estate
         </div>
 
         {/* Accent */}

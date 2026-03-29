@@ -6,21 +6,21 @@ const steps = [
   {
     number: "01",
     icon: Upload,
-    title: "Upload Your LOI",
+    title: "Upload Your Document",
     description:
-      "Drop a PDF, DOCX, or paste text. We support any LOI format from any market.",
+      "Drop a PDF, DOCX, or paste text. We support any document format from any market.",
   },
   {
     number: "02",
     icon: Brain,
-    title: "AI Analyzes Every Provision",
+    title: "AI Analyzes Every Detail",
     description:
-      "Our engine checks against industry-standard benchmarks, identifies risks, and generates specific redline language.",
+      "Our engine checks against industry-standard benchmarks, identifies risks, and generates specific recommendations.",
   },
   {
     number: "03",
     icon: Download,
-    title: "Download Your Redlines",
+    title: "Download Your Results",
     description:
       "Get a professional DOCX with tracked changes and a PDF executive summary. Ready to send.",
   },
@@ -36,10 +36,10 @@ export function HowItWorks() {
             How It Works
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Three Steps to Institutional-Grade Redlines
+            Three Steps to Institutional-Grade Analysis
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto">
-            No learning curve. No complex setup. Upload your document and get actionable redlines in under a minute.
+            No learning curve. No complex setup. Upload your document and get actionable results in under a minute.
           </p>
         </div>
 
@@ -74,6 +74,11 @@ export function HowItWorks() {
             </div>
           ))}
         </div>
+
+        {/* Currently available note */}
+        <p className="text-center text-sm text-slate-500 mt-12">
+          Currently available: <span className="text-electric">LOI Redlining Agent</span>
+        </p>
       </div>
     </section>
   );

@@ -40,7 +40,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-slate-500 leading-relaxed">
-              AI-powered LOI redlining built for commercial real estate professionals.
+              AI agents for commercial real estate.
             </p>
           </div>
 
@@ -70,7 +70,7 @@ export function Footer() {
             &copy; {new Date().getFullYear()} CREagentic. All rights reserved.
           </p>
           <p className="text-sm text-slate-600">
-            CREagentic: AI-Powered CRE LOI Analysis
+            CREagentic: AI Agents for Commercial Real Estate
           </p>
         </div>
         <div className="mt-4 text-center">

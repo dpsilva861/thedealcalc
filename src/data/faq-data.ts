@@ -32,7 +32,7 @@ export const faqData = [
   {
     question: "Can I use this for full lease documents?",
     answer:
-      "CREagentic is currently optimized for letters of intent and term sheets. Full lease analysis is on our roadmap. LOIs are the critical first step in any CRE negotiation, and getting the terms right at the LOI stage saves significant time and legal costs downstream.",
+      "CREagentic is currently optimized for letters of intent and term sheets. A full Lease Analysis Agent is coming soon. LOIs are the critical first step in any CRE negotiation, and getting the terms right at the LOI stage saves significant time and legal costs downstream.",
   },
   {
     question: "What is the output format?",
@@ -47,11 +47,16 @@ export const faqData = [
   {
     question: "Does CREagentic replace my attorney?",
     answer:
-      "No. CREagentic is not a law firm and does not provide legal advice or legal representation. It is an AI-powered analysis tool that gives you a faster, more thorough starting point for LOI negotiations. All redline suggestions, deal scores, and negotiation recommendations should be reviewed by qualified legal and real estate professionals before implementation. Think of CREagentic as a first pass that helps you and your attorney work more efficiently.",
+      "No. CREagentic is not a law firm and does not provide legal advice or legal representation. It is an AI agent platform that gives you a faster, more thorough starting point for CRE workflows. All redline suggestions, deal scores, and negotiation recommendations should be reviewed by qualified legal and real estate professionals before implementation. Think of CREagentic as a first pass that helps you and your attorney work more efficiently.",
+  },
+  {
+    question: "What other tools are coming?",
+    answer:
+      "CREagentic is building a full suite of AI agents for commercial real estate. After LOI redlining, we are adding lease analysis, CAM reconciliation, and deal underwriting agents. Each tool is purpose-built for a specific CRE workflow.",
   },
   {
     question: "Do you offer bulk pricing?",
     answer:
-      "We are developing volume pricing for firms and brokerages that process a high number of LOIs. If you are interested in bulk pricing, please reach out through our contact page and we will work with you on a custom arrangement.",
+      "We are developing volume pricing for firms and brokerages that process a high number of documents. If you are interested in bulk pricing, please reach out through our contact page and we will work with you on a custom arrangement.",
   },
 ];

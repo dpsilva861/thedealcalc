@@ -13,9 +13,9 @@ const geistSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "CREagentic | AI-Powered LOI Redlining for Commercial Real Estate",
+  title: "CREagentic | AI Agents for Commercial Real Estate",
   description:
-    "Redline any commercial real estate LOI in 60 seconds. AI-powered analysis with tracked changes output. $2 per document. No subscription.",
+    "AI agent platform for commercial real estate. LOI redlining, lease analysis, and more. Upload a document, get institutional-grade analysis in seconds. Starting at $2 per use.",
   keywords: [
     "LOI redlining",
     "commercial real estate",
@@ -25,20 +25,22 @@ export const metadata: Metadata = {
     "lease negotiation",
     "LOI review",
     "deal analysis",
+    "AI agents",
+    "CRE technology",
   ],
   authors: [{ name: "CREagentic" }],
   openGraph: {
-    title: "CREagentic | AI-Powered LOI Redlining for Commercial Real Estate",
+    title: "CREagentic | AI Agents for Commercial Real Estate",
     description:
-      "Redline any commercial real estate LOI in 60 seconds. AI-powered analysis with tracked changes output. $2 per document.",
+      "AI agent platform for commercial real estate. Upload a document, get institutional-grade analysis in seconds. Starting at $2 per use.",
     type: "website",
     siteName: "CREagentic",
   },
   twitter: {
     card: "summary_large_image",
-    title: "CREagentic | AI-Powered CRE LOI Redlining",
+    title: "CREagentic | AI Agents for Commercial Real Estate",
     description:
-      "Redline any commercial real estate LOI in 60 seconds. $2 per document. No subscription.",
+      "AI agent platform for commercial real estate. Upload a document, get institutional-grade analysis in seconds. Starting at $2 per use.",
   },
   robots: {
     index: true,

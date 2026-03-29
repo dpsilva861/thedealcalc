@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About | CREagentic",
   description:
-    "CREagentic brings institutional-grade LOI analysis to every CRE professional. Learn about our mission and self-learning AI engine.",
+    "CREagentic is building the AI operating system for commercial real estate. Learn about our platform and self-learning AI engine.",
 };
 
 export default function AboutPage() {
@@ -14,20 +14,21 @@ export default function AboutPage() {
         <h1 className="text-4xl font-bold text-white mb-8">About CREagentic</h1>
 
         <div className="space-y-12 text-slate-300 leading-relaxed">
-          {/* The Problem */}
+          {/* Platform Vision */}
           <section>
             <p className="text-lg text-slate-300">
-              CREagentic was built to solve a simple problem: LOI review in
-              commercial real estate takes too long, costs too much, and often
-              misses critical issues.
+              CREagentic is building the AI operating system for commercial real
+              estate. We are creating a suite of intelligent agents that handle
+              the most time-consuming tasks in CRE, from LOI redlining to lease
+              analysis to deal underwriting. Each agent is purpose-built for a
+              specific workflow, learns from every document it processes, and
+              gets smarter over time.
             </p>
             <p className="mt-4">
-              A typical LOI review costs $500 to $2,000 and takes 2 to 5
-              business days. For large institutional deals, that investment makes
-              sense. But for the thousands of mid-market LOIs negotiated every
-              week, the cost of professional review often exceeds what deal teams
-              are willing to spend. The result: LOIs go unreviewed, provisions
-              get missed, and landlords and tenants leave money on the table.
+              Our first tool, the LOI Redlining Agent, analyzes Letters of
+              Intent against industry-standard benchmarks in 60 seconds. More
+              agents are on the way: lease analysis, CAM reconciliation, and
+              deal underwriting.
             </p>
           </section>
 
@@ -37,18 +38,17 @@ export default function AboutPage() {
               Our Mission
             </h2>
             <p>
-              We are building the standard tool for commercial real estate LOI
-              analysis. Our goal is to democratize institutional-grade review so
+              We are building the standard AI platform for commercial real
+              estate. Our goal is to democratize institutional-grade analysis so
               that every landlord, broker, and tenant representative has access
-              to thorough, consistent, and affordable LOI analysis regardless of
+              to thorough, consistent, and affordable tools regardless of
               deal size or budget.
             </p>
             <p className="mt-4">
-              At $2 per document, there is no longer a reason to send back an
-              LOI without reviewing every provision against market standards.
-              Whether you are a solo broker handling 5 deals a month or a
-              property management firm processing 100, CREagentic delivers the
-              same institutional-grade analysis on every document.
+              Starting at $2 per document, there is no longer a reason to skip
+              thorough review. Whether you are a solo broker handling 5 deals a
+              month or a property management firm processing 100, CREagentic
+              delivers the same institutional-grade analysis on every document.
             </p>
           </section>
 
@@ -58,12 +58,12 @@ export default function AboutPage() {
               The Self-Learning Engine
             </h2>
             <p>
-              Every LOI we analyze makes CREagentic better. Our AI continuously
-              learns from real deal patterns, user feedback, and market trends.
-              When users accept, reject, or modify our recommendations, those
-              signals feed into a nightly aggregation engine that identifies
-              which provisions matter most, which benchmarks need updating, and
-              where our analysis can improve.
+              Every document we analyze makes CREagentic better. Our AI
+              continuously learns from real deal patterns, user feedback, and
+              market trends. When users accept, reject, or modify our
+              recommendations, those signals feed into a nightly aggregation
+              engine that identifies which provisions matter most, which
+              benchmarks need updating, and where our analysis can improve.
             </p>
             <p className="mt-4">
               The result is an engine that gets measurably smarter over time. The
@@ -81,15 +81,14 @@ export default function AboutPage() {
             <p>
               We are not a law firm. We do not provide legal advice. We do not
               represent landlords, tenants, or brokers in any transaction.
-              CREagentic is a technology tool that helps CRE professionals work
-              faster and catch issues they might otherwise miss.
+              CREagentic is a technology platform that helps CRE professionals
+              work faster and catch issues they might otherwise miss.
             </p>
             <p className="mt-4">
-              Every redline suggestion, deal score, and negotiation
-              recommendation should be reviewed by qualified legal and real
-              estate professionals before implementation. CREagentic gives you a
-              faster, more consistent starting point. The final decisions are
-              yours.
+              Every suggestion, deal score, and recommendation should be
+              reviewed by qualified legal and real estate professionals before
+              implementation. CREagentic gives you a faster, more consistent
+              starting point. The final decisions are yours.
             </p>
           </section>
 

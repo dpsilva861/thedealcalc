@@ -53,7 +53,7 @@ function buildSchema(type: SchemaType, data: SchemaMarkupProps["data"] = {}) {
         name: data.name || "CREagentic",
         description:
           data.description ||
-          "AI-powered LOI redlining for commercial real estate. Upload any LOI and get institutional-grade redlines in 60 seconds.",
+          "AI agent platform for commercial real estate professionals. LOI redlining, lease analysis, and more.",
         url: data.url || "https://creagentic.ai",
         applicationCategory: data.applicationCategory || "BusinessApplication",
         operatingSystem: data.operatingSystem || "Web",

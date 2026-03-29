@@ -66,7 +66,7 @@ export function Navbar() {
               href="/redline"
               className="inline-flex items-center gap-2 px-4 py-2 bg-electric hover:bg-electric-hover text-white text-sm font-medium rounded-lg transition-colors"
             >
-              Upload LOI
+              Get Started
             </Link>
           </div>
 
