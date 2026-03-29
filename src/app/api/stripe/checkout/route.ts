@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-
 export const dynamic = "force-dynamic";
+
+import { NextRequest, NextResponse } from "next/server";
 import { createCheckoutSession } from "@/lib/stripe";
 
 export async function POST(request: NextRequest) {
